@@ -1,0 +1,6 @@
+@CMMS.WebAPI_HostAddress = http://localhost:5298
+
+GET {{CMMS.WebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
