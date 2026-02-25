@@ -1,5 +1,9 @@
-﻿using CMMS.DAL.DBContext;
+﻿using CMMS.BLL.Interfaces;
+using CMMS.BLL.Services;
+using CMMS.DAL.DBContext;
 using CMMS.DAL.Entities;
+using CMMS.DAL.Interfaces;
+using CMMS.DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnectionStringDB")));
+
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
