@@ -72,7 +72,6 @@ namespace CMMS.BLL.Services
 
         private async System.Threading.Tasks.Task SendEmailAsync(string toEmail, string subject, string body)
         {
-            // Cấu hình SMTP thực tế của bạn tại đây
             var fromMail = "your-email@gmail.com";
             var pw = "your-app-password";
             var client = new SmtpClient("smtp.gmail.com", 587)
