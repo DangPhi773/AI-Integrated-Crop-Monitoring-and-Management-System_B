@@ -22,10 +22,16 @@ builder.Services.AddControllers()
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICropRepository, CropRepository>();
 builder.Services.AddScoped<IWorkerRepository, WorkerRepository>();
+builder.Services.AddScoped<ITaskRepository,TaskRepository>();
+builder.Services.AddScoped<ISeasonRepository, SeasonRepository>();
+builder.Services.AddScoped<IFarmRepository, FarmRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICropService, CropService>();
 builder.Services.AddScoped<IWorkerService, WorkerService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<ISeasonService, SeasonService>();
+builder.Services.AddScoped<IFarmService, FarmService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -44,5 +50,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+
 
 app.Run();
