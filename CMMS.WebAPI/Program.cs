@@ -21,9 +21,11 @@ builder.Services.AddControllers()
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICropRepository, CropRepository>();
+builder.Services.AddScoped<IWorkerRepository, WorkerRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICropService, CropService>();
+builder.Services.AddScoped<IWorkerService, WorkerService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
