@@ -12,34 +12,18 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CMMS.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260302055435_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260317063855_AddPlantSpacing")]
+    partial class AddPlantSpacing
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("public")
                 .HasAnnotation("ProductVersion", "8.0.24")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "auth", "aal_level", new[] { "aal1", "aal2", "aal3" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "auth", "code_challenge_method", new[] { "s256", "plain" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "auth", "factor_status", new[] { "unverified", "verified" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "auth", "factor_type", new[] { "totp", "webauthn", "phone" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "auth", "oauth_authorization_status", new[] { "pending", "approved", "denied", "expired" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "auth", "oauth_client_type", new[] { "public", "confidential" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "auth", "oauth_registration_type", new[] { "dynamic", "manual" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "auth", "oauth_response_type", new[] { "code" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "auth", "one_time_token_type", new[] { "confirmation_token", "reauthentication_token", "recovery_token", "email_change_token_new", "email_change_token_current", "phone_change_token" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "realtime", "action", new[] { "INSERT", "UPDATE", "DELETE", "TRUNCATE", "ERROR" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "realtime", "equality_op", new[] { "eq", "neq", "lt", "lte", "gt", "gte", "in" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "storage", "buckettype", new[] { "STANDARD", "ANALYTICS", "VECTOR" });
-            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "extensions", "pg_stat_statements");
-            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "extensions", "pgcrypto");
-            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "extensions", "uuid-ossp");
-            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "graphql", "pg_graphql");
-            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "vault", "supabase_vault");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("CMMS.DAL.Entities.Bed", b =>
@@ -81,7 +65,7 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("PlotId");
 
-                    b.ToTable("beds", (string)null);
+                    b.ToTable("beds", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Crop", b =>
@@ -113,6 +97,10 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("crop_status");
 
+                    b.Property<double?>("PlantSpacing")
+                        .HasColumnType("double precision")
+                        .HasColumnName("plant_spacing");
+
                     b.Property<Guid?>("SoilId")
                         .HasColumnType("uuid")
                         .HasColumnName("soil_id");
@@ -122,7 +110,7 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("SoilId");
 
-                    b.ToTable("crops", (string)null);
+                    b.ToTable("crops", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Farm", b =>
@@ -159,7 +147,7 @@ namespace CMMS.DAL.Migrations
                     b.HasKey("FarmId")
                         .HasName("farms_pkey");
 
-                    b.ToTable("farms", (string)null);
+                    b.ToTable("farms", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.ImageAnalysis", b =>
@@ -219,7 +207,7 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("PhotoId");
 
-                    b.ToTable("image_analyses", (string)null);
+                    b.ToTable("image_analyses", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.ImageAnalysisResult", b =>
@@ -265,7 +253,7 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("ImageAnalysisId");
 
-                    b.ToTable("image_analysis_result", (string)null);
+                    b.ToTable("image_analysis_result", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Notification", b =>
@@ -313,7 +301,7 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("notification", (string)null);
+                    b.ToTable("notification", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.PestDetection", b =>
@@ -375,7 +363,7 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("SpecialistId");
 
-                    b.ToTable("pest_detections", (string)null);
+                    b.ToTable("pest_detections", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Photo", b =>
@@ -429,7 +417,7 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("SeasonDetailId");
 
-                    b.ToTable("photo", (string)null);
+                    b.ToTable("photo", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Plot", b =>
@@ -473,7 +461,7 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("SoilId");
 
-                    b.ToTable("plots", (string)null);
+                    b.ToTable("plots", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Recommendation", b =>
@@ -519,7 +507,7 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("SeasonId");
 
-                    b.ToTable("recommendation", (string)null);
+                    b.ToTable("recommendation", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.RecommendationTask", b =>
@@ -563,7 +551,7 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("CreatedByOwnerId");
 
-                    b.ToTable("recommendation_tasks", (string)null);
+                    b.ToTable("recommendation_tasks", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.RecommendationTaskDetail", b =>
@@ -617,7 +605,7 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("WorkerId");
 
-                    b.ToTable("recommendation_task_detail", (string)null);
+                    b.ToTable("recommendation_task_detail", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Report", b =>
@@ -659,7 +647,7 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("WorkerId");
 
-                    b.ToTable("report", (string)null);
+                    b.ToTable("report", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Role", b =>
@@ -678,7 +666,7 @@ namespace CMMS.DAL.Migrations
                     b.HasKey("RoleId")
                         .HasName("role_pkey");
 
-                    b.ToTable("role", (string)null);
+                    b.ToTable("role", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Season", b =>
@@ -728,7 +716,7 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("FarmId");
 
-                    b.ToTable("seasons", (string)null);
+                    b.ToTable("seasons", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.SeasonsDetail", b =>
@@ -780,7 +768,7 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("SeasonId");
 
-                    b.ToTable("seasons_detail", (string)null);
+                    b.ToTable("seasons_detail", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Soil", b =>
@@ -803,7 +791,7 @@ namespace CMMS.DAL.Migrations
                     b.HasKey("SoilId")
                         .HasName("soil_pkey");
 
-                    b.ToTable("soil", (string)null);
+                    b.ToTable("soil", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Task", b =>
@@ -851,7 +839,7 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("SeasonId");
 
-                    b.ToTable("tasks", (string)null);
+                    b.ToTable("tasks", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.TaskDetail", b =>
@@ -889,7 +877,7 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("task_detail", (string)null);
+                    b.ToTable("task_detail", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.User", b =>
@@ -939,7 +927,7 @@ namespace CMMS.DAL.Migrations
                     b.HasIndex(new[] { "Email" }, "users_email_key")
                         .IsUnique();
 
-                    b.ToTable("users", (string)null);
+                    b.ToTable("users", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.WorkerSchedule", b =>
@@ -973,7 +961,7 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("WorkerId");
 
-                    b.ToTable("worker_schedule", (string)null);
+                    b.ToTable("worker_schedule", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Bed", b =>

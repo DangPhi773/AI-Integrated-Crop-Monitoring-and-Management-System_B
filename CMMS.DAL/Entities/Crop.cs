@@ -17,6 +17,8 @@ public partial class Crop
 
     public int? CropQuantities { get; set; }
 
+    public double? PlantSpacing { get; set; }
+
     public string? CropStatus { get; set; }
 
     public virtual ICollection<SeasonsDetail> SeasonsDetails { get; set; } = new List<SeasonsDetail>();
