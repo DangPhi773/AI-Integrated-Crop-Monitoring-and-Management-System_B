@@ -137,29 +137,5 @@ namespace CMMS.BLL.Services
                 }).ToList() ?? new List<TaskDetailDto>()
             };
 
-        Task<ApiResponse<IEnumerable<TaskResponse>>> ITaskService.GetAllTasksAsync()
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<ApiResponse<TaskResponse>> ITaskService.GetTaskByIdAsync(Guid id)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<ApiResponse<string>> ITaskService.CreateTaskAsync(TaskRequest request)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<ApiResponse<string>> ITaskService.UpdateTaskAsync(Guid id, TaskRequest request)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<ApiResponse<string>> ITaskService.DeleteTaskAsync(Guid id)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
