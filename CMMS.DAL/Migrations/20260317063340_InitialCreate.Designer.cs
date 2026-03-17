@@ -3,6 +3,7 @@ using System;
 using CMMS.DAL.DBContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CMMS.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260317063340_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -93,10 +96,6 @@ namespace CMMS.DAL.Migrations
                     b.Property<string>("CropStatus")
                         .HasColumnType("text")
                         .HasColumnName("crop_status");
-
-                    b.Property<double?>("PlantSpacing")
-                        .HasColumnType("double precision")
-                        .HasColumnName("plant_spacing");
 
                     b.Property<Guid?>("SoilId")
                         .HasColumnType("uuid")
