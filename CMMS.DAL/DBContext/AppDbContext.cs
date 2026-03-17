@@ -75,24 +75,25 @@ public partial class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder
-            .HasPostgresEnum("auth", "aal_level", new[] { "aal1", "aal2", "aal3" })
-            .HasPostgresEnum("auth", "code_challenge_method", new[] { "s256", "plain" })
-            .HasPostgresEnum("auth", "factor_status", new[] { "unverified", "verified" })
-            .HasPostgresEnum("auth", "factor_type", new[] { "totp", "webauthn", "phone" })
-            .HasPostgresEnum("auth", "oauth_authorization_status", new[] { "pending", "approved", "denied", "expired" })
-            .HasPostgresEnum("auth", "oauth_client_type", new[] { "public", "confidential" })
-            .HasPostgresEnum("auth", "oauth_registration_type", new[] { "dynamic", "manual" })
-            .HasPostgresEnum("auth", "oauth_response_type", new[] { "code" })
-            .HasPostgresEnum("auth", "one_time_token_type", new[] { "confirmation_token", "reauthentication_token", "recovery_token", "email_change_token_new", "email_change_token_current", "phone_change_token" })
-            .HasPostgresEnum("realtime", "action", new[] { "INSERT", "UPDATE", "DELETE", "TRUNCATE", "ERROR" })
-            .HasPostgresEnum("realtime", "equality_op", new[] { "eq", "neq", "lt", "lte", "gt", "gte", "in" })
-            .HasPostgresEnum("storage", "buckettype", new[] { "STANDARD", "ANALYTICS", "VECTOR" })
-            .HasPostgresExtension("extensions", "pg_stat_statements")
-            .HasPostgresExtension("extensions", "pgcrypto")
-            .HasPostgresExtension("extensions", "uuid-ossp")
-            .HasPostgresExtension("graphql", "pg_graphql")
-            .HasPostgresExtension("vault", "supabase_vault");
+        modelBuilder.HasDefaultSchema("public");
+        //modelBuilder
+        //    .HasPostgresEnum("auth", "aal_level", new[] { "aal1", "aal2", "aal3" })
+        //    .HasPostgresEnum("auth", "code_challenge_method", new[] { "s256", "plain" })
+        //    .HasPostgresEnum("auth", "factor_status", new[] { "unverified", "verified" })
+        //    .HasPostgresEnum("auth", "factor_type", new[] { "totp", "webauthn", "phone" })
+        //    .HasPostgresEnum("auth", "oauth_authorization_status", new[] { "pending", "approved", "denied", "expired" })
+        //    .HasPostgresEnum("auth", "oauth_client_type", new[] { "public", "confidential" })
+        //    .HasPostgresEnum("auth", "oauth_registration_type", new[] { "dynamic", "manual" })
+        //    .HasPostgresEnum("auth", "oauth_response_type", new[] { "code" })
+        //    .HasPostgresEnum("auth", "one_time_token_type", new[] { "confirmation_token", "reauthentication_token", "recovery_token", "email_change_token_new", "email_change_token_current", "phone_change_token" })
+        //    .HasPostgresEnum("realtime", "action", new[] { "INSERT", "UPDATE", "DELETE", "TRUNCATE", "ERROR" })
+        //    .HasPostgresEnum("realtime", "equality_op", new[] { "eq", "neq", "lt", "lte", "gt", "gte", "in" })
+        //    .HasPostgresEnum("storage", "buckettype", new[] { "STANDARD", "ANALYTICS", "VECTOR" })
+        //    .HasPostgresExtension("extensions", "pg_stat_statements")
+        //    .HasPostgresExtension("extensions", "pgcrypto")
+        //    .HasPostgresExtension("extensions", "uuid-ossp")
+        //    .HasPostgresExtension("graphql", "pg_graphql")
+        //    .HasPostgresExtension("vault", "supabase_vault");
 
         modelBuilder.Entity<Bed>(entity =>
         {
@@ -128,6 +129,7 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("crop_id");
             entity.Property(e => e.CropDefaultGrowthDays).HasColumnName("crop_default_growth_days");
             entity.Property(e => e.CropName).HasColumnName("crop_name");
+            entity.Property(e => e.PlantSpacing).HasColumnName("plant_spacing");
             entity.Property(e => e.CropQuantities).HasColumnName("crop_quantities");
             entity.Property(e => e.CropScientificName).HasColumnName("crop_scientific_name");
             entity.Property(e => e.CropStatus).HasColumnName("crop_status");
