@@ -29,6 +29,7 @@ namespace CMMS.BLL.Services
                     CropName = c.CropName,
                     CropScientificName = c.CropScientificName,
                     CropDefaultGrowthDays = c.CropDefaultGrowthDays,
+                    PlantSpacing = c.PlantSpacing,
                     CropQuantities = c.CropQuantities,
                     CropStatus = c.CropStatus,
                     SoilName = c.Soil?.Name, 
@@ -59,6 +60,7 @@ namespace CMMS.BLL.Services
                     CropName = crop.CropName,
                     CropScientificName = crop.CropScientificName,
                     CropDefaultGrowthDays = crop.CropDefaultGrowthDays,
+                    PlantSpacing = crop.PlantSpacing,
                     CropQuantities = crop.CropQuantities,
                     CropStatus = crop.CropStatus,
                     SoilName = crop.Soil?.Name,          
@@ -84,6 +86,7 @@ namespace CMMS.BLL.Services
                     CropName = request.CropName,
                     CropScientificName = request.CropScientificName,
                     CropDefaultGrowthDays = request.CropDefaultGrowthDays,
+                    PlantSpacing = request.PlantSpacing,
                     CropQuantities = request.CropQuantities,
                     CropStatus = request.CropStatus ?? "Active"
                 };
@@ -108,6 +111,7 @@ namespace CMMS.BLL.Services
                 crop.SoilId = request.SoilId;
                 crop.CropScientificName = request.CropScientificName;
                 crop.CropDefaultGrowthDays = request.CropDefaultGrowthDays;
+                crop.PlantSpacing = request.PlantSpacing;
                 crop.CropQuantities = request.CropQuantities;
                 crop.CropStatus = request.CropStatus;
 

@@ -12,6 +12,7 @@ namespace CMMS.DAL.DTOs.Crops
         public string CropName { get; set; } = null!;
         public string? CropScientificName { get; set; }
         public int? CropDefaultGrowthDays { get; set; }
+        public double? PlantSpacing { get; set; }
         public int? CropQuantities { get; set; }
         public string? CropStatus { get; set; }
     }
@@ -22,6 +23,7 @@ namespace CMMS.DAL.DTOs.Crops
         public string CropName { get; set; } = null!;
         public string? CropScientificName { get; set; }
         public int? CropDefaultGrowthDays { get; set; }
+        public double? PlantSpacing { get; set; }
         public int? CropQuantities { get; set; }
         public string? CropStatus { get; set; }
 
