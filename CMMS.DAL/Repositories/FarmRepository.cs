@@ -35,9 +35,5 @@ namespace CMMS.DAL.Repositories
         public async Task<bool> SaveChangesAsync()
             => await _context.SaveChangesAsync() > 0;
 
-        System.Threading.Tasks.Task IFarmRepository.AddAsync(Farm farm)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
