@@ -60,6 +60,8 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<WorkerSchedule> WorkerSchedules { get; set; }
+    public virtual DbSet<IotDevice> IotDevices { get; set; } = null!;
+    public virtual DbSet<IotData> IotDatas { get; set; } = null!;
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -617,6 +619,53 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.Worker).WithMany(p => p.WorkerSchedules)
                 .HasForeignKey(d => d.WorkerId)
                 .HasConstraintName("worker_schedule_worker_id_fkey");
+        });
+
+        modelBuilder.Entity<IotDevice>(entity =>
+        {
+            entity.ToTable("iot_devices");
+
+            entity.HasKey(e => e.DeviceId);
+            entity.Property(e => e.DeviceId).HasColumnName("device_id");
+            entity.Property(e => e.BedId).HasColumnName("bed_id");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Type).HasColumnName("type");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.InstallationDate).HasColumnName("installation_date").HasColumnType("date");
+            entity.Property(e => e.Latitude).HasColumnName("latitude");
+            entity.Property(e => e.Longitude).HasColumnName("longitude");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasColumnType("timestamp with time zone");
+
+            entity.HasOne(d => d.Bed)
+                  .WithMany(p => p.IotDevices)
+                  .HasForeignKey(d => d.BedId)
+                  .HasConstraintName("fk_iot_devices_beds");
+        });
+
+        modelBuilder.Entity<IotData>(entity =>
+        {
+            entity.ToTable("iot_data");
+
+            entity.HasKey(e => e.SensorDataId); 
+            entity.Property(e => e.SensorDataId).HasColumnName("sensor_data_id");
+
+            entity.Property(e => e.DeviceId).HasColumnName("device_id");
+            entity.Property(e => e.SeasonId).HasColumnName("season_id");
+
+            entity.Property(e => e.RecordedAt).HasColumnName("recorded_at").HasColumnType("timestamp with time zone");
+            entity.Property(e => e.Type).HasColumnName("type");
+            entity.Property(e => e.Value).HasColumnName("value");
+            entity.Property(e => e.Unit).HasColumnName("unit");
+            entity.Property(e => e.IsAlert).HasColumnName("is_alert");
+            entity.Property(e => e.Min).HasColumnName("min");
+            entity.Property(e => e.Max).HasColumnName("max");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone");
+
+            entity.HasOne(d => d.Device)
+                  .WithMany(p => p.IotDatas)
+                  .HasForeignKey(d => d.DeviceId)
+                  .HasConstraintName("fk_iot_data_iot_devices");
         });
 
         OnModelCreatingPartial(modelBuilder);
