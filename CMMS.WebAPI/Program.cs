@@ -25,6 +25,10 @@ builder.Services.AddScoped<IWorkerRepository, WorkerRepository>();
 builder.Services.AddScoped<ITaskRepository,TaskRepository>();
 builder.Services.AddScoped<ISeasonRepository, SeasonRepository>();
 builder.Services.AddScoped<IFarmRepository, FarmRepository>();
+builder.Services.AddScoped<ISoilRepository, SoilRepository>();
+builder.Services.AddScoped<IPlotRepository, PlotRepository>();
+builder.Services.AddScoped<IBedRepository, BedRepository>();
+builder.Services.AddScoped<ISeasonsDetailRepository, SeasonsDetailRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICropService, CropService>();
@@ -32,6 +36,10 @@ builder.Services.AddScoped<IWorkerService, WorkerService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ISeasonService, SeasonService>();
 builder.Services.AddScoped<IFarmService, FarmService>();
+builder.Services.AddScoped<ISoilService, SoilService>();
+builder.Services.AddScoped<IPlotService, PlotService>();
+builder.Services.AddScoped<IBedService, BedService>();
+builder.Services.AddScoped<ISeasonsDetailService, SeasonsDetailService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
