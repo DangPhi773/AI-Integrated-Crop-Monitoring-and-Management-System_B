@@ -22,4 +22,6 @@ public partial class Bed
     public virtual Plot? Plot { get; set; }
 
     public virtual ICollection<SeasonsDetail> SeasonsDetails { get; set; } = new List<SeasonsDetail>();
+    // Thêm bộ sưu tập các thiết bị IoT vào luống (Bed)
+    public virtual ICollection<IotDevice> IotDevices { get; set; } = new List<IotDevice>();
 }
