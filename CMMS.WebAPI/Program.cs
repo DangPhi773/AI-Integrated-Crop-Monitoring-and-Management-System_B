@@ -29,6 +29,7 @@ builder.Services.AddScoped<ISoilRepository, SoilRepository>();
 builder.Services.AddScoped<IPlotRepository, PlotRepository>();
 builder.Services.AddScoped<IBedRepository, BedRepository>();
 builder.Services.AddScoped<ISeasonsDetailRepository, SeasonsDetailRepository>();
+builder.Services.AddScoped<IReportRepository, ReportRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICropService, CropService>();
@@ -40,6 +41,7 @@ builder.Services.AddScoped<ISoilService, SoilService>();
 builder.Services.AddScoped<IPlotService, PlotService>();
 builder.Services.AddScoped<IBedService, BedService>();
 builder.Services.AddScoped<ISeasonsDetailService, SeasonsDetailService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
