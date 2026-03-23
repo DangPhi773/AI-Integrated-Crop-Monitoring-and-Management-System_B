@@ -30,6 +30,7 @@ builder.Services.AddScoped<IPlotRepository, PlotRepository>();
 builder.Services.AddScoped<IBedRepository, BedRepository>();
 builder.Services.AddScoped<ISeasonsDetailRepository, SeasonsDetailRepository>();
 builder.Services.AddScoped<IReportRepository, ReportRepository>();
+builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICropService, CropService>();
@@ -42,6 +43,7 @@ builder.Services.AddScoped<IPlotService, PlotService>();
 builder.Services.AddScoped<IBedService, BedService>();
 builder.Services.AddScoped<ISeasonsDetailService, SeasonsDetailService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
