@@ -35,6 +35,7 @@ namespace CMMS.DAL.Repositories
             return await _context.Users
             .Include(u => u.Role)
             .FirstOrDefaultAsync(u => u.UserId == id &&
+                                  u.Role != null &&
                                   u.Role.RoleName.ToLower().Trim() == "worker");
         }
 
