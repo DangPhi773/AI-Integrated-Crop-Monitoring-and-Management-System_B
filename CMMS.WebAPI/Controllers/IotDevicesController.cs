@@ -1,50 +1,50 @@
 using CMMS.BLL.Interfaces;
-using CMMS.DAL.DTOs.Tasks;
+using CMMS.DAL.DTOs.IotDevices;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class TasksController : ControllerBase
+    public class IotDevicesController : ControllerBase
     {
-        private readonly ITaskService _taskService;
+        private readonly IIotDeviceService _service;
 
-        public TasksController(ITaskService taskService) => _taskService = taskService;
+        public IotDevicesController(IIotDeviceService service) => _service = service;
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var result = await _taskService.GetAllTasksAsync();
+            var result = await _service.GetAllDevicesAsync();
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var result = await _taskService.GetTaskByIdAsync(id);
+            var result = await _service.GetDeviceByIdAsync(id);
             return result.Success ? Ok(result) : NotFound(result);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] TaskRequest request)
+        public async Task<IActionResult> Create([FromBody] IotDeviceRequest request)
         {
             if (!ModelState.IsValid) return BadRequest("Invalid request");
-            var result = await _taskService.CreateTaskAsync(request);
+            var result = await _service.CreateDeviceAsync(request);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
         [HttpPut("{id:guid}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] TaskRequest request)
+        public async Task<IActionResult> Update(Guid id, [FromBody] IotDeviceRequest request)
         {
-            var result = await _taskService.UpdateTaskAsync(id, request);
+            var result = await _service.UpdateDeviceAsync(id, request);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var result = await _taskService.DeleteTaskAsync(id);
+            var result = await _service.DeleteDeviceAsync(id);
             return result.Success ? Ok(result) : BadRequest(result);
         }
     }
