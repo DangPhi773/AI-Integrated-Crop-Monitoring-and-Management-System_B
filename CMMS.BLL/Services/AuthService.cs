@@ -72,14 +72,15 @@ namespace CMMS.BLL.Services
 
         private async System.Threading.Tasks.Task SendEmailAsync(string toEmail, string subject, string body)
         {
+            // TODO: Configure email credentials via appsettings.json
             var fromMail = "your-email@gmail.com";
             var pw = "your-app-password";
-            var client = new SmtpClient("smtp.gmail.com", 587)
+            using var client = new SmtpClient("smtp.gmail.com", 587)
             {
                 EnableSsl = true,
                 Credentials = new NetworkCredential(fromMail, pw)
             };
-            //await client.SendMailAsync(new MailMessage(fromMail, toEmail, subject, body));
+            await client.SendMailAsync(new MailMessage(fromMail, toEmail, subject, body));
         }
     }
 }

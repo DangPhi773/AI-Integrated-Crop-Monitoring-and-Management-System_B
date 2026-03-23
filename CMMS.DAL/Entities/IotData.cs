@@ -23,5 +23,6 @@ namespace CMMS.DAL.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public virtual IotDevice? Device { get; set; }
+        public virtual Season? Season { get; set; }
     }
 }
