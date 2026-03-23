@@ -529,23 +529,16 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.TaskId)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("task_id");
-            entity.Property(e => e.AssignedToWorkerId).HasColumnName("assigned_to_worker_id");
-            entity.Property(e => e.SeasonId).HasColumnName("season_id");
+
+            entity.Property(e => e.TaskTitle).HasColumnName("task_title");
+            entity.Property(e => e.TaskScheduledAt).HasColumnName("task_scheduled_at");
+            entity.Property(e => e.TaskStatus).HasColumnName("task_status");
+            entity.Property(e => e.TaskNotes).HasColumnName("task_notes");
+
             entity.Property(e => e.TaskCreatedAt)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("task_created_at");
-            entity.Property(e => e.TaskNotes).HasColumnName("task_notes");
-            entity.Property(e => e.TaskScheduledAt).HasColumnName("task_scheduled_at");
-            entity.Property(e => e.TaskStatus).HasColumnName("task_status");
-            entity.Property(e => e.TaskTitle).HasColumnName("task_title");
 
-            entity.HasOne(d => d.AssignedToWorker).WithMany(p => p.Tasks)
-                .HasForeignKey(d => d.AssignedToWorkerId)
-                .HasConstraintName("tasks_assigned_to_worker_id_fkey");
-
-            entity.HasOne(d => d.Season).WithMany(p => p.Tasks)
-                .HasForeignKey(d => d.SeasonId)
-                .HasConstraintName("tasks_season_id_fkey");
         });
 
         modelBuilder.Entity<TaskDetail>(entity =>
@@ -557,19 +550,29 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.TaskDetailId)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("task_detail_id");
+
+            entity.Property(e => e.TaskId).HasColumnName("task_id");
+            entity.Property(e => e.SeasonId).HasColumnName("season_id");
+            entity.Property(e => e.AssignedToWorkerId).HasColumnName("assigned_to_worker_id");
+
+            entity.Property(e => e.StartDate).HasColumnName("start_date");
             entity.Property(e => e.EndDate).HasColumnName("end_date");
             entity.Property(e => e.Notes).HasColumnName("notes");
-            entity.Property(e => e.SeasonId).HasColumnName("season_id");
-            entity.Property(e => e.StartDate).HasColumnName("start_date");
-            entity.Property(e => e.TaskId).HasColumnName("task_id");
 
-            entity.HasOne(d => d.Season).WithMany(p => p.TaskDetails)
+            entity.HasOne(d => d.Task)
+                .WithMany(p => p.TaskDetails)
+                .HasForeignKey(d => d.TaskId)
+                .HasConstraintName("task_detail_task_id_fkey");
+
+            entity.HasOne(d => d.Season)
+                .WithMany(p => p.TaskDetails)
                 .HasForeignKey(d => d.SeasonId)
                 .HasConstraintName("task_detail_season_id_fkey");
 
-            entity.HasOne(d => d.Task).WithMany(p => p.TaskDetails)
-                .HasForeignKey(d => d.TaskId)
-                .HasConstraintName("task_detail_task_id_fkey");
+            entity.HasOne(d => d.AssignedToWorker)
+                .WithMany(p => p.TaskDetails) 
+                .HasForeignKey(d => d.AssignedToWorkerId)
+                .HasConstraintName("task_detail_assigned_to_worker_id_fkey");
         });
 
         modelBuilder.Entity<User>(entity =>

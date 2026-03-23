@@ -55,20 +55,25 @@ namespace CMMS.BLL.Services
                     TaskNotes = request.TaskNotes,
                     TaskStatus = request.TaskStatus ?? "Pending",
                     TaskScheduledAt = request.TaskScheduledAt,
-                    AssignedToWorkerId = request.AssignedToWorkerId,
-                    SeasonId = request.SeasonId,
-                    TaskCreatedAt = DateTime.UtcNow
+                    TaskCreatedAt = DateTime.UtcNow,
+                    TaskDetails = request.TaskDetails?.Select(d => new TaskDetail
+                    {
+                        TaskDetailId = Guid.NewGuid(),
+                        SeasonId = d.SeasonId,
+                        AssignedToWorkerId = d.AssignedToWorkerId,
+                        StartDate = d.StartDate,
+                        EndDate = d.EndDate,
+                        Notes = d.Notes
+                    }).ToList() ?? new List<TaskDetail>()
                 };
 
                 await _taskRepo.AddAsync(entity);
-                if (await _taskRepo.SaveChangesAsync())
-                    return new ApiResponse<string> { Success = true, Message = "Task created" };
-
-                return new ApiResponse<string> { Success = false, Message = "Failed to save task" };
+                await _taskRepo.SaveChangesAsync();
+                return new ApiResponse<string> { Success = true, Message = "Task created with details" };
             }
             catch (Exception ex)
             {
-                return new ApiResponse<string> { Success = false, Message = "Error creating task", Errors = new List<string> { ex.Message } };
+                return new ApiResponse<string> { Success = false, Message = "Error", Errors = new List<string> { ex.Message } };
             }
         }
 
@@ -83,17 +88,33 @@ namespace CMMS.BLL.Services
                 entity.TaskNotes = request.TaskNotes ?? entity.TaskNotes;
                 entity.TaskStatus = request.TaskStatus ?? entity.TaskStatus;
                 entity.TaskScheduledAt = request.TaskScheduledAt ?? entity.TaskScheduledAt;
-                entity.AssignedToWorkerId = request.AssignedToWorkerId ?? entity.AssignedToWorkerId;
-                entity.SeasonId = request.SeasonId ?? entity.SeasonId;
+
+                if (request.TaskDetails != null)
+                {
+                    foreach (var detailReq in request.TaskDetails)
+                    {
+                        var existingDetail = entity.TaskDetails
+                            .FirstOrDefault(d => d.TaskDetailId == detailReq.TaskDetailId);
+
+                        if (existingDetail != null)
+                        {
+                            existingDetail.SeasonId = detailReq.SeasonId ?? existingDetail.SeasonId;
+                            existingDetail.AssignedToWorkerId = detailReq.AssignedToWorkerId ?? existingDetail.AssignedToWorkerId;
+                            existingDetail.StartDate = detailReq.StartDate ?? existingDetail.StartDate;
+                            existingDetail.EndDate = detailReq.EndDate ?? existingDetail.EndDate;
+                            existingDetail.Notes = detailReq.Notes ?? existingDetail.Notes;
+                        }
+                    }
+                }
 
                 _taskRepo.Update(entity);
                 await _taskRepo.SaveChangesAsync();
 
-                return new ApiResponse<string> { Success = true, Message = "Task updated" };
+                return new ApiResponse<string> { Success = true, Message = "Task updated successfully" };
             }
             catch (Exception ex)
             {
-                return new ApiResponse<string> { Success = false, Message = "Error updating task", Errors = new List<string> { ex.Message } };
+                return new ApiResponse<string> { Success = false, Message = "Update failed", Errors = new List<string> { ex.Message } };
             }
         }
 
@@ -117,25 +138,25 @@ namespace CMMS.BLL.Services
 
         // --- helpers ---
         private static TaskResponse MapToResponse(DAL.Entities.Task t) =>
-            new TaskResponse
+        new TaskResponse
+        {
+            TaskId = t.TaskId,
+            TaskTitle = t.TaskTitle,
+            TaskNotes = t.TaskNotes,
+            TaskStatus = t.TaskStatus,
+            TaskScheduledAt = t.TaskScheduledAt,
+            TaskCreatedAt = t.TaskCreatedAt,
+            TaskDetails = t.TaskDetails?.Select(d => new TaskDetailDto
             {
-                TaskId = t.TaskId,
-                TaskTitle = t.TaskTitle,
-                TaskNotes = t.TaskNotes,
-                TaskStatus = t.TaskStatus,
-                TaskScheduledAt = t.TaskScheduledAt,
-                TaskCreatedAt = t.TaskCreatedAt,
-                AssignedToWorkerId = t.AssignedToWorkerId,
-                SeasonId = t.SeasonId,
-                TaskDetails = t.TaskDetails?.Select(d => new TaskDetailDto
-                {
-                    TaskDetailId = d.TaskDetailId,
-                    SeasonId = d.SeasonId,
-                    StartDate = d.StartDate,
-                    EndDate = d.EndDate,
-                    Notes = d.Notes
-                }).ToList() ?? new List<TaskDetailDto>()
-            };
+                TaskDetailId = d.TaskDetailId,
+                SeasonId = d.SeasonId,
+                AssignedToWorkerId = d.AssignedToWorkerId,
+                WorkerName = d.AssignedToWorker?.Fullname, 
+                StartDate = d.StartDate,
+                EndDate = d.EndDate,
+                Notes = d.Notes
+            }).ToList() ?? new List<TaskDetailDto>()
+        };
 
     }
 }
