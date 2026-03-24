@@ -37,7 +37,5 @@ public partial class User
 
     public virtual ICollection<TaskDetail> TaskDetails { get; set; } = new List<TaskDetail>();
 
-    public virtual ICollection<Task> Tasks { get; set; } = new List<Task>();
-
     public virtual ICollection<WorkerSchedule> WorkerSchedules { get; set; } = new List<WorkerSchedule>();
 }

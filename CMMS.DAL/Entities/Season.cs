@@ -32,6 +32,4 @@ public partial class Season
     public virtual ICollection<SeasonsDetail> SeasonsDetails { get; set; } = new List<SeasonsDetail>();
 
     public virtual ICollection<TaskDetail> TaskDetails { get; set; } = new List<TaskDetail>();
-
-    public virtual ICollection<Task> Tasks { get; set; } = new List<Task>();
 }

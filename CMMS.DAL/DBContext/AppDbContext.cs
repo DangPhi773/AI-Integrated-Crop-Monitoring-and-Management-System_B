@@ -557,6 +557,7 @@ public partial class AppDbContext : DbContext
 
             entity.Property(e => e.StartDate).HasColumnName("start_date");
             entity.Property(e => e.EndDate).HasColumnName("end_date");
+            entity.Property(e => e.BedId).HasColumnName("bed_id");
             entity.Property(e => e.Notes).HasColumnName("notes");
 
             entity.HasOne(d => d.Task)
@@ -570,9 +571,14 @@ public partial class AppDbContext : DbContext
                 .HasConstraintName("task_detail_season_id_fkey");
 
             entity.HasOne(d => d.AssignedToWorker)
-                .WithMany(p => p.TaskDetails) 
+                .WithMany(p => p.TaskDetails)
                 .HasForeignKey(d => d.AssignedToWorkerId)
                 .HasConstraintName("task_detail_assigned_to_worker_id_fkey");
+
+            entity.HasOne(d => d.Bed)
+                .WithMany()
+                .HasForeignKey(d => d.BedId)
+                .HasConstraintName("task_detail_bed_id_fkey");
         });
 
         modelBuilder.Entity<User>(entity =>
@@ -669,6 +675,11 @@ public partial class AppDbContext : DbContext
                   .WithMany(p => p.IotDatas)
                   .HasForeignKey(d => d.DeviceId)
                   .HasConstraintName("fk_iot_data_iot_devices");
+
+            entity.HasOne(d => d.Season)
+                  .WithMany()
+                  .HasForeignKey(d => d.SeasonId)
+                  .HasConstraintName("fk_iot_data_seasons");
         });
 
         OnModelCreatingPartial(modelBuilder);

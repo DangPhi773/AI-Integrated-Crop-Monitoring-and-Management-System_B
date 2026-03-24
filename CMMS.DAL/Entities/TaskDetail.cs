@@ -28,7 +28,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CMMS.DAL.Entities;
 
-[Table("task_details")]
+[Table("task_detail")]
 public partial class TaskDetail
 {
     [Key]
@@ -50,6 +50,9 @@ public partial class TaskDetail
     [Column("end_date")]
     public DateTime? EndDate { get; set; }
 
+    [Column("bed_id")]
+    public Guid? BedId { get; set; }
+
     [Column("notes")]
     public string? Notes { get; set; }
 
@@ -57,5 +60,6 @@ public partial class TaskDetail
     public virtual Task? Task { get; set; }
     public virtual User? AssignedToWorker { get; set; }
     public virtual Season? Season { get; set; }
+    public virtual Bed? Bed { get; set; }
     public virtual ICollection<WorkerSchedule> WorkerSchedules { get; set; } = new List<WorkerSchedule>();
 }

@@ -18,14 +18,14 @@ namespace CMMS.DAL.Repositories
         public async Task<IEnumerable<Season>> GetAllAsync()
             => await _context.Seasons
                 .Include(s => s.SeasonsDetails)
-                .Include(s => s.Tasks)
+                .Include(s => s.TaskDetails)
                 .AsNoTracking()
                 .ToListAsync();
 
         public async Task<Season?> GetByIdAsync(Guid id)
             => await _context.Seasons
                 .Include(s => s.SeasonsDetails)
-                .Include(s => s.Tasks)
+                .Include(s => s.TaskDetails)
                 .FirstOrDefaultAsync(s => s.SeasonId == id);
 
         public async System.Threading.Tasks.Task AddAsync(Season season) => await _context.Seasons.AddAsync(season);
