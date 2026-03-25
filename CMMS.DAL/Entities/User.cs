@@ -36,7 +36,5 @@ public partial class User
 
     public virtual Role? Role { get; set; }
 
-    public virtual ICollection<TaskDetail> TaskDetails { get; set; } = new List<TaskDetail>();
-
     public virtual ICollection<WorkerSchedule> WorkerSchedules { get; set; } = new List<WorkerSchedule>();
 }

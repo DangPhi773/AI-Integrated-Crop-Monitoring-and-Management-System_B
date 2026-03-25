@@ -2,6 +2,7 @@ using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Tasks;
 using CMMS.DAL.Interfaces;
+using CMMS.BLL.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,16 +44,19 @@ namespace CMMS.BLL.Services
                 var t = await _taskRepo.GetByIdAsync(id);
                 if (t == null) return new ApiResponse<TaskResponse> { Success = false, Message = "Task not found" };
 
-                var data = new TaskResponse
+                return new ApiResponse<TaskResponse>
                 {
-                    TaskId = t.TaskId,
-                    TaskTitle = t.TaskTitle,
-                    TaskStatus = t.TaskStatus,
-                    TaskNotes = t.TaskNotes,
-                    TaskCreatedAt = t.TaskCreatedAt,
-                    TaskDetailsCount = t.TaskDetails?.Count ?? 0
+                    Success = true,
+                    Data = new TaskResponse
+                    {
+                        TaskId = t.TaskId,
+                        TaskTitle = t.TaskTitle,
+                        TaskStatus = t.TaskStatus,
+                        TaskNotes = t.TaskNotes,
+                        TaskCreatedAt = t.TaskCreatedAt,
+                        TaskDetailsCount = t.TaskDetails?.Count ?? 0
+                    }
                 };
-                return new ApiResponse<TaskResponse> { Success = true, Data = data };
             }
             catch (Exception ex)
             {
@@ -70,7 +74,7 @@ namespace CMMS.BLL.Services
                     TaskTitle = request.TaskTitle,
                     TaskNotes = request.TaskNotes,
                     TaskStatus = request.TaskStatus ?? "Active",
-                    TaskCreatedAt = DateTime.UtcNow
+                    TaskCreatedAt = DateTimeHelper.VnNow()
                 };
 
                 await _taskRepo.AddAsync(entity);

@@ -1,4 +1,5 @@
-﻿using CMMS.BLL.Interfaces;
+﻿using CMMS.BLL.Helpers;
+using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Reports;
 using CMMS.DAL.Entities;
@@ -84,7 +85,7 @@ namespace CMMS.BLL.Services
                     Title = request.Title,
                     Description = request.Description,
                     Status = request.Status ?? "Pending",
-                    CreatedAt = DateTime.UtcNow,
+                    CreatedAt = DateTimeHelper.VnNow(),
                     SubmitDate = request.SubmitDate
                 };
 

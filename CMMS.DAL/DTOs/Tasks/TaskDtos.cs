@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 namespace CMMS.DAL.DTOs.Tasks
 {
+    // ===== TASK (mẫu công việc, dùng lại được) =====
+
     public class TaskRequest
     {
         public string? TaskTitle { get; set; }
@@ -20,17 +22,15 @@ namespace CMMS.DAL.DTOs.Tasks
         public int TaskDetailsCount { get; set; }
     }
 
+    // ===== TASK DETAIL (chi tiết: ai làm, ở đâu, khi nào) =====
+
     public class TaskDetailRequest
     {
         public Guid? TaskId { get; set; }
         public Guid? SeasonId { get; set; }
-
-        // --- ĐÃ UPDATE SANG MẢNG ID ---
-        public List<Guid>? AssignedToWorkerIds { get; set; } = new List<Guid>();
-        public List<Guid>? BedIds { get; set; } = new List<Guid>();
-        public List<Guid>? PlotIds { get; set; } = new List<Guid>();
-        // ------------------------------
-
+        public List<Guid>? AssignedToWorkerIds { get; set; }
+        public List<Guid>? BedIds { get; set; }
+        public List<Guid>? PlotIds { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string? Notes { get; set; }
@@ -42,15 +42,9 @@ namespace CMMS.DAL.DTOs.Tasks
         public Guid? TaskId { get; set; }
         public string? TaskTitle { get; set; }
         public Guid? SeasonId { get; set; }
-
-        // --- ĐÃ UPDATE SANG MẢNG ID ---
-        public List<Guid> AssignedToWorkerIds { get; set; } = new List<Guid>();
-        public List<Guid> BedIds { get; set; } = new List<Guid>();
-        public List<Guid> PlotIds { get; set; } = new List<Guid>();
-        // ------------------------------
-
-        public string? WorkerName { get; set; } 
-        public string? BedName { get; set; }
+        public List<Guid> AssignedToWorkerIds { get; set; } = new();
+        public List<Guid> BedIds { get; set; } = new();
+        public List<Guid> PlotIds { get; set; } = new();
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string? Notes { get; set; }

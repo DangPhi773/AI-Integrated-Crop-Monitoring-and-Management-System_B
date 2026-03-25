@@ -1,3 +1,4 @@
+using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Beds;
@@ -57,7 +58,7 @@ namespace CMMS.BLL.Services
                     BedArea = request.BedArea,
                     BedStatus = request.BedStatus ?? "Active",
                     CropQuantities = request.CropQuantities,
-                    BedCreatedAt = DateTime.UtcNow
+                    BedCreatedAt = DateTimeHelper.VnNow()
                 };
 
                 await _bedRepo.AddAsync(entity);

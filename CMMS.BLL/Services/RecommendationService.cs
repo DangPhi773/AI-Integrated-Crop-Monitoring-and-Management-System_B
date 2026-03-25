@@ -1,4 +1,5 @@
-﻿using CMMS.BLL.Interfaces;
+﻿using CMMS.BLL.Helpers;
+using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Recommendation;
 using CMMS.DAL.Entities;
@@ -77,8 +78,8 @@ namespace CMMS.BLL.Services
                     PestDetectionId = request.PestDetectionId,
                     Title = request.Title,
                     Content = request.Content,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    CreatedAt = DateTimeHelper.VnNow(),
+                    UpdatedAt = DateTimeHelper.VnNow()
                 };
 
                 await _repo.AddAsync(rec);
@@ -111,7 +112,7 @@ namespace CMMS.BLL.Services
 
             existing.Title = request.Title;
             existing.Content = request.Content;
-            existing.UpdatedAt = DateTime.UtcNow;
+            existing.UpdatedAt = DateTimeHelper.VnNow();
 
             _repo.Update(existing);
             await _repo.SaveChangesAsync();
