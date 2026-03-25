@@ -1,4 +1,5 @@
-﻿using CMMS.BLL.Interfaces;
+﻿using CMMS.BLL.Helpers;
+using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Seasons;
 using CMMS.DAL.Entities;
@@ -59,7 +60,7 @@ namespace CMMS.BLL.Services
                     Description = request.Description,
                     SeasonNotes = request.SeasonNotes,
                     Status = request.Status ?? "Active",
-                    SeasonCreatedAt = DateTime.UtcNow
+                    SeasonCreatedAt = DateTimeHelper.VnNow()
                 };
 
                 await _seasonRepo.AddAsync(entity);

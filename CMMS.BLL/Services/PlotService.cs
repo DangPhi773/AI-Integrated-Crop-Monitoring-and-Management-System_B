@@ -1,3 +1,4 @@
+using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Plots;
@@ -57,7 +58,7 @@ namespace CMMS.BLL.Services
                     PlotName = request.PlotName,
                     PlotArea = request.PlotArea,
                     PlotStatus = request.PlotStatus ?? "Active",
-                    BedCreatedAt = DateTime.UtcNow
+                    BedCreatedAt = DateTimeHelper.VnNow()
                 };
 
                 await _plotRepo.AddAsync(entity);

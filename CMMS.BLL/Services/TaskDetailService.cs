@@ -43,6 +43,19 @@ namespace CMMS.BLL.Services
             }
         }
 
+        public async Task<ApiResponse<IEnumerable<TaskDetailResponse>>> GetByTaskIdAsync(Guid taskId)
+        {
+            try
+            {
+                var details = await _repo.GetByTaskIdAsync(taskId);
+                return new ApiResponse<IEnumerable<TaskDetailResponse>> { Success = true, Data = details.Select(MapToResponse) };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<IEnumerable<TaskDetailResponse>> { Success = false, Message = "Error", Errors = new List<string> { ex.Message } };
+            }
+        }
+
         public async Task<ApiResponse<IEnumerable<TaskDetailResponse>>> GetBySeasonIdAsync(Guid seasonId)
         {
             try
@@ -74,19 +87,6 @@ namespace CMMS.BLL.Services
             try
             {
                 var details = await _repo.GetByBedIdAsync(bedId);
-                return new ApiResponse<IEnumerable<TaskDetailResponse>> { Success = true, Data = details.Select(MapToResponse) };
-            }
-            catch (Exception ex)
-            {
-                return new ApiResponse<IEnumerable<TaskDetailResponse>> { Success = false, Message = "Error", Errors = new List<string> { ex.Message } };
-            }
-        }
-
-        public async Task<ApiResponse<IEnumerable<TaskDetailResponse>>> GetByTaskIdAsync(Guid taskId)
-        {
-            try
-            {
-                var details = await _repo.GetByTaskIdAsync(taskId);
                 return new ApiResponse<IEnumerable<TaskDetailResponse>> { Success = true, Data = details.Select(MapToResponse) };
             }
             catch (Exception ex)
@@ -131,11 +131,9 @@ namespace CMMS.BLL.Services
 
                 entity.TaskId = request.TaskId ?? entity.TaskId;
                 entity.SeasonId = request.SeasonId ?? entity.SeasonId;
-
                 entity.AssignedToWorkerIds = request.AssignedToWorkerIds ?? entity.AssignedToWorkerIds;
                 entity.BedIds = request.BedIds ?? entity.BedIds;
                 entity.PlotIds = request.PlotIds ?? entity.PlotIds;
-
                 entity.StartDate = request.StartDate ?? entity.StartDate;
                 entity.EndDate = request.EndDate ?? entity.EndDate;
                 entity.Notes = request.Notes ?? entity.Notes;

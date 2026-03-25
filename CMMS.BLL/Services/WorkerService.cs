@@ -1,4 +1,5 @@
-﻿using CMMS.BLL.Interfaces;
+﻿using CMMS.BLL.Helpers;
+using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Users;
 using CMMS.DAL.Entities;
@@ -86,12 +87,13 @@ namespace CMMS.BLL.Services
                 {
                     UserId = Guid.NewGuid(),
                     Email = request.Email,
-                    Password = request.Password, // note:  Hash password
+                    Password = request.Password,
+                    HashPassword = PasswordHelper.HashPassword(request.Password),
                     Fullname = request.Fullname,
                     PhoneNumber = request.PhoneNumber,
-                    RoleId = workerRole.RoleId, // Tự động gán RoleId tìm được từ DB
+                    RoleId = workerRole.RoleId,
                     Status = "Active",
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTimeHelper.VnNow()
                 };
 
                 await _workerRepo.AddWorkerAsync(newWorker);
