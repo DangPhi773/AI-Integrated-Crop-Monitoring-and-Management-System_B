@@ -62,6 +62,10 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<WorkerSchedule> WorkerSchedules { get; set; }
     public virtual DbSet<IotDevice> IotDevices { get; set; } = null!;
     public virtual DbSet<IotData> IotDatas { get; set; } = null!;
+    public virtual DbSet<SoilCropCompatibility> SoilCropCompatibilities { get; set; }
+    public virtual DbSet<CropGrowthStage> CropGrowthStages { get; set; }
+    public virtual DbSet<CropGrowthTask> CropGrowthTasks { get; set; }
+    public virtual DbSet<GrowthTracking> GrowthTrackings { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -137,9 +141,9 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CropStatus).HasColumnName("crop_status");
             entity.Property(e => e.SoilId).HasColumnName("soil_id");
 
-            entity.HasOne(d => d.Soil).WithMany(p => p.Crops)
-                .HasForeignKey(d => d.SoilId)
-                .HasConstraintName("crops_soil_id_fkey");
+            //entity.HasOne(d => d.Soil).WithMany(p => p.Crops)
+            //    .HasForeignKey(d => d.SoilId)
+            //    .HasConstraintName("crops_soil_id_fkey");
         });
 
         modelBuilder.Entity<Farm>(entity =>
@@ -553,7 +557,18 @@ public partial class AppDbContext : DbContext
 
             entity.Property(e => e.TaskId).HasColumnName("task_id");
             entity.Property(e => e.SeasonId).HasColumnName("season_id");
-            entity.Property(e => e.AssignedToWorkerId).HasColumnName("assigned_to_worker_id");
+
+            entity.Property(e => e.AssignedToWorkerIds)
+                .HasColumnName("assigned_to_worker_ids")
+                .HasColumnType("uuid[]");
+
+            entity.Property(e => e.PlotIds)
+                .HasColumnName("plot_ids")
+                .HasColumnType("uuid[]");
+
+            entity.Property(e => e.BedIds)
+                .HasColumnName("bed_ids")
+                .HasColumnType("uuid[]");
 
             entity.Property(e => e.StartDate).HasColumnName("start_date");
             entity.Property(e => e.EndDate).HasColumnName("end_date");
@@ -569,10 +584,6 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(d => d.SeasonId)
                 .HasConstraintName("task_detail_season_id_fkey");
 
-            entity.HasOne(d => d.AssignedToWorker)
-                .WithMany(p => p.TaskDetails) 
-                .HasForeignKey(d => d.AssignedToWorkerId)
-                .HasConstraintName("task_detail_assigned_to_worker_id_fkey");
         });
 
         modelBuilder.Entity<User>(entity =>
@@ -669,6 +680,63 @@ public partial class AppDbContext : DbContext
                   .WithMany(p => p.IotDatas)
                   .HasForeignKey(d => d.DeviceId)
                   .HasConstraintName("fk_iot_data_iot_devices");
+
+            entity.HasOne(d => d.Season)
+                  .WithMany()
+                  .HasForeignKey(d => d.SeasonId)
+                  .HasConstraintName("fk_iot_data_seasons");
+        });
+
+        modelBuilder.Entity<SoilCropCompatibility>(entity =>
+        {
+            entity.ToTable("soil_crop_compatibility"); 
+            entity.HasKey(e => e.ComptId);
+
+            entity.HasOne(d => d.Soil)
+                .WithMany(p => p.SoilCropCompatibilities)
+                .HasForeignKey(d => d.SoilId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Crop)
+                .WithMany(p => p.SoilCropCompatibilities)
+                .HasForeignKey(d => d.CropId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CropGrowthStage>(entity => {
+            entity.ToTable("crop_growth_stages");
+            entity.HasKey(e => e.StageId);
+            entity.Property(e => e.StageId).HasColumnName("stage_id");
+
+            entity.HasOne(d => d.Crop)
+                  .WithMany(p => p.CropGrowthStages)
+                  .HasForeignKey(d => d.CropId);
+        });
+
+        modelBuilder.Entity<CropGrowthTask>(entity => {
+            entity.ToTable("crop_growth_tasks");
+            entity.HasKey(e => e.GrowthTaskId);
+
+            entity.HasOne(d => d.CropGrowthStage)
+                  .WithMany(p => p.CropGrowthTasks)
+                  .HasForeignKey(d => d.StageId);
+        });
+
+        modelBuilder.Entity<GrowthTracking>(entity =>
+        {
+            entity.ToTable("growth_tracking");
+            entity.HasKey(e => e.TrackingId);
+            entity.Property(e => e.TrackingId).HasColumnName("tracking_id");
+
+            entity.HasOne(d => d.SeasonDetail)
+                  .WithMany(p => p.GrowthTrackings)
+                  .HasForeignKey(d => d.SeasonDetailId)
+                  .OnDelete(DeleteBehavior.Cascade); 
+
+            entity.HasOne(d => d.CropGrowthStage)
+                  .WithMany(p => p.GrowthTrackings)
+                  .HasForeignKey(d => d.StageId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         OnModelCreatingPartial(modelBuilder);

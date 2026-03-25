@@ -30,4 +30,5 @@ public partial class SeasonsDetail
     public virtual ICollection<Photo> Photos { get; set; } = new List<Photo>();
 
     public virtual Season? Season { get; set; }
+    public virtual ICollection<GrowthTracking> GrowthTrackings { get; set; } = new List<GrowthTracking>();
 }

@@ -11,7 +11,8 @@ public partial class Soil
 
     public string? ScienceName { get; set; }
 
-    public virtual ICollection<Crop> Crops { get; set; } = new List<Crop>();
+    //public virtual ICollection<Crop> Crops { get; set; } = new List<Crop>();
+    public virtual ICollection<SoilCropCompatibility> SoilCropCompatibilities { get; set; } = new List<SoilCropCompatibility>();
 
     public virtual ICollection<Plot> Plots { get; set; } = new List<Plot>();
 }
