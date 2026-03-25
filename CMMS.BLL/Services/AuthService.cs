@@ -39,7 +39,7 @@ namespace CMMS.BLL.Services
 
                     Fullname = request.Fullname,
                     PhoneNumber = request.PhoneNumber,
-                    CreatedAt = DateTime.UtcNow,
+                    CreatedAt = DateTimeHelper.VnNow(),
                     Status = "Active"
                 };
 

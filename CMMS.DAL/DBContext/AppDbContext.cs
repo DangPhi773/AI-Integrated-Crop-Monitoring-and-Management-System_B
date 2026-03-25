@@ -139,11 +139,6 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CropQuantities).HasColumnName("crop_quantities");
             entity.Property(e => e.CropScientificName).HasColumnName("crop_scientific_name");
             entity.Property(e => e.CropStatus).HasColumnName("crop_status");
-            entity.Property(e => e.SoilId).HasColumnName("soil_id");
-
-            //entity.HasOne(d => d.Soil).WithMany(p => p.Crops)
-            //    .HasForeignKey(d => d.SoilId)
-            //    .HasConstraintName("crops_soil_id_fkey");
         });
 
         modelBuilder.Entity<Farm>(entity =>
