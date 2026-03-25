@@ -12,6 +12,7 @@ public partial class User
     public string Email { get; set; } = null!;
 
     public string? Password { get; set; }
+    public string? HashPassword { get; set; }
 
     public string? Fullname { get; set; }
 
