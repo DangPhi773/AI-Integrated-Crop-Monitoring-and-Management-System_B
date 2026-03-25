@@ -41,25 +41,31 @@ public partial class TaskDetail
     [Column("season_id")]
     public Guid? SeasonId { get; set; }
 
-    [Column("assigned_to_worker_id")] 
-    public Guid? AssignedToWorkerId { get; set; }
-
     [Column("start_date")]
     public DateTime? StartDate { get; set; }
 
     [Column("end_date")]
     public DateTime? EndDate { get; set; }
 
-    [Column("bed_id")]
-    public Guid? BedId { get; set; }
-
     [Column("notes")]
     public string? Notes { get; set; }
 
-    // Navigation properties
+    // --- CÁC CỘT DẠNG MẢNG (ARRAY) ---
+
+    [Column("assigned_to_worker_ids")]
+    public List<Guid> AssignedToWorkerIds { get; set; } = new List<Guid>();
+
+    [Column("plot_ids")]
+    public List<Guid> PlotIds { get; set; } = new List<Guid>();
+
+    [Column("bed_ids")]
+    public List<Guid> BedIds { get; set; } = new List<Guid>();
+
+    // --- NAVIGATION PROPERTIES ---
     public virtual Task? Task { get; set; }
-    public virtual User? AssignedToWorker { get; set; }
     public virtual Season? Season { get; set; }
-    public virtual Bed? Bed { get; set; }
+
+    // Lưu ý: Không tạo virtual User hay virtual Bed ở đây 
+    // vì EF Core không hỗ trợ mapping 1 mảng ID sang Navigation.
     public virtual ICollection<WorkerSchedule> WorkerSchedules { get; set; } = new List<WorkerSchedule>();
 }

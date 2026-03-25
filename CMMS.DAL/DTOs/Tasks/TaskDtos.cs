@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace CMMS.DAL.DTOs.Tasks
 {
-    // ===== Task (mẫu công việc) =====
     public class TaskRequest
     {
         public string? TaskTitle { get; set; }
@@ -21,13 +20,17 @@ namespace CMMS.DAL.DTOs.Tasks
         public int TaskDetailsCount { get; set; }
     }
 
-    // ===== TaskDetail (chi tiết công việc thực tế) =====
     public class TaskDetailRequest
     {
         public Guid? TaskId { get; set; }
         public Guid? SeasonId { get; set; }
-        public Guid? AssignedToWorkerId { get; set; }
-        public Guid? BedId { get; set; }
+
+        // --- ĐÃ UPDATE SANG MẢNG ID ---
+        public List<Guid>? AssignedToWorkerIds { get; set; } = new List<Guid>();
+        public List<Guid>? BedIds { get; set; } = new List<Guid>();
+        public List<Guid>? PlotIds { get; set; } = new List<Guid>();
+        // ------------------------------
+
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string? Notes { get; set; }
@@ -39,9 +42,14 @@ namespace CMMS.DAL.DTOs.Tasks
         public Guid? TaskId { get; set; }
         public string? TaskTitle { get; set; }
         public Guid? SeasonId { get; set; }
-        public Guid? AssignedToWorkerId { get; set; }
-        public string? WorkerName { get; set; }
-        public Guid? BedId { get; set; }
+
+        // --- ĐÃ UPDATE SANG MẢNG ID ---
+        public List<Guid> AssignedToWorkerIds { get; set; } = new List<Guid>();
+        public List<Guid> BedIds { get; set; } = new List<Guid>();
+        public List<Guid> PlotIds { get; set; } = new List<Guid>();
+        // ------------------------------
+
+        public string? WorkerName { get; set; } 
         public string? BedName { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

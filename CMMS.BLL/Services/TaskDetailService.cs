@@ -104,8 +104,9 @@ namespace CMMS.BLL.Services
                     TaskDetailId = Guid.NewGuid(),
                     TaskId = request.TaskId,
                     SeasonId = request.SeasonId,
-                    AssignedToWorkerId = request.AssignedToWorkerId,
-                    BedId = request.BedId,
+                    AssignedToWorkerIds = request.AssignedToWorkerIds ?? new List<Guid>(),
+                    BedIds = request.BedIds ?? new List<Guid>(),
+                    PlotIds = request.PlotIds ?? new List<Guid>(),
                     StartDate = request.StartDate,
                     EndDate = request.EndDate,
                     Notes = request.Notes
@@ -130,8 +131,11 @@ namespace CMMS.BLL.Services
 
                 entity.TaskId = request.TaskId ?? entity.TaskId;
                 entity.SeasonId = request.SeasonId ?? entity.SeasonId;
-                entity.AssignedToWorkerId = request.AssignedToWorkerId ?? entity.AssignedToWorkerId;
-                entity.BedId = request.BedId ?? entity.BedId;
+
+                entity.AssignedToWorkerIds = request.AssignedToWorkerIds ?? entity.AssignedToWorkerIds;
+                entity.BedIds = request.BedIds ?? entity.BedIds;
+                entity.PlotIds = request.PlotIds ?? entity.PlotIds;
+
                 entity.StartDate = request.StartDate ?? entity.StartDate;
                 entity.EndDate = request.EndDate ?? entity.EndDate;
                 entity.Notes = request.Notes ?? entity.Notes;
@@ -169,10 +173,9 @@ namespace CMMS.BLL.Services
             TaskId = d.TaskId,
             TaskTitle = d.Task?.TaskTitle,
             SeasonId = d.SeasonId,
-            AssignedToWorkerId = d.AssignedToWorkerId,
-            WorkerName = d.AssignedToWorker?.Fullname,
-            BedId = d.BedId,
-            BedName = d.Bed?.BedName,
+            AssignedToWorkerIds = d.AssignedToWorkerIds,
+            BedIds = d.BedIds,
+            PlotIds = d.PlotIds,
             StartDate = d.StartDate,
             EndDate = d.EndDate,
             Notes = d.Notes
