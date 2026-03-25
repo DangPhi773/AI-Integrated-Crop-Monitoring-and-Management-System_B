@@ -16,26 +16,30 @@ namespace CMMS.DAL.Repositories
         private IQueryable<TaskDetail> BaseQuery()
             => _context.TaskDetails
                 .Include(d => d.Task)
-                .Include(d => d.AssignedToWorker)
-                .Include(d => d.Bed)
                 .Include(d => d.Season);
 
-        public async System.Threading.Tasks.Task<IEnumerable<TaskDetail>> GetAllAsync()
+        public async Task<IEnumerable<TaskDetail>> GetAllAsync()
             => await BaseQuery().AsNoTracking().ToListAsync();
 
-        public async System.Threading.Tasks.Task<TaskDetail?> GetByIdAsync(Guid id)
+        public async Task<TaskDetail?> GetByIdAsync(Guid id)
             => await BaseQuery().FirstOrDefaultAsync(d => d.TaskDetailId == id);
 
-        public async System.Threading.Tasks.Task<IEnumerable<TaskDetail>> GetBySeasonIdAsync(Guid seasonId)
+        public async Task<IEnumerable<TaskDetail>> GetBySeasonIdAsync(Guid seasonId)
             => await BaseQuery().Where(d => d.SeasonId == seasonId).AsNoTracking().ToListAsync();
 
-        public async System.Threading.Tasks.Task<IEnumerable<TaskDetail>> GetByWorkerIdAsync(Guid workerId)
-            => await BaseQuery().Where(d => d.AssignedToWorkerId == workerId).AsNoTracking().ToListAsync();
+        public async Task<IEnumerable<TaskDetail>> GetByWorkerIdAsync(Guid workerId)
+            => await BaseQuery()
+                .Where(d => d.AssignedToWorkerIds.Contains(workerId))
+                .AsNoTracking()
+                .ToListAsync();
 
-        public async System.Threading.Tasks.Task<IEnumerable<TaskDetail>> GetByBedIdAsync(Guid bedId)
-            => await BaseQuery().Where(d => d.BedId == bedId).AsNoTracking().ToListAsync();
+        public async Task<IEnumerable<TaskDetail>> GetByBedIdAsync(Guid bedId)
+            => await BaseQuery()
+                .Where(d => d.BedIds.Contains(bedId))
+                .AsNoTracking()
+                .ToListAsync();
 
-        public async System.Threading.Tasks.Task<IEnumerable<TaskDetail>> GetByTaskIdAsync(Guid taskId)
+        public async Task<IEnumerable<TaskDetail>> GetByTaskIdAsync(Guid taskId)
             => await BaseQuery().Where(d => d.TaskId == taskId).AsNoTracking().ToListAsync();
 
         public async System.Threading.Tasks.Task AddAsync(TaskDetail entity)
@@ -47,7 +51,7 @@ namespace CMMS.DAL.Repositories
         public void Delete(TaskDetail entity)
             => _context.TaskDetails.Remove(entity);
 
-        public async System.Threading.Tasks.Task<bool> SaveChangesAsync()
+        public async Task<bool> SaveChangesAsync()
             => await _context.SaveChangesAsync() > 0;
     }
 }
