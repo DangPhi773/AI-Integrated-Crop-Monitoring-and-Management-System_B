@@ -26,4 +26,5 @@ public partial class Crop
     public virtual ICollection<SeasonsDetail> SeasonsDetails { get; set; } = new List<SeasonsDetail>();
 
     public virtual Soil? Soil { get; set; }
+    public virtual ICollection<CropGrowthStage> CropGrowthStages { get; set; } = new List<CropGrowthStage>();
 }
