@@ -1,4 +1,4 @@
-﻿using CMMS.BLL.Interfaces;
+using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Crops;
 using CMMS.DAL.Entities;
@@ -6,7 +6,6 @@ using CMMS.DAL.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CMMS.BLL.Services
@@ -25,15 +24,18 @@ namespace CMMS.BLL.Services
                 var response = crops.Select(c => new CropResponse
                 {
                     CropId = c.CropId,
-                    SoilId = c.SoilId,
                     CropName = c.CropName,
                     CropScientificName = c.CropScientificName,
                     CropDefaultGrowthDays = c.CropDefaultGrowthDays,
                     PlantSpacing = c.PlantSpacing,
                     CropQuantities = c.CropQuantities,
                     CropStatus = c.CropStatus,
-                    SoilName = c.Soil?.Name, 
-                    SoilScienceName = c.Soil?.ScienceName
+                    CompatibleSoils = c.SoilCropCompatibilities?.Select(sc => new SoilCompatibilityDto
+                    {
+                        SoilId = sc.SoilId,
+                        SoilName = sc.Soil?.Name,
+                        Compatibility = sc.Compatibility
+                    }).ToList() ?? new List<SoilCompatibilityDto>()
                 }).ToList();
 
                 return new ApiResponse<IEnumerable<CropResponse>> { Success = true, Data = response };
@@ -56,15 +58,18 @@ namespace CMMS.BLL.Services
                 var response = new CropResponse
                 {
                     CropId = crop.CropId,
-                    SoilId = crop.SoilId,
                     CropName = crop.CropName,
                     CropScientificName = crop.CropScientificName,
                     CropDefaultGrowthDays = crop.CropDefaultGrowthDays,
                     PlantSpacing = crop.PlantSpacing,
                     CropQuantities = crop.CropQuantities,
                     CropStatus = crop.CropStatus,
-                    SoilName = crop.Soil?.Name,          
-                    SoilScienceName = crop.Soil?.ScienceName
+                    CompatibleSoils = crop.SoilCropCompatibilities?.Select(sc => new SoilCompatibilityDto
+                    {
+                        SoilId = sc.SoilId,
+                        SoilName = sc.Soil?.Name,
+                        Compatibility = sc.Compatibility
+                    }).ToList() ?? new List<SoilCompatibilityDto>()
                 };
 
                 return new ApiResponse<CropResponse> { Success = true, Data = response };
@@ -82,7 +87,6 @@ namespace CMMS.BLL.Services
                 var crop = new Crop
                 {
                     CropId = Guid.NewGuid(),
-                    SoilId = request.SoilId,
                     CropName = request.CropName,
                     CropScientificName = request.CropScientificName,
                     CropDefaultGrowthDays = request.CropDefaultGrowthDays,
@@ -108,7 +112,6 @@ namespace CMMS.BLL.Services
                 if (crop == null) return new ApiResponse<string> { Success = false, Message = "Không tồn tại" };
 
                 crop.CropName = request.CropName;
-                crop.SoilId = request.SoilId;
                 crop.CropScientificName = request.CropScientificName;
                 crop.CropDefaultGrowthDays = request.CropDefaultGrowthDays;
                 crop.PlantSpacing = request.PlantSpacing;

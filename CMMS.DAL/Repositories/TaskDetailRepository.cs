@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace CMMS.DAL.Repositories
 {
@@ -24,23 +25,17 @@ namespace CMMS.DAL.Repositories
         public async Task<TaskDetail?> GetByIdAsync(Guid id)
             => await BaseQuery().FirstOrDefaultAsync(d => d.TaskDetailId == id);
 
+        public async Task<IEnumerable<TaskDetail>> GetByTaskIdAsync(Guid taskId)
+            => await BaseQuery().Where(d => d.TaskId == taskId).AsNoTracking().ToListAsync();
+
         public async Task<IEnumerable<TaskDetail>> GetBySeasonIdAsync(Guid seasonId)
             => await BaseQuery().Where(d => d.SeasonId == seasonId).AsNoTracking().ToListAsync();
 
         public async Task<IEnumerable<TaskDetail>> GetByWorkerIdAsync(Guid workerId)
-            => await BaseQuery()
-                .Where(d => d.AssignedToWorkerIds.Contains(workerId))
-                .AsNoTracking()
-                .ToListAsync();
+            => await BaseQuery().Where(d => d.AssignedToWorkerIds.Contains(workerId)).AsNoTracking().ToListAsync();
 
         public async Task<IEnumerable<TaskDetail>> GetByBedIdAsync(Guid bedId)
-            => await BaseQuery()
-                .Where(d => d.BedIds.Contains(bedId))
-                .AsNoTracking()
-                .ToListAsync();
-
-        public async Task<IEnumerable<TaskDetail>> GetByTaskIdAsync(Guid taskId)
-            => await BaseQuery().Where(d => d.TaskId == taskId).AsNoTracking().ToListAsync();
+            => await BaseQuery().Where(d => d.BedIds.Contains(bedId)).AsNoTracking().ToListAsync();
 
         public async System.Threading.Tasks.Task AddAsync(TaskDetail entity)
             => await _context.TaskDetails.AddAsync(entity);

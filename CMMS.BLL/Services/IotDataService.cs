@@ -1,3 +1,4 @@
+using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.IotDatas;
@@ -67,14 +68,14 @@ namespace CMMS.BLL.Services
                     SensorDataId = Guid.NewGuid(),
                     DeviceId = request.DeviceId,
                     SeasonId = request.SeasonId,
-                    RecordedAt = DateTime.UtcNow,
+                    RecordedAt = DateTimeHelper.VnNow(),
                     Type = request.Type,
                     Value = request.Value,
                     Unit = request.Unit,
                     IsAlert = request.IsAlert,
                     Min = request.Min,
                     Max = request.Max,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTimeHelper.VnNow()
                 };
 
                 await _repo.AddAsync(entity);

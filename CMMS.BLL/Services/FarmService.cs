@@ -1,4 +1,5 @@
-﻿using CMMS.BLL.Interfaces;
+﻿using CMMS.BLL.Helpers;
+using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Farms;
 using CMMS.DAL.Entities;
@@ -56,7 +57,7 @@ namespace CMMS.BLL.Services
                     FarmLocation = request.FarmLocation,
                     FarmArea = request.FarmArea,
                     FarmStatus = request.FarmStatus ?? "Active",
-                    FarmCreatedAt = DateTime.UtcNow
+                    FarmCreatedAt = DateTimeHelper.VnNow()
                 };
 
                 await _farmRepo.AddAsync(entity);

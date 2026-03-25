@@ -1,3 +1,4 @@
+using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.IotDevices;
@@ -58,7 +59,7 @@ namespace CMMS.BLL.Services
                     InstallationDate = request.InstallationDate,
                     Latitude = request.Latitude,
                     Longitude = request.Longitude,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTimeHelper.VnNow()
                 };
 
                 await _repo.AddAsync(entity);
@@ -87,7 +88,7 @@ namespace CMMS.BLL.Services
                 entity.InstallationDate = request.InstallationDate ?? entity.InstallationDate;
                 entity.Latitude = request.Latitude ?? entity.Latitude;
                 entity.Longitude = request.Longitude ?? entity.Longitude;
-                entity.UpdatedAt = DateTime.UtcNow;
+                entity.UpdatedAt = DateTimeHelper.VnNow();
 
                 _repo.Update(entity);
                 await _repo.SaveChangesAsync();
