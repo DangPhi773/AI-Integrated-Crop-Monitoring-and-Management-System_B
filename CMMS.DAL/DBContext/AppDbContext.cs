@@ -63,6 +63,9 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<IotDevice> IotDevices { get; set; } = null!;
     public virtual DbSet<IotData> IotDatas { get; set; } = null!;
     public virtual DbSet<SoilCropCompatibility> SoilCropCompatibilities { get; set; }
+    public virtual DbSet<CropGrowthStage> CropGrowthStages { get; set; }
+    public virtual DbSet<CropGrowthTask> CropGrowthTasks { get; set; }
+    public virtual DbSet<GrowthTracking> GrowthTrackings { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -697,6 +700,42 @@ public partial class AppDbContext : DbContext
                 .WithMany(p => p.SoilCropCompatibilities)
                 .HasForeignKey(d => d.CropId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CropGrowthStage>(entity => {
+            entity.ToTable("crop_growth_stages");
+            entity.HasKey(e => e.StageId);
+            entity.Property(e => e.StageId).HasColumnName("stage_id");
+
+            entity.HasOne(d => d.Crop)
+                  .WithMany(p => p.CropGrowthStages)
+                  .HasForeignKey(d => d.CropId);
+        });
+
+        modelBuilder.Entity<CropGrowthTask>(entity => {
+            entity.ToTable("crop_growth_tasks");
+            entity.HasKey(e => e.GrowthTaskId);
+
+            entity.HasOne(d => d.CropGrowthStage)
+                  .WithMany(p => p.CropGrowthTasks)
+                  .HasForeignKey(d => d.StageId);
+        });
+
+        modelBuilder.Entity<GrowthTracking>(entity =>
+        {
+            entity.ToTable("growth_tracking");
+            entity.HasKey(e => e.TrackingId);
+            entity.Property(e => e.TrackingId).HasColumnName("tracking_id");
+
+            entity.HasOne(d => d.SeasonDetail)
+                  .WithMany(p => p.GrowthTrackings)
+                  .HasForeignKey(d => d.SeasonDetailId)
+                  .OnDelete(DeleteBehavior.Cascade); 
+
+            entity.HasOne(d => d.CropGrowthStage)
+                  .WithMany(p => p.GrowthTrackings)
+                  .HasForeignKey(d => d.StageId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         OnModelCreatingPartial(modelBuilder);
