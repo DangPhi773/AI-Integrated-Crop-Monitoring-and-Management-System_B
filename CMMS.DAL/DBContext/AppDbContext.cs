@@ -62,6 +62,7 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<WorkerSchedule> WorkerSchedules { get; set; }
     public virtual DbSet<IotDevice> IotDevices { get; set; } = null!;
     public virtual DbSet<IotData> IotDatas { get; set; } = null!;
+    public virtual DbSet<SoilCropCompatibility> SoilCropCompatibilities { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -137,9 +138,9 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CropStatus).HasColumnName("crop_status");
             entity.Property(e => e.SoilId).HasColumnName("soil_id");
 
-            entity.HasOne(d => d.Soil).WithMany(p => p.Crops)
-                .HasForeignKey(d => d.SoilId)
-                .HasConstraintName("crops_soil_id_fkey");
+            //entity.HasOne(d => d.Soil).WithMany(p => p.Crops)
+            //    .HasForeignKey(d => d.SoilId)
+            //    .HasConstraintName("crops_soil_id_fkey");
         });
 
         modelBuilder.Entity<Farm>(entity =>
@@ -680,6 +681,22 @@ public partial class AppDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(d => d.SeasonId)
                   .HasConstraintName("fk_iot_data_seasons");
+        });
+
+        modelBuilder.Entity<SoilCropCompatibility>(entity =>
+        {
+            entity.ToTable("soil_crop_compatibility"); 
+            entity.HasKey(e => e.ComptId);
+
+            entity.HasOne(d => d.Soil)
+                .WithMany(p => p.SoilCropCompatibilities)
+                .HasForeignKey(d => d.SoilId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Crop)
+                .WithMany(p => p.SoilCropCompatibilities)
+                .HasForeignKey(d => d.CropId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         OnModelCreatingPartial(modelBuilder);

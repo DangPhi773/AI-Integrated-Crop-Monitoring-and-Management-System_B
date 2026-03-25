@@ -107,14 +107,13 @@ namespace CMMS.BLL.Services
             }
         }
 
-        private static SoilResponse MapToResponse(Soil s) =>
-            new SoilResponse
-            {
-                SoilId = s.SoilId,
-                Name = s.Name,
-                ScienceName = s.ScienceName,
-                CropsCount = s.Crops?.Count ?? 0,
-                PlotsCount = s.Plots?.Count ?? 0
-            };
+        private static SoilResponse MapToResponse(Soil s) => new SoilResponse
+        {
+            SoilId = s.SoilId,
+            Name = s.Name,
+            ScienceName = s.ScienceName,
+            CropsCount = s.SoilCropCompatibilities?.Count ?? 0,
+            PlotsCount = s.Plots?.Count ?? 0
+        };
     }
 }
