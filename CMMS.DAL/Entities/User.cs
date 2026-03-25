@@ -12,6 +12,7 @@ public partial class User
     public string Email { get; set; } = null!;
 
     public string? Password { get; set; }
+    public string? HashPassword { get; set; }
 
     public string? Fullname { get; set; }
 
@@ -36,8 +37,6 @@ public partial class User
     public virtual Role? Role { get; set; }
 
     public virtual ICollection<TaskDetail> TaskDetails { get; set; } = new List<TaskDetail>();
-
-    public virtual ICollection<Task> Tasks { get; set; } = new List<Task>();
 
     public virtual ICollection<WorkerSchedule> WorkerSchedules { get; set; } = new List<WorkerSchedule>();
 }

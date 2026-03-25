@@ -131,7 +131,7 @@ namespace CMMS.BLL.Services
                 SeasonCreatedAt = s.SeasonCreatedAt,
                 Status = s.Status,
                 SeasonsDetailsCount = s.SeasonsDetails?.Count ?? 0,
-                TasksCount = s.Tasks?.Count ?? 0,
+                TasksCount = s.TaskDetails?.Count ?? 0,
                 SeasonsDetails = s.SeasonsDetails?.Select(d => new SeasonsDetailDto
                 {
                     SeasonDetailId = d.SeasonDetailId,

@@ -21,7 +21,10 @@ public partial class Crop
 
     public string? CropStatus { get; set; }
 
+    public virtual ICollection<SoilCropCompatibility> SoilCropCompatibilities { get; set; } = new List<SoilCropCompatibility>();
+
     public virtual ICollection<SeasonsDetail> SeasonsDetails { get; set; } = new List<SeasonsDetail>();
 
     public virtual Soil? Soil { get; set; }
+    public virtual ICollection<CropGrowthStage> CropGrowthStages { get; set; } = new List<CropGrowthStage>();
 }

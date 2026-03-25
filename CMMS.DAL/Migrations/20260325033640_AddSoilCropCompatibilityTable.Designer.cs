@@ -3,6 +3,7 @@ using System;
 using CMMS.DAL.DBContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CMMS.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260325033640_AddSoilCropCompatibilityTable")]
+    partial class AddSoilCropCompatibilityTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -110,107 +113,6 @@ namespace CMMS.DAL.Migrations
                     b.ToTable("crops", "public");
                 });
 
-            modelBuilder.Entity("CMMS.DAL.Entities.CropGrowthStage", b =>
-                {
-                    b.Property<Guid>("StageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("stage_id");
-
-                    b.Property<string>("CommonDiseases")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CropId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("GrowthIndicators")
-                        .HasColumnType("text");
-
-                    b.Property<double?>("HumidityMin")
-                        .HasColumnType("double precision");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("text");
-
-                    b.Property<double?>("SoilMoistureMin")
-                        .HasColumnType("double precision");
-
-                    b.Property<string>("StageDescription")
-                        .HasColumnType("text");
-
-                    b.Property<string>("StageName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<double?>("TemperatureMin")
-                        .HasColumnType("double precision");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("StageId");
-
-                    b.HasIndex("CropId");
-
-                    b.ToTable("crop_growth_stages", "public");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.CropGrowthTask", b =>
-                {
-                    b.Property<Guid>("GrowthTaskId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("DurationMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Frequency")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsMandatory")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("text");
-
-                    b.Property<int>("Priority")
-                        .HasColumnType("integer");
-
-                    b.Property<double?>("QuantityPerUnit")
-                        .HasColumnType("double precision");
-
-                    b.Property<string>("QuantityUnit")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RequiredMaterials")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RequiredTools")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("StageId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("TaskDescription")
-                        .HasColumnType("text");
-
-                    b.Property<string>("TaskName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("GrowthTaskId");
-
-                    b.HasIndex("StageId");
-
-                    b.ToTable("crop_growth_tasks", "public");
-                });
-
             modelBuilder.Entity("CMMS.DAL.Entities.Farm", b =>
                 {
                     b.Property<Guid>("FarmId")
@@ -246,68 +148,6 @@ namespace CMMS.DAL.Migrations
                         .HasName("farms_pkey");
 
                     b.ToTable("farms", "public");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.GrowthTracking", b =>
-                {
-                    b.Property<Guid>("TrackingId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("tracking_id");
-
-                    b.Property<double?>("ActualHeight")
-                        .HasColumnType("double precision");
-
-                    b.Property<double?>("ActualYield")
-                        .HasColumnType("double precision");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("DelayDays")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("DelayReason")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("HealthStatus")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("LastObservedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("LastUpdatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("SeasonDetailId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("StageId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("TrackingStatus")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("TrackingId");
-
-                    b.HasIndex("SeasonDetailId");
-
-                    b.HasIndex("StageId");
-
-                    b.ToTable("growth_tracking", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.ImageAnalysis", b =>
@@ -1197,9 +1037,6 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("fullname");
 
-                    b.Property<string>("HashPassword")
-                        .HasColumnType("text");
-
                     b.Property<string>("Password")
                         .HasColumnType("text")
                         .HasColumnName("password");
@@ -1278,47 +1115,6 @@ namespace CMMS.DAL.Migrations
                         .HasForeignKey("SoilId");
 
                     b.Navigation("Soil");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.CropGrowthStage", b =>
-                {
-                    b.HasOne("CMMS.DAL.Entities.Crop", "Crop")
-                        .WithMany("CropGrowthStages")
-                        .HasForeignKey("CropId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Crop");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.CropGrowthTask", b =>
-                {
-                    b.HasOne("CMMS.DAL.Entities.CropGrowthStage", "CropGrowthStage")
-                        .WithMany("CropGrowthTasks")
-                        .HasForeignKey("StageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CropGrowthStage");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.GrowthTracking", b =>
-                {
-                    b.HasOne("CMMS.DAL.Entities.SeasonsDetail", "SeasonDetail")
-                        .WithMany("GrowthTrackings")
-                        .HasForeignKey("SeasonDetailId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CMMS.DAL.Entities.CropGrowthStage", "CropGrowthStage")
-                        .WithMany("GrowthTrackings")
-                        .HasForeignKey("StageId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("CropGrowthStage");
-
-                    b.Navigation("SeasonDetail");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.ImageAnalysis", b =>
@@ -1617,18 +1413,9 @@ namespace CMMS.DAL.Migrations
 
             modelBuilder.Entity("CMMS.DAL.Entities.Crop", b =>
                 {
-                    b.Navigation("CropGrowthStages");
-
                     b.Navigation("SeasonsDetails");
 
                     b.Navigation("SoilCropCompatibilities");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.CropGrowthStage", b =>
-                {
-                    b.Navigation("CropGrowthTasks");
-
-                    b.Navigation("GrowthTrackings");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Farm", b =>
@@ -1693,8 +1480,6 @@ namespace CMMS.DAL.Migrations
 
             modelBuilder.Entity("CMMS.DAL.Entities.SeasonsDetail", b =>
                 {
-                    b.Navigation("GrowthTrackings");
-
                     b.Navigation("Photos");
                 });
 

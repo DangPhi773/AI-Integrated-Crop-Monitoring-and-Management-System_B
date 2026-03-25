@@ -1,10 +1,8 @@
-﻿using CMMS.DAL.DBContext;
+using CMMS.DAL.DBContext;
 using CMMS.DAL.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CMMS.DAL.Repositories
@@ -23,14 +21,12 @@ namespace CMMS.DAL.Repositories
         public async Task<IEnumerable<Entities.Task>> GetAllAsync()
         => await _context.Tasks
                 .Include(t => t.TaskDetails)
-                    .ThenInclude(d => d.AssignedToWorker) 
                 .AsNoTracking()
                 .ToListAsync();
 
         public async Task<Entities.Task?> GetByIdAsync(Guid id)
         => await _context.Tasks
                 .Include(t => t.TaskDetails)
-                    .ThenInclude(d => d.AssignedToWorker)
                 .FirstOrDefaultAsync(t => t.TaskId == id);
 
         public async Task<bool> SaveChangesAsync()
