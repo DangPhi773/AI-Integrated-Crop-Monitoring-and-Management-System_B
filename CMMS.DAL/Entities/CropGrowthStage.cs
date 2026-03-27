@@ -19,7 +19,7 @@ namespace CMMS.DAL.Entities
             public string? CommonDiseases { get; set; }
             public string? Notes { get; set; }
             public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-            public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+            public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
 
             public virtual Crop Crop { get; set; }
             public virtual ICollection<GrowthTracking> GrowthTrackings { get; set; } = new List<GrowthTracking>();

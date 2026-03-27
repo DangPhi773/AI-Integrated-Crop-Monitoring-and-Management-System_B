@@ -34,6 +34,7 @@ builder.Services.AddScoped<IReportRepository, ReportRepository>();
 builder.Services.AddScoped<IIotDeviceRepository, IotDeviceRepository>();
 builder.Services.AddScoped<IIotDataRepository, IotDataRepository>();
 builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>();
+builder.Services.AddScoped<ICropGrowthTaskRepository, CropGrowthTaskRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICropService, CropService>();
@@ -50,9 +51,12 @@ builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IIotDeviceService, IotDeviceService>();
 builder.Services.AddScoped<IIotDataService, IotDataService>();
 builder.Services.AddScoped<IRecommendationService, RecommendationService>();
+builder.Services.AddScoped<ICropGrowthTaskService, CropGrowthTaskService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var app = builder.Build();
 
