@@ -708,13 +708,41 @@ public partial class AppDbContext : DbContext
                   .HasForeignKey(d => d.CropId);
         });
 
-        modelBuilder.Entity<CropGrowthTask>(entity => {
+        modelBuilder.Entity<CropGrowthTask>(entity =>
+        {
             entity.ToTable("crop_growth_tasks");
             entity.HasKey(e => e.GrowthTaskId);
+            entity.Property(e => e.GrowthTaskId)
+                  .HasColumnName("GrowthTaskId") 
+                  .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(e => e.StageId)
+                  .HasColumnName("StageId"); 
+
+            entity.Property(e => e.TaskName)
+                  .HasColumnName("TaskName")
+                  .IsRequired();
+
+            entity.Property(e => e.CreatedAt)
+                  .HasColumnName("CreatedAt") 
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(e => e.TaskDescription).HasColumnName("TaskDescription");
+            entity.Property(e => e.Frequency).HasColumnName("Frequency");
+            entity.Property(e => e.DurationMinutes).HasColumnName("DurationMinutes");
+            entity.Property(e => e.RequiredTools).HasColumnName("RequiredTools");
+            entity.Property(e => e.RequiredMaterials).HasColumnName("RequiredMaterials");
+            entity.Property(e => e.QuantityPerUnit).HasColumnName("QuantityPerUnit");
+            entity.Property(e => e.QuantityUnit).HasColumnName("QuantityUnit");
+            entity.Property(e => e.Priority).HasColumnName("Priority");
+            entity.Property(e => e.IsMandatory).HasColumnName("IsMandatory");
+            entity.Property(e => e.Notes).HasColumnName("Notes");
 
             entity.HasOne(d => d.CropGrowthStage)
                   .WithMany(p => p.CropGrowthTasks)
-                  .HasForeignKey(d => d.StageId);
+                  .HasForeignKey(d => d.StageId)
+                  .OnDelete(DeleteBehavior.Cascade)
+                  .HasConstraintName("FK_CropGrowthTasks_CropGrowthStages");
         });
 
         modelBuilder.Entity<GrowthTracking>(entity =>
