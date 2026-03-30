@@ -1,9 +1,11 @@
 ﻿using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Recommendation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
+    [Authorize (Roles = "Specialist")]
     [Route("api/[controller]")]
     [ApiController]
     public class RecommendationsController : ControllerBase

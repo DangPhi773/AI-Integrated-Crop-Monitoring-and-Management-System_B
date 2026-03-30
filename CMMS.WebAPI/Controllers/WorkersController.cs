@@ -1,9 +1,11 @@
 ﻿using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Users;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
+    [Authorize (Roles = "Owner")]
     [Route("api/[controller]")]
     [ApiController]
     public class WorkersController : ControllerBase

@@ -1,9 +1,11 @@
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Soils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
+    [Authorize(Roles = "Owner")]
     [ApiController]
     [Route("api/[controller]")]
     public class SoilsController : ControllerBase
@@ -12,6 +14,7 @@ namespace CMMS.WebAPI.Controllers
 
         public SoilsController(ISoilService soilService) => _soilService = soilService;
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {

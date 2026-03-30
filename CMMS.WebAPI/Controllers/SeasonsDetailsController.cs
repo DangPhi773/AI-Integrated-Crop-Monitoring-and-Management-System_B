@@ -1,9 +1,11 @@
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.SeasonsDetails;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
+    [Authorize(Roles = "Owner")]
     [ApiController]
     [Route("api/seasons-details")]
     public class SeasonsDetailsController : ControllerBase
@@ -12,6 +14,7 @@ namespace CMMS.WebAPI.Controllers
 
         public SeasonsDetailsController(ISeasonsDetailService seasonsDetailService) => _seasonsDetailService = seasonsDetailService;
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {

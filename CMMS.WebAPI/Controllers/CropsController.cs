@@ -1,9 +1,11 @@
 ﻿using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Crops;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
+    [Authorize (Roles = "Owner")]
     [Route("api/[controller]")]
     [ApiController]
     public class CropsController : ControllerBase
@@ -11,6 +13,7 @@ namespace CMMS.WebAPI.Controllers
         private readonly ICropService _cropService;
         public CropsController(ICropService cropService) => _cropService = cropService;
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpGet]
         public async Task<IActionResult> GetAll() => Ok(await _cropService.GetAllCropsAsync());
 

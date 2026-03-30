@@ -1,9 +1,12 @@
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Beds;
+using CMMS.DAL.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
+    [Authorize (Roles = "Owner")]
     [ApiController]
     [Route("api/[controller]")]
     public class BedsController : ControllerBase
@@ -12,6 +15,7 @@ namespace CMMS.WebAPI.Controllers
 
         public BedsController(IBedService bedService) => _bedService = bedService;
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {

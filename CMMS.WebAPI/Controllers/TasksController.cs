@@ -1,9 +1,11 @@
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
+    [Authorize (Roles = "Owner")]
     [ApiController]
     [Route("api/[controller]")]
     public class TasksController : ControllerBase
@@ -12,6 +14,7 @@ namespace CMMS.WebAPI.Controllers
 
         public TasksController(ITaskService taskService) => _taskService = taskService;
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {

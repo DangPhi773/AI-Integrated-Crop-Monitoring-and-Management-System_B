@@ -1,9 +1,11 @@
 ﻿using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Farms;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
+    [Authorize (Roles = "Owner")]
     [ApiController]
     [Route("api/[controller]")]
     public class FarmsController : ControllerBase
@@ -12,6 +14,7 @@ namespace CMMS.WebAPI.Controllers
 
         public FarmsController(IFarmService farmService) => _farmService = farmService;
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
