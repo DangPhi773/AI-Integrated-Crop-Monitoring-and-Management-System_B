@@ -3,12 +3,13 @@ using CMMS.BLL.Services;
 using CMMS.DAL.DBContext;
 using CMMS.DAL.Interfaces;
 using CMMS.DAL.Repositories;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
-using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,7 +61,7 @@ builder.Services.AddScoped<ICropGrowthTaskService, CropGrowthTaskService>();
 builder.Services.AddEndpointsApiExplorer();
 
 
-var secretKey = "Your_Secret_Key_At_Least_32_Chars_Long";
+var secretKey = "CMMS_Secret_Key_Vip_Pro_2026_Generation";
 var key = Encoding.UTF8.GetBytes(secretKey);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -71,7 +72,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key)
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            RoleClaimType = System.Security.Claims.ClaimTypes.Role,
+            NameClaimType = System.Security.Claims.ClaimTypes.NameIdentifier
         };
     });
 
@@ -101,10 +104,12 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("SpecialistOnly", policy => policy.RequireRole("Owner", "Specialist"));
 
-    options.AddPolicy("StaffOnly", policy => policy.RequireRole("Owner", "Worker"));
+    options.AddPolicy("StaffOnly", policy => policy.RequireRole("Owner", "Worker", "Specialist"));
 });
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 var app = builder.Build();
 

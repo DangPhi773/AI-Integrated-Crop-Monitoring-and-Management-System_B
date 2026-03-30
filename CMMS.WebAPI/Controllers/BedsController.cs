@@ -1,21 +1,22 @@
-using CMMS.BLL.Interfaces;
+﻿using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Beds;
 using CMMS.DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims; // Thêm thư viện này để đọc Claims
 
 namespace CMMS.WebAPI.Controllers
 {
-    [Authorize (Roles = "Owner")]
     [ApiController]
     [Route("api/[controller]")]
+     [Authorize]
     public class BedsController : ControllerBase
     {
         private readonly IBedService _bedService;
 
         public BedsController(IBedService bedService) => _bedService = bedService;
 
-        [Authorize(Roles = "Owner,Worker")]
+        [Authorize(Roles = "Owner,Worker")] 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -23,6 +24,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Owner")] 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -30,6 +32,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : NotFound(result);
         }
 
+        [Authorize(Roles = "Owner")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] BedRequest request)
         {
@@ -38,6 +41,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Owner")]
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] BedRequest request)
         {
@@ -45,6 +49,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Owner")]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {

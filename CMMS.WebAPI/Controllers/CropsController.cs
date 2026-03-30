@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
-    [Authorize (Roles = "Owner")]
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CropsController : ControllerBase
@@ -17,15 +17,19 @@ namespace CMMS.WebAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll() => Ok(await _cropService.GetAllCropsAsync());
 
+        [Authorize(Roles = "Owner")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id) => Ok(await _cropService.GetCropByIdAsync(id));
 
+        [Authorize(Roles = "Owner")]
         [HttpPost]
         public async Task<IActionResult> Create(CropRequest request) => Ok(await _cropService.CreateCropAsync(request));
 
+        [Authorize(Roles = "Owner")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, CropRequest request) => Ok(await _cropService.UpdateCropAsync(id, request));
 
+        [Authorize(Roles = "Owner")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id) => Ok(await _cropService.DeleteCropAsync(id));
     }

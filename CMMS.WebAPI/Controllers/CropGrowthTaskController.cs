@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
-    [Authorize (Roles = "Owner")]
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CropGrowthTaskController : ControllerBase
@@ -17,6 +17,7 @@ namespace CMMS.WebAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll() => Ok(await _service.GetAllAsync());
 
+        [Authorize(Roles = "Owner")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -24,9 +25,11 @@ namespace CMMS.WebAPI.Controllers
             return res.Success ? Ok(res) : NotFound(res);
         }
 
+        [Authorize(Roles = "Owner")]
         [HttpGet("stage/{stageId}")]
         public async Task<IActionResult> GetByStage(Guid stageId) => Ok(await _service.GetByStageIdAsync(stageId));
 
+        [Authorize(Roles = "Owner")]
         [HttpPost]
         public async Task<IActionResult> Create(CropGrowthTaskRequest request)
         {
@@ -34,9 +37,11 @@ namespace CMMS.WebAPI.Controllers
             return res.Success ? StatusCode(201, res) : BadRequest(res);
         }
 
+        [Authorize(Roles = "Owner")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, CropGrowthTaskRequest request) => Ok(await _service.UpdateAsync(id, request));
 
+        [Authorize(Roles = "Owner")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id) => Ok(await _service.DeleteAsync(id));
     }
