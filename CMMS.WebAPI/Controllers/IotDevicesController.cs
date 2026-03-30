@@ -1,9 +1,11 @@
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.IotDevices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
+    [Authorize(Roles = "Owner,Worker")]
     [ApiController]
     [Route("api/[controller]")]
     public class IotDevicesController : ControllerBase

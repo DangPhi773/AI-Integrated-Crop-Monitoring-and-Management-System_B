@@ -1,9 +1,11 @@
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Plots;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
+    [Authorize (Roles = "Owner")]
     [ApiController]
     [Route("api/[controller]")]
     public class PlotsController : ControllerBase
@@ -12,6 +14,7 @@ namespace CMMS.WebAPI.Controllers
 
         public PlotsController(IPlotService plotService) => _plotService = plotService;
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
