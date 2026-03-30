@@ -1,9 +1,11 @@
 ﻿using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Users;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class WorkersController : ControllerBase
@@ -15,6 +17,7 @@ namespace CMMS.WebAPI.Controllers
             _workerService = workerService;
         }
 
+        [Authorize(Roles = "Owner")]
         [HttpGet]
         public async Task<IActionResult> GetAllWorkers()
         {
@@ -22,6 +25,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Owner")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetWorkerById(Guid id)
         {
@@ -29,7 +33,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : NotFound(result);
         }
 
-
+        [Authorize(Roles = "Owner")]
         [HttpPost]
         public async Task<IActionResult> CreateWorker([FromBody] WorkerRequest request)
         {
@@ -39,7 +43,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-
+        [Authorize(Roles = "Owner")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateWorker(Guid id, [FromBody] WorkerRequest request)
         {
@@ -52,6 +56,7 @@ namespace CMMS.WebAPI.Controllers
         /// </summary>
         /// <param name="id">ID nhân viên</param>
         /// <param name="status">Trạng thái mới</param>
+        [Authorize(Roles = "Owner")]
         [HttpPatch("{id}/status")]
         public async Task<IActionResult> ChangeStatus(Guid id, [FromQuery] string status)
         {
@@ -59,6 +64,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Owner")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteWorker(Guid id)
         {

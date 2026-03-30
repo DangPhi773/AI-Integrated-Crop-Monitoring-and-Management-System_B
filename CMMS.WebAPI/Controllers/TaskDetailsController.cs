@@ -1,9 +1,11 @@
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class TaskDetailsController : ControllerBase
@@ -12,6 +14,7 @@ namespace CMMS.WebAPI.Controllers
 
         public TaskDetailsController(ITaskDetailService service) => _service = service;
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -19,6 +22,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Owner")]
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -26,6 +30,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : NotFound(result);
         }
 
+        [Authorize(Roles = "Owner")]
         [HttpGet("season/{seasonId:guid}")]
         public async Task<IActionResult> GetBySeason(Guid seasonId)
         {
@@ -33,6 +38,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Owner")]
         [HttpGet("worker/{workerId:guid}")]
         public async Task<IActionResult> GetByWorker(Guid workerId)
         {
@@ -40,6 +46,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Owner")]
         [HttpGet("bed/{bedId:guid}")]
         public async Task<IActionResult> GetByBed(Guid bedId)
         {
@@ -47,6 +54,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Owner")]
         [HttpGet("task/{taskId:guid}")]
         public async Task<IActionResult> GetByTask(Guid taskId)
         {
@@ -54,6 +62,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Owner")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] TaskDetailRequest request)
         {
@@ -62,6 +71,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Owner")]
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] TaskDetailRequest request)
         {
@@ -69,6 +79,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Owner")]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
