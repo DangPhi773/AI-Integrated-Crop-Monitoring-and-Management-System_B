@@ -1,9 +1,11 @@
 ﻿using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Reports;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class ReportsController : ControllerBase
@@ -15,6 +17,7 @@ namespace CMMS.WebAPI.Controllers
             _reportService = reportService;
         }
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -22,6 +25,7 @@ namespace CMMS.WebAPI.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -30,6 +34,7 @@ namespace CMMS.WebAPI.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ReportRequest request)
         {
@@ -38,6 +43,7 @@ namespace CMMS.WebAPI.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] ReportRequest request)
         {
@@ -46,6 +52,7 @@ namespace CMMS.WebAPI.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {

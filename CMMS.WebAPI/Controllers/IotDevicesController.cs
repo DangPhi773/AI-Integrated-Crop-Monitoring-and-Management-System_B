@@ -1,9 +1,11 @@
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.IotDevices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class IotDevicesController : ControllerBase
@@ -12,6 +14,7 @@ namespace CMMS.WebAPI.Controllers
 
         public IotDevicesController(IIotDeviceService service) => _service = service;
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -19,6 +22,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -26,6 +30,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : NotFound(result);
         }
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] IotDeviceRequest request)
         {
@@ -34,6 +39,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] IotDeviceRequest request)
         {
@@ -41,6 +47,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Owner,Worker")]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {

@@ -4,11 +4,14 @@ using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.Entities;
 using CMMS.DAL.Interfaces;
 using CMMS.DAL.Repositories;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -63,15 +66,36 @@ namespace CMMS.BLL.Services
             try
             {
                 var user = await _userRepo.GetByEmailAsync(request.Email);
+
                 if (user == null || !PasswordHelper.VerifyPassword(request.Password, user.HashPassword))
                 {
                     return new ApiResponse<object> { Success = false, Message = "Thông tin đăng nhập không chính xác." };
                 }
 
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.UTF8.GetBytes("CMMS_Secret_Key_Vip_Pro_2026_Generation");
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(new[]
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                        new Claim(ClaimTypes.Email, user.Email),
+                        new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "User")
+                    }),
+                    Expires = DateTime.UtcNow.AddDays(7), 
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                };
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+                var tokenString = tokenHandler.WriteToken(token);
+
                 return new ApiResponse<object>
                 {
                     Success = true,
-                    Data = new { user.UserId, user.Email, Role = user.Role?.RoleName }
+                    Message = "Đăng nhập thành công",
+                    Data = new
+                    {
+                        Token = tokenString,
+                    }
                 };
             }
             catch (Exception ex)
