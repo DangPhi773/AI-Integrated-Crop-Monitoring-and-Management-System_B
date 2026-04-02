@@ -119,5 +119,21 @@ namespace CMMS.BLL.Services
             }
             catch {  }
         }
+        public async Task<ApiResponse<object>> GetRolesAsync()
+        {
+            var roles = await _userRepo.GetAllRolesAsync();
+
+            var result = roles.Select(r => new
+            {
+                r.RoleId,
+                r.RoleName
+            });
+
+            return new ApiResponse<object>
+            {
+                Success = true,
+                Data = result
+            };
+        }
     }
 }
