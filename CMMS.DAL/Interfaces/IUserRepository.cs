@@ -11,6 +11,7 @@ namespace CMMS.DAL.Interfaces
     {
         Task<User?> GetByEmailAsync(string email);
         System.Threading.Tasks.Task AddAsync(User user);
+        Task<IEnumerable<Role>> GetAllRolesAsync();
         Task<bool> SaveChangesAsync();
     }
 }
