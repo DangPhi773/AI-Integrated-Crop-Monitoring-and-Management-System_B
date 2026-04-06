@@ -1,29 +1,4 @@
-﻿//using System;
-//using System.Collections.Generic;
-
-//namespace CMMS.DAL.Entities;
-
-//public partial class TaskDetail
-//{
-//    public Guid TaskDetailId { get; set; }
-
-//    public Guid? TaskId { get; set; }
-
-//    public Guid? SeasonId { get; set; }
-
-//    public DateTime? StartDate { get; set; }
-
-//    public DateTime? EndDate { get; set; }
-
-//    public string? Notes { get; set; }
-
-//    public virtual Season? Season { get; set; }
-
-//    public virtual Task? Task { get; set; }
-
-//    public virtual ICollection<WorkerSchedule> WorkerSchedules { get; set; } = new List<WorkerSchedule>();
-//}
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CMMS.DAL.Entities;
@@ -68,4 +43,5 @@ public partial class TaskDetail
     // Lưu ý: Không tạo virtual User hay virtual Bed ở đây 
     // vì EF Core không hỗ trợ mapping 1 mảng ID sang Navigation.
     public virtual ICollection<WorkerSchedule> WorkerSchedules { get; set; } = new List<WorkerSchedule>();
+    public virtual ICollection<SubTask> SubTasks { get; set; } = new List<SubTask>();
 }
