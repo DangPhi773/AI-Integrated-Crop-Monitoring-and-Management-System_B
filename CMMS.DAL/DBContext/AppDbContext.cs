@@ -66,6 +66,7 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<CropGrowthStage> CropGrowthStages { get; set; }
     public virtual DbSet<CropGrowthTask> CropGrowthTasks { get; set; }
     public virtual DbSet<GrowthTracking> GrowthTrackings { get; set; }
+    public virtual DbSet<SubTask> SubTasks { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -760,6 +761,29 @@ public partial class AppDbContext : DbContext
                   .WithMany(p => p.GrowthTrackings)
                   .HasForeignKey(d => d.StageId)
                   .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<SubTask>(entity =>
+        {
+            entity.ToTable("sub_tasks");
+            entity.HasKey(e => e.SubTaskId);
+            entity.Property(e => e.SubTaskId)
+                  .HasColumnName("sub_task_id");
+
+            entity.Property(e => e.Title)
+                  .IsRequired()
+                  .HasMaxLength(200)
+                  .HasColumnName("title");
+
+            entity.Property(e => e.Description)
+                  .HasColumnName("description");
+
+            entity.Property(e => e.TaskDetailId)
+                  .HasColumnName("task_detail_id");
+            entity.HasOne(d => d.TaskDetail)
+                  .WithMany(p => p.SubTasks)
+                  .HasForeignKey(d => d.TaskDetailId)
+                  .OnDelete(DeleteBehavior.Cascade); 
         });
 
         OnModelCreatingPartial(modelBuilder);
