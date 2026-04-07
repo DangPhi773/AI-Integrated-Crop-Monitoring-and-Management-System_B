@@ -15,6 +15,10 @@ public partial class Plot
 
     public decimal? PlotArea { get; set; }
 
+    public double? PlotLength { get; set; }
+
+    public double? PlotWidth { get; set; }
+
     public string? PlotStatus { get; set; }
 
     public DateTime? BedCreatedAt { get; set; }
