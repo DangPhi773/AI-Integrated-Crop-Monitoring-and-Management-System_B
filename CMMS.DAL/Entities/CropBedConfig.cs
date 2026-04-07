@@ -6,7 +6,7 @@ public partial class CropBedConfig
 {
     public Guid ConfigId { get; set; }
     public Guid CropId { get; set; }
-    public string PlantingPattern { get; set; } = "straight"; // "straight" | "staggered"
+    public string PlantingPattern { get; set; } = "straight";
     public double RowSpacing { get; set; }
     public double PlantSpacing { get; set; }
     public int RowsPerBed { get; set; }

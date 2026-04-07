@@ -7,9 +7,9 @@ namespace CMMS.DAL.DTOs.Beds
     {
         public Guid PlotId { get; set; }
         public Guid CropId { get; set; }
-        public string? PlantingPattern { get; set; } // null => dùng config is_default
-        public int? DesiredBedCount { get; set; }    // optional
-        public string? BedNamePrefix { get; set; }   // optional
+        public string? PlantingPattern { get; set; }
+        public int? DesiredBedCount { get; set; }
+        public string? BedNamePrefix { get; set; }
     }
 
     public class BedAllocationItem
@@ -29,7 +29,7 @@ namespace CMMS.DAL.DTOs.Beds
         public string PlantingPattern { get; set; } = null!;
         public List<string> AvailablePatterns { get; set; } = new();
         public double PlotAreaM2 { get; set; }
-        public double EstimatedPlotSideM { get; set; }   // sqrt(area)
+        public double EstimatedPlotSideM { get; set; }
         public double UsedAreaM2 { get; set; }
         public double UnusedAreaM2 { get; set; }
         public int BedCount { get; set; }
@@ -39,6 +39,6 @@ namespace CMMS.DAL.DTOs.Beds
         public string? DensityWarningMessage { get; set; }
         public List<string> Warnings { get; set; } = new();
         public List<BedAllocationItem> Beds { get; set; } = new();
-        public bool IsEstimatedShape { get; set; } = true; // plot là ước lượng hình vuông
+        public bool IsEstimatedShape { get; set; } = true;
     }
 }

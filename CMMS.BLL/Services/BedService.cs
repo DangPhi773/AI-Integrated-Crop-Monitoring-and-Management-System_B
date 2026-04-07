@@ -148,7 +148,6 @@ namespace CMMS.BLL.Services
                 var calc = await BuildAllocationAsync(request);
                 if (!calc.Success || calc.Data == null) return calc;
 
-                // double-check plot chưa có beds
                 var plot = await _plotRepo.GetByIdAsync(request.PlotId);
                 if (plot == null)
                     return new ApiResponse<BedAutoAllocateResponse> { Success = false, Message = "Plot không tồn tại" };
@@ -188,7 +187,6 @@ namespace CMMS.BLL.Services
 
         private async Task<ApiResponse<BedAutoAllocateResponse>> BuildAllocationAsync(BedAutoAllocateRequest request)
         {
-            // 1) Validate plot
             var plot = await _plotRepo.GetByIdAsync(request.PlotId);
             if (plot == null)
                 return new ApiResponse<BedAutoAllocateResponse> { Success = false, Message = "Plot không tồn tại" };
@@ -197,12 +195,10 @@ namespace CMMS.BLL.Services
             if (plot.Beds != null && plot.Beds.Any())
                 return new ApiResponse<BedAutoAllocateResponse> { Success = false, Message = "Plot đã có beds" };
 
-            // 2) Validate crop
             var crop = await _cropRepo.GetByIdAsync(request.CropId);
             if (crop == null)
                 return new ApiResponse<BedAutoAllocateResponse> { Success = false, Message = "Crop không tồn tại" };
 
-            // 3) Lấy config
             var availableConfigs = (await _configRepo.GetByCropIdAsync(request.CropId)).ToList();
             if (!availableConfigs.Any())
                 return new ApiResponse<BedAutoAllocateResponse> { Success = false, Message = "Chưa có cấu hình luống cho giống cây này" };
@@ -219,7 +215,6 @@ namespace CMMS.BLL.Services
 
             var warnings = new List<string>();
 
-            // 4) Tính kích thước plot (ưu tiên length/width nếu có, else √area)
             double plotAreaM2 = (double)plot.PlotArea!.Value;
             double plotLength, plotWidth;
             bool isEstimated = true;
@@ -236,7 +231,6 @@ namespace CMMS.BLL.Services
                 warnings.Add("Plot không có length/width — ước lượng hình vuông từ plot_area");
             }
 
-            // 5) Tính bed_width từ rows_per_bed × row_spacing + lề
             const double margin = 0.15;
             double bedWidth = (config.RowsPerBed - 1) * config.RowSpacing + 2 * margin;
             if (config.BedWidthMin.HasValue && bedWidth < config.BedWidthMin.Value)
@@ -246,7 +240,6 @@ namespace CMMS.BLL.Services
 
             double pathWidth = ((config.PathWidthMin ?? 0.2) + (config.PathWidthMax ?? 0.3)) / 2.0;
 
-            // 6) Số luống tối đa theo chiều rộng plot
             double slot = bedWidth + pathWidth;
             int maxBedCount = (int)Math.Floor(plotWidth / slot);
             if (maxBedCount <= 0)
@@ -261,10 +254,8 @@ namespace CMMS.BLL.Services
                     bedCount = request.DesiredBedCount.Value;
             }
 
-            // 7) Chiều dài mỗi luống = chiều dài còn lại của plot
             double bedLength = plotLength;
 
-            // 8) Tính số cây trên mỗi luống
             int plantsPerBed = CalculatePlants(config, bedLength);
 
             int totalPlants = plantsPerBed * bedCount;
@@ -273,7 +264,6 @@ namespace CMMS.BLL.Services
             if (usedArea > plotAreaM2) usedArea = plotAreaM2;
             double unusedArea = Math.Max(0, plotAreaM2 - usedArea);
 
-            // 9) Density check
             double densityPerHa = (totalPlants / plotAreaM2) * 10000.0;
             bool densityWarning = false;
             string? densityMsg = null;
@@ -288,7 +278,6 @@ namespace CMMS.BLL.Services
                 densityMsg = $"Mật độ {densityPerHa:F0} cây/ha vượt khuyến nghị ({config.DensityPerHaMax})";
             }
 
-            // 10) Build response
             var prefix = string.IsNullOrWhiteSpace(request.BedNamePrefix) ? "Luống" : request.BedNamePrefix!.Trim();
             var beds = Enumerable.Range(1, bedCount).Select(i => new BedAllocationItem
             {
@@ -329,7 +318,6 @@ namespace CMMS.BLL.Services
 
             if (config.PlantingPattern == "staggered")
             {
-                // hàng lẻ: floor(L / s); hàng chẵn: floor((L - s/2) / s)
                 int oddRowPlants = (int)Math.Floor(bedLength / config.PlantSpacing);
                 int evenRowPlants = (int)Math.Floor((bedLength - config.PlantSpacing / 2.0) / config.PlantSpacing);
                 if (evenRowPlants < 0) evenRowPlants = 0;
