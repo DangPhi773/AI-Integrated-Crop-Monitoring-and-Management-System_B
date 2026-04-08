@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CMMS.DAL.Entities;
@@ -16,16 +18,14 @@ public partial class TaskDetail
     [Column("season_id")]
     public Guid? SeasonId { get; set; }
 
-    [Column("start_date")]
+    [Column("start_date", TypeName = "timestamp")]
     public DateTime? StartDate { get; set; }
 
-    [Column("end_date")]
+    [Column("end_date", TypeName = "timestamp")]
     public DateTime? EndDate { get; set; }
 
     [Column("notes")]
     public string? Notes { get; set; }
-
-    // --- CÁC CỘT DẠNG MẢNG (ARRAY) ---
 
     [Column("assigned_to_worker_ids")]
     public List<Guid> AssignedToWorkerIds { get; set; } = new List<Guid>();
@@ -36,12 +36,12 @@ public partial class TaskDetail
     [Column("bed_ids")]
     public List<Guid> BedIds { get; set; } = new List<Guid>();
 
-    // --- NAVIGATION PROPERTIES ---
+    [ForeignKey("TaskId")]
     public virtual Task? Task { get; set; }
+
+    [ForeignKey("SeasonId")]
     public virtual Season? Season { get; set; }
 
-    // Lưu ý: Không tạo virtual User hay virtual Bed ở đây 
-    // vì EF Core không hỗ trợ mapping 1 mảng ID sang Navigation.
     public virtual ICollection<WorkerSchedule> WorkerSchedules { get; set; } = new List<WorkerSchedule>();
     public virtual ICollection<SubTask> SubTasks { get; set; } = new List<SubTask>();
 }
