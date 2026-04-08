@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace CMMS.DAL.Entities
 {
+    [Table("SubTask")]
     public class SubTask
     {
         [Key]
@@ -19,6 +20,7 @@ namespace CMMS.DAL.Entities
 
         public string? Description { get; set; }
 
+        [Required]
         public Guid TaskDetailId { get; set; }
 
         [ForeignKey("TaskDetailId")]
