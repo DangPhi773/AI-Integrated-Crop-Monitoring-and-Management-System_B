@@ -19,6 +19,14 @@ public partial class Bed
 
     public int? CropQuantities { get; set; }
 
+    public string? PlantingPattern { get; set; }
+
+    public int? RowCount { get; set; }
+
+    public double? BedWidth { get; set; }
+
+    public double? BedLength { get; set; }
+
     public virtual Plot? Plot { get; set; }
 
     public virtual ICollection<SeasonsDetail> SeasonsDetails { get; set; } = new List<SeasonsDetail>();
