@@ -41,6 +41,7 @@ builder.Services.AddScoped<IIotDataRepository, IotDataRepository>();
 builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>();
 builder.Services.AddScoped<ICropGrowthTaskRepository, CropGrowthTaskRepository>();
 builder.Services.AddScoped<ISubTaskRepository, SubTaskRepository>();
+builder.Services.AddScoped<ICropBedConfigRepository, CropBedConfigRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICropService, CropService>();
@@ -59,6 +60,7 @@ builder.Services.AddScoped<IIotDataService, IotDataService>();
 builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddScoped<ICropGrowthTaskService, CropGrowthTaskService>();
 builder.Services.AddScoped<ISubTaskService, SubTaskService>();
+builder.Services.AddScoped<ICropBedConfigService, CropBedConfigService>();
 
 builder.Services.AddEndpointsApiExplorer();
 
