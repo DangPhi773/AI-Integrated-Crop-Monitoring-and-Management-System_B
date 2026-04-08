@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CMMS.DAL.Entities;
 
-[Table("tasks")]
+[Table("tasks")] 
 public partial class Task
 {
     [Key]
@@ -13,20 +13,21 @@ public partial class Task
     public Guid TaskId { get; set; }
 
     [Column("task_title")]
+    [MaxLength(255)]
     public string? TaskTitle { get; set; }
 
-    [Column("task_scheduled_at")]
+    [Column("task_scheduled_at", TypeName = "timestamp")]
     public DateTime? TaskScheduledAt { get; set; }
 
     [Column("task_status")]
+    [MaxLength(50)]
     public string? TaskStatus { get; set; }
 
     [Column("task_notes")]
     public string? TaskNotes { get; set; }
 
-    [Column("task_created_at")]
-    public DateTime? TaskCreatedAt { get; set; }
+    [Column("task_created_at", TypeName = "timestamp")]
+    public DateTime? TaskCreatedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation properties
     public virtual ICollection<TaskDetail> TaskDetails { get; set; } = new List<TaskDetail>();
 }
