@@ -27,6 +27,15 @@ public partial class Bed
 
     public int? CropQuantities { get; set; }
 
+    [MaxLength(100)]
+    public string? PlantingPattern { get; set; }
+
+    public int? RowCount { get; set; }
+
+    public double? BedWidth { get; set; }
+
+    public double? BedLength { get; set; }
+
     [ForeignKey("PlotId")]
     public virtual Plot? Plot { get; set; }
 

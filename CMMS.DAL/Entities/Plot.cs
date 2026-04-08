@@ -21,6 +21,10 @@ public partial class Plot
     [Column(TypeName = "decimal(18,2)")]
     public decimal? PlotArea { get; set; }
 
+    public double? PlotLength { get; set; }
+
+    public double? PlotWidth { get; set; }
+
     [MaxLength(50)]
     public string? PlotStatus { get; set; }
 
