@@ -1,4 +1,5 @@
-﻿using CMMS.BLL.Interfaces;
+﻿using CMMS.BLL.Configuration;
+using CMMS.BLL.Interfaces;
 using CMMS.BLL.Services;
 using CMMS.DAL.DBContext;
 using CMMS.DAL.Interfaces;
@@ -61,6 +62,11 @@ builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddScoped<ICropGrowthTaskService, CropGrowthTaskService>();
 builder.Services.AddScoped<ISubTaskService, SubTaskService>();
 builder.Services.AddScoped<ICropBedConfigService, CropBedConfigService>();
+
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 builder.Services.AddEndpointsApiExplorer();
 

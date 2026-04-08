@@ -41,6 +41,9 @@ namespace CMMS.DAL.Repositories
 
         public async System.Threading.Tasks.Task AddWorkerAsync(User worker) => await _context.Users.AddAsync(worker);
 
+        public async System.Threading.Tasks.Task<bool> EmailExistsAsync(string email)
+            => await _context.Users.AsNoTracking().AnyAsync(u => u.Email != null && u.Email.ToLower() == email.ToLower());
+
         public void UpdateWorker(User worker) => _context.Users.Update(worker);
 
         public void DeleteWorker(User worker) => _context.Users.Remove(worker);
