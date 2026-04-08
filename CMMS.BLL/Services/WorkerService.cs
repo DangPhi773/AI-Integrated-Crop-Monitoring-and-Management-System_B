@@ -5,16 +5,19 @@ using CMMS.DAL.DTOs.Users;
 using CMMS.DAL.Entities;
 using CMMS.DAL.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CMMS.BLL.Services
 {
     public class WorkerService : IWorkerService
     {
         private readonly IWorkerRepository _workerRepo;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public WorkerService(IWorkerRepository workerRepo)
+        public WorkerService(IWorkerRepository workerRepo, IServiceScopeFactory scopeFactory)
         {
             _workerRepo = workerRepo;
+            _scopeFactory = scopeFactory;
         }
 
         public async System.Threading.Tasks.Task<ApiResponse<IEnumerable<UserResponse>>> GetListOfWorkersAsync()
@@ -71,6 +74,16 @@ namespace CMMS.BLL.Services
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(request.Email))
+                {
+                    return new ApiResponse<string> { Success = false, Message = "Email không được để trống." };
+                }
+
+                if (await _workerRepo.EmailExistsAsync(request.Email))
+                {
+                    return new ApiResponse<string> { Success = false, Message = $"Email '{request.Email}' đã tồn tại trong hệ thống." };
+                }
+
                 var workerRole = await _workerRepo.GetRoleByNameAsync("Worker");
 
                 if (workerRole == null)
@@ -98,6 +111,18 @@ namespace CMMS.BLL.Services
 
                 await _workerRepo.AddWorkerAsync(newWorker);
                 await _workerRepo.SaveChangesAsync();
+
+                var workerId = newWorker.UserId;
+                _ = System.Threading.Tasks.Task.Run(async () =>
+                {
+                    try
+                    {
+                        using var scope = _scopeFactory.CreateScope();
+                        var notify = scope.ServiceProvider.GetRequiredService<INotificationService>();
+                        await notify.NotifyNewWorkerAsync(workerId);
+                    }
+                    catch { }
+                });
 
                 return new ApiResponse<string> { Success = true, Message = "Tạo Worker thành công." };
             }

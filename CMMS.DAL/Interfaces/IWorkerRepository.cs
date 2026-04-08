@@ -13,6 +13,7 @@ namespace CMMS.DAL.Interfaces
         System.Threading.Tasks.Task<IEnumerable<User>> GetAllWorkersAsync();
         System.Threading.Tasks.Task<User?> GetWorkerByIdAsync(Guid id);
         System.Threading.Tasks.Task AddWorkerAsync(User worker);
+        System.Threading.Tasks.Task<bool> EmailExistsAsync(string email);
         void UpdateWorker(User worker);
         void DeleteWorker(User worker);
         System.Threading.Tasks.Task<bool> SaveChangesAsync();
