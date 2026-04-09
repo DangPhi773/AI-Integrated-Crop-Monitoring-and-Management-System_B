@@ -1,4 +1,4 @@
-using CMMS.BLL.Helpers;
+﻿using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Plots;
@@ -102,16 +102,43 @@ namespace CMMS.BLL.Services
             try
             {
                 var entity = await _plotRepo.GetByIdAsync(id);
-                if (entity == null) return new ApiResponse<string> { Success = false, Message = "Plot not found" };
+
+                if (entity == null)
+                    return new ApiResponse<string> { Success = false, Message = "Không tìm thấy Vuông (Plot) này." };
+
+                if (entity.Beds != null && entity.Beds.Any())
+                {
+                    bool hasActiveBeds = entity.Beds.Any(b => b.BedStatus == "Occupied");
+
+                    if (hasActiveBeds)
+                    {
+                        return new ApiResponse<string>
+                        {
+                            Success = false,
+                            Message = "Không thể xóa Vuông này vì có các Luống đang trong vụ mùa (Occupied). Hãy kết thúc vụ mùa trước!"
+                        };
+                    }
+
+                    return new ApiResponse<string>
+                    {
+                        Success = false,
+                        Message = "Vuông này vẫn còn chứa các Luống (Beds). Sếp phải xóa các Luống trước khi xóa Vuông để tránh lỗi dữ liệu."
+                    };
+                }
 
                 _plotRepo.Delete(entity);
                 await _plotRepo.SaveChangesAsync();
 
-                return new ApiResponse<string> { Success = true, Message = "Plot deleted" };
+                return new ApiResponse<string> { Success = true, Message = "Xóa Vuông thành công." };
             }
             catch (Exception ex)
             {
-                return new ApiResponse<string> { Success = false, Message = "Error deleting plot", Errors = new List<string> { ex.Message } };
+                return new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "Lỗi khi xóa Vuông",
+                    Errors = new List<string> { ex.Message }
+                };
             }
         }
 
