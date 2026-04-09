@@ -30,4 +30,6 @@ public partial class Farm
     public virtual ICollection<Plot> Plots { get; set; } = new List<Plot>();
 
     public virtual ICollection<Season> Seasons { get; set; } = new List<Season>();
+
+    public virtual ICollection<TaskDetail> TaskDetails { get; set; } = new List<TaskDetail>();
 }

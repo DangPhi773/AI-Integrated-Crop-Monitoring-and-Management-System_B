@@ -18,6 +18,9 @@ public partial class TaskDetail
     [Column("season_id")]
     public Guid? SeasonId { get; set; }
 
+    [Column("farm_id")]
+    public Guid? FarmId { get; set; }
+
     [Column("start_date", TypeName = "timestamp")]
     public DateTime? StartDate { get; set; }
 
@@ -41,6 +44,9 @@ public partial class TaskDetail
 
     [ForeignKey("SeasonId")]
     public virtual Season? Season { get; set; }
+
+    [ForeignKey("FarmId")]
+    public virtual Farm? Farm { get; set; }
 
     public virtual ICollection<WorkerSchedule> WorkerSchedules { get; set; } = new List<WorkerSchedule>();
     public virtual ICollection<SubTask> SubTasks { get; set; } = new List<SubTask>();
