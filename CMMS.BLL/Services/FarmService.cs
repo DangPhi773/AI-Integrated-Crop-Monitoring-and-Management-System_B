@@ -100,16 +100,32 @@ namespace CMMS.BLL.Services
             try
             {
                 var entity = await _farmRepo.GetByIdAsync(id);
-                if (entity == null) return new ApiResponse<string> { Success = false, Message = "Farm not found" };
+
+                if (entity == null)
+                    return new ApiResponse<string> { Success = false, Message = "Farm not found" };
+
+                if (entity.Seasons != null && entity.Seasons.Any())
+                {
+                    return new ApiResponse<string>
+                    {
+                        Success = false,
+                        Message = "Không thể xóa Trang trại này vì đang có các Mùa vụ (Seasons) hoạt động bên trong. Hãy xóa các mùa vụ trước!"
+                    };
+                }
 
                 _farmRepo.Delete(entity);
                 await _farmRepo.SaveChangesAsync();
 
-                return new ApiResponse<string> { Success = true, Message = "Farm deleted" };
+                return new ApiResponse<string> { Success = true, Message = "Farm deleted successfully" };
             }
             catch (Exception ex)
             {
-                return new ApiResponse<string> { Success = false, Message = "Error deleting farm", Errors = new List<string> { ex.Message } };
+                return new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "Lỗi hệ thống khi xóa trang trại",
+                    Errors = new List<string> { ex.Message }
+                };
             }
         }
 
