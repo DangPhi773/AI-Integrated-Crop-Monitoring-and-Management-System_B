@@ -4,6 +4,7 @@ using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Reports;
 using CMMS.DAL.Entities;
 using CMMS.DAL.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,10 +16,12 @@ namespace CMMS.BLL.Services
     public class ReportService : IReportService
     {
         private readonly IReportRepository _reportRepo;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public ReportService(IReportRepository reportRepo)
+        public ReportService(IReportRepository reportRepo, IServiceScopeFactory scopeFactory)
         {
             _reportRepo = reportRepo;
+            _scopeFactory = scopeFactory;
         }
 
         public async Task<ApiResponse<IEnumerable<ReportResponse>>> GetAllReportsAsync()
@@ -91,6 +94,21 @@ namespace CMMS.BLL.Services
 
                 await _reportRepo.AddAsync(report);
                 var result = await _reportRepo.SaveChangesAsync();
+
+                if (result)
+                {
+                    var reportId = report.ReportId;
+                    _ = System.Threading.Tasks.Task.Run(async () =>
+                    {
+                        try
+                        {
+                            using var scope = _scopeFactory.CreateScope();
+                            var notify = scope.ServiceProvider.GetRequiredService<INotificationService>();
+                            await notify.NotifyNewReportAsync(reportId);
+                        }
+                        catch { }
+                    });
+                }
 
                 return result
                     ? new ApiResponse<string> { Success = true, Message = "Tạo báo cáo thành công" }

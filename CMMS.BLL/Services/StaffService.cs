@@ -5,14 +5,20 @@ using CMMS.DAL.DTOs.Users;
 using CMMS.DAL.Entities;
 using CMMS.DAL.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CMMS.BLL.Services
 {
     public class StaffService : IStaffService
     {
         private readonly IStaffRepository _staffRepo;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public StaffService(IStaffRepository staffRepo) => _staffRepo = staffRepo;
+        public StaffService(IStaffRepository staffRepo, IServiceScopeFactory scopeFactory)
+        {
+            _staffRepo = staffRepo;
+            _scopeFactory = scopeFactory;
+        }
 
         public async Task<ApiResponse<IEnumerable<UserResponse>>> GetStaffListAsync()
         {
@@ -56,7 +62,6 @@ namespace CMMS.BLL.Services
             };
         }
 
-        // VẤN ĐỀ 1: Assign Account
         public async Task<ApiResponse<string>> AssignRoleAsync(Guid userId, string roleName)
         {
             try
@@ -83,6 +88,12 @@ namespace CMMS.BLL.Services
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(request.Email))
+                    return new ApiResponse<string> { Success = false, Message = "Email không được để trống." };
+
+                if (await _staffRepo.EmailExistsAsync(request.Email))
+                    return new ApiResponse<string> { Success = false, Message = $"Email '{request.Email}' đã tồn tại trong hệ thống." };
+
                 var role = await _staffRepo.GetRoleByNameAsync(roleName);
                 if (role == null) return new ApiResponse<string> { Success = false, Message = "Role không hợp lệ." };
 
@@ -101,6 +112,19 @@ namespace CMMS.BLL.Services
 
                 await _staffRepo.AddUserAsync(newUser);
                 await _staffRepo.SaveChangesAsync();
+
+                var userId = newUser.UserId;
+                _ = System.Threading.Tasks.Task.Run(async () =>
+                {
+                    try
+                    {
+                        using var scope = _scopeFactory.CreateScope();
+                        var notify = scope.ServiceProvider.GetRequiredService<INotificationService>();
+                        await notify.NotifyNewWorkerAsync(userId);
+                    }
+                    catch { }
+                });
+
                 return new ApiResponse<string> { Success = true, Message = $"Tạo {roleName} thành công." };
             }
             catch (Exception ex)
