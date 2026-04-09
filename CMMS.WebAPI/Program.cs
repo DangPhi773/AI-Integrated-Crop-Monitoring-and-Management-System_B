@@ -26,7 +26,7 @@ builder.Services.AddControllers()
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICropRepository, CropRepository>();
-builder.Services.AddScoped<IWorkerRepository, WorkerRepository>();
+builder.Services.AddScoped<IStaffRepository, StaffRepository>();
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<ITaskDetailRepository, TaskDetailRepository>();
 builder.Services.AddScoped<ISeasonRepository, SeasonRepository>();
@@ -42,10 +42,11 @@ builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>(
 builder.Services.AddScoped<ICropGrowthTaskRepository, CropGrowthTaskRepository>();
 builder.Services.AddScoped<ISubTaskRepository, SubTaskRepository>();
 builder.Services.AddScoped<ICropBedConfigRepository, CropBedConfigRepository>();
+builder.Services.AddScoped<ICropGrowthStageRepository, CropGrowthStageRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICropService, CropService>();
-builder.Services.AddScoped<IWorkerService, WorkerService>();
+builder.Services.AddScoped<IStaffService, StaffService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ITaskDetailService, TaskDetailService>();
 builder.Services.AddScoped<ISeasonService, SeasonService>();
@@ -61,6 +62,7 @@ builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddScoped<ICropGrowthTaskService, CropGrowthTaskService>();
 builder.Services.AddScoped<ISubTaskService, SubTaskService>();
 builder.Services.AddScoped<ICropBedConfigService, CropBedConfigService>();
+builder.Services.AddScoped<ICropGrowthStageService, CropGrowthStageService>();
 
 builder.Services.AddEndpointsApiExplorer();
 
