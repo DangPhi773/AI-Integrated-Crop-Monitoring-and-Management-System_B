@@ -115,16 +115,41 @@ namespace CMMS.BLL.Services
             try
             {
                 var entity = await _bedRepo.GetByIdAsync(id);
-                if (entity == null) return new ApiResponse<string> { Success = false, Message = "Bed not found" };
+
+                if (entity == null)
+                    return new ApiResponse<string> { Success = false, Message = "Không tìm thấy Luống (Bed) này." };
+
+                if (entity.BedStatus != null && entity.BedStatus.Equals("Occupied", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new ApiResponse<string>
+                    {
+                        Success = false,
+                        Message = "Luống này đang trong quá trình canh tác (Occupied). Sếp phải kết thúc mùa vụ hoặc giải phóng luống trước khi xóa!"
+                    };
+                }
+
+                if (entity.SeasonsDetails != null && entity.SeasonsDetails.Any())
+                {
+                    return new ApiResponse<string>
+                    {
+                        Success = false,
+                        Message = "Luống này đã có dữ liệu lịch sử canh tác. Để bảo toàn dữ liệu, sếp nên đổi trạng thái sang 'Inactive' thay vì xóa vĩnh viễn."
+                    };
+                }
 
                 _bedRepo.Delete(entity);
                 await _bedRepo.SaveChangesAsync();
 
-                return new ApiResponse<string> { Success = true, Message = "Bed deleted" };
+                return new ApiResponse<string> { Success = true, Message = "Xóa Luống thành công." };
             }
             catch (Exception ex)
             {
-                return new ApiResponse<string> { Success = false, Message = "Error deleting bed", Errors = new List<string> { ex.Message } };
+                return new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "Lỗi hệ thống khi xóa luống",
+                    Errors = new List<string> { ex.Message }
+                };
             }
         }
 
