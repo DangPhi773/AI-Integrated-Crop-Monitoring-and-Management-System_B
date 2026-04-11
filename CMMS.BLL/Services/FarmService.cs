@@ -1,5 +1,6 @@
 ﻿using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
+using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Farms;
 using CMMS.DAL.Entities;
@@ -23,7 +24,7 @@ namespace CMMS.BLL.Services
             try
             {
                 var farms = await _farmRepo.GetAllAsync();
-                var data = farms.Select(MapToResponse);
+                var data = farms.Select(FarmMapper.ToResponse);
                 return new ApiResponse<IEnumerable<FarmResponse>> { Success = true, Data = data };
             }
             catch (Exception ex)
@@ -38,7 +39,7 @@ namespace CMMS.BLL.Services
             {
                 var farm = await _farmRepo.GetByIdAsync(id);
                 if (farm == null) return new ApiResponse<FarmResponse> { Success = false, Message = "Farm not found" };
-                return new ApiResponse<FarmResponse> { Success = true, Data = MapToResponse(farm) };
+                return new ApiResponse<FarmResponse> { Success = true, Data = FarmMapper.ToResponse(farm) };
             }
             catch (Exception ex)
             {
@@ -129,16 +130,5 @@ namespace CMMS.BLL.Services
             }
         }
 
-        private static FarmResponse MapToResponse(Farm f) =>
-            new FarmResponse
-            {
-                FarmId = f.FarmId,
-                FarmName = f.FarmName,
-                FarmLocation = f.FarmLocation,
-                FarmArea = f.FarmArea,
-                FarmStatus = f.FarmStatus,
-                FarmCreatedAt = f.FarmCreatedAt,
-                SeasonsCount = f.Seasons?.Count ?? 0
-            };
     }
 }

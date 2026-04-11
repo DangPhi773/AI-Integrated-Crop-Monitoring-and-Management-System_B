@@ -25,15 +25,7 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Farm> Farms { get; set; }
 
-    public virtual DbSet<ImageAnalysis> ImageAnalyses { get; set; }
-
-    public virtual DbSet<ImageAnalysisResult> ImageAnalysisResults { get; set; }
-
     public virtual DbSet<Notification> Notifications { get; set; }
-
-    public virtual DbSet<PestDetection> PestDetections { get; set; }
-
-    public virtual DbSet<Photo> Photos { get; set; }
 
     public virtual DbSet<Plot> Plots { get; set; }
 
@@ -69,6 +61,11 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<SubTask> SubTasks { get; set; }
 
     public virtual DbSet<CropBedConfig> CropBedConfigs { get; set; }
+    public virtual DbSet<Attachment> Attachments { get; set; }
+    public virtual DbSet<ReportAssignment> ReportAssignments { get; set; }
+    public virtual DbSet<DiagnosisResult> DiagnosisResults { get; set; }
+    public virtual DbSet<IotSensor> IotSensors { get; set; }
+    public virtual DbSet<ReportEnvironmentSnapshot> ReportEnvironmentSnapshots { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -166,62 +163,6 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.FarmStatus).HasColumnName("farm_status");
         });
 
-        modelBuilder.Entity<ImageAnalysis>(entity =>
-        {
-            entity.HasKey(e => e.ImageAnalysisId).HasName("image_analyses_pkey");
-
-            entity.ToTable("image_analyses");
-
-            entity.Property(e => e.ImageAnalysisId)
-                .HasDefaultValueSql("gen_random_uuid()")
-                .HasColumnName("image_analysis_id");
-            entity.Property(e => e.AiLatencyMs).HasColumnName("ai_latency_ms");
-            entity.Property(e => e.AiModel).HasColumnName("ai_model");
-            entity.Property(e => e.AiModelVersion).HasColumnName("ai_model_version");
-            entity.Property(e => e.AiPrompt).HasColumnName("ai_prompt");
-            entity.Property(e => e.AiProvider).HasColumnName("ai_provider");
-            entity.Property(e => e.AiRawResponseJson)
-                .HasColumnType("jsonb")
-                .HasColumnName("ai_raw_response_json");
-            entity.Property(e => e.AiRequestId).HasColumnName("ai_request_id");
-            entity.Property(e => e.AiTokens).HasColumnName("ai_tokens");
-            entity.Property(e => e.AnalysisStatus).HasColumnName("analysis_status");
-            entity.Property(e => e.AnalysisType).HasColumnName("analysis_type");
-            entity.Property(e => e.PhotoId).HasColumnName("photo_id");
-
-            entity.HasOne(d => d.Photo).WithMany(p => p.ImageAnalyses)
-                .HasForeignKey(d => d.PhotoId)
-                .HasConstraintName("image_analyses_photo_id_fkey");
-        });
-
-        modelBuilder.Entity<ImageAnalysisResult>(entity =>
-        {
-            entity.HasKey(e => e.ImageAnalysisResultId).HasName("image_analysis_result_pkey");
-
-            entity.ToTable("image_analysis_result");
-
-            entity.Property(e => e.ImageAnalysisResultId)
-                .HasDefaultValueSql("gen_random_uuid()")
-                .HasColumnName("image_analysis_result_id");
-            entity.Property(e => e.AiConfidence).HasColumnName("ai_confidence");
-            entity.Property(e => e.AiLabel).HasColumnName("ai_label");
-            entity.Property(e => e.AiSeverity).HasColumnName("ai_severity");
-            entity.Property(e => e.BoundingBoxJson)
-                .HasColumnType("jsonb")
-                .HasColumnName("bounding_box_json");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("now()")
-                .HasColumnName("created_at");
-            entity.Property(e => e.ExtraDataJson)
-                .HasColumnType("jsonb")
-                .HasColumnName("extra_data_json");
-            entity.Property(e => e.ImageAnalysisId).HasColumnName("image_analysis_id");
-
-            entity.HasOne(d => d.ImageAnalysis).WithMany(p => p.ImageAnalysisResults)
-                .HasForeignKey(d => d.ImageAnalysisId)
-                .HasConstraintName("image_analysis_result_image_analysis_id_fkey");
-        });
-
         modelBuilder.Entity<Notification>(entity =>
         {
             entity.HasKey(e => e.NoteId).HasName("notification_pkey");
@@ -238,77 +179,21 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.NoteStatus).HasColumnName("note_status");
             entity.Property(e => e.NoteTitle).HasColumnName("note_title");
             entity.Property(e => e.NoteType).HasColumnName("note_type");
-            entity.Property(e => e.PestDetectionId).HasColumnName("pest_detection_id");
             entity.Property(e => e.UserId).HasColumnName("user_id");
-
-            entity.HasOne(d => d.PestDetection).WithMany(p => p.Notifications)
-                .HasForeignKey(d => d.PestDetectionId)
-                .HasConstraintName("notification_pest_detection_id_fkey");
+            entity.Property(e => e.ReportId).HasColumnName("report_id");
+            entity.Property(e => e.DiagnosisId).HasColumnName("diagnosis_id");
 
             entity.HasOne(d => d.User).WithMany(p => p.Notifications)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("notification_user_id_fkey");
-        });
 
-        modelBuilder.Entity<PestDetection>(entity =>
-        {
-            entity.HasKey(e => e.PestDetectionId).HasName("pest_detections_pkey");
+            entity.HasOne(d => d.Report).WithMany()
+                .HasForeignKey(d => d.ReportId)
+                .HasConstraintName("notification_report_id_fkey");
 
-            entity.ToTable("pest_detections");
-
-            entity.Property(e => e.PestDetectionId)
-                .HasDefaultValueSql("gen_random_uuid()")
-                .HasColumnName("pest_detection_id");
-            entity.Property(e => e.ConfidenceSource).HasColumnName("confidence_source");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("now()")
-                .HasColumnName("created_at");
-            entity.Property(e => e.DetectedAt).HasColumnName("detected_at");
-            entity.Property(e => e.DetectionStatus).HasColumnName("detection_status");
-            entity.Property(e => e.GeneralLabel).HasColumnName("general_label");
-            entity.Property(e => e.GeneralSeverity).HasColumnName("general_severity");
-            entity.Property(e => e.ImageAnalysisResultId).HasColumnName("image_analysis_result_id");
-            entity.Property(e => e.ReviewNotes).HasColumnName("review_notes");
-            entity.Property(e => e.SeasonId).HasColumnName("season_id");
-            entity.Property(e => e.SpecialistId).HasColumnName("specialist_id");
-
-            entity.HasOne(d => d.ImageAnalysisResult).WithMany(p => p.PestDetections)
-                .HasForeignKey(d => d.ImageAnalysisResultId)
-                .HasConstraintName("pest_detections_image_analysis_result_id_fkey");
-
-            entity.HasOne(d => d.Season).WithMany(p => p.PestDetections)
-                .HasForeignKey(d => d.SeasonId)
-                .HasConstraintName("pest_detections_season_id_fkey");
-
-            entity.HasOne(d => d.Specialist).WithMany(p => p.PestDetections)
-                .HasForeignKey(d => d.SpecialistId)
-                .HasConstraintName("pest_detections_specialist_id_fkey");
-        });
-
-        modelBuilder.Entity<Photo>(entity =>
-        {
-            entity.HasKey(e => e.PhotoId).HasName("photo_pkey");
-
-            entity.ToTable("photo");
-
-            entity.Property(e => e.PhotoId)
-                .HasDefaultValueSql("gen_random_uuid()")
-                .HasColumnName("photo_id");
-            entity.Property(e => e.HumidityAtTheMomentTakePhoto).HasColumnName("humidity_at_the_moment_take_photo");
-            entity.Property(e => e.PhotoDate).HasColumnName("photo_date");
-            entity.Property(e => e.PhotoSource).HasColumnName("photo_source");
-            entity.Property(e => e.PhotoTime).HasColumnName("photo_time");
-            entity.Property(e => e.RainfallAtTheMomentTakePhoto).HasColumnName("rainfall_at_the_moment_take_photo");
-            entity.Property(e => e.SeasonDetailId).HasColumnName("season_detail_id");
-            entity.Property(e => e.SoilMoistureAtTheMomentTakePhoto).HasColumnName("soil_moisture_at_the_moment_take_photo");
-            entity.Property(e => e.TemperatureAtTheMomentTakePhoto).HasColumnName("temperature_at_the_moment_take_photo");
-            entity.Property(e => e.UploadedAt)
-                .HasDefaultValueSql("now()")
-                .HasColumnName("uploaded_at");
-
-            entity.HasOne(d => d.SeasonDetail).WithMany(p => p.Photos)
-                .HasForeignKey(d => d.SeasonDetailId)
-                .HasConstraintName("photo_season_detail_id_fkey");
+            entity.HasOne(d => d.Diagnosis).WithMany()
+                .HasForeignKey(d => d.DiagnosisId)
+                .HasConstraintName("notification_diagnosis_id_fkey");
         });
 
         modelBuilder.Entity<Plot>(entity =>
@@ -353,16 +238,16 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
-            entity.Property(e => e.PestDetectionId).HasColumnName("pest_detection_id");
+            entity.Property(e => e.DiagnosisId).HasColumnName("diagnosis_id");
             entity.Property(e => e.SeasonId).HasColumnName("season_id");
             entity.Property(e => e.Title).HasColumnName("title");
             entity.Property(e => e.UpdatedAt)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("updated_at");
 
-            entity.HasOne(d => d.PestDetection).WithMany(p => p.Recommendations)
-                .HasForeignKey(d => d.PestDetectionId)
-                .HasConstraintName("recommendation_pest_detection_id_fkey");
+            entity.HasOne(d => d.Diagnosis).WithMany(p => p.Recommendations)
+                .HasForeignKey(d => d.DiagnosisId)
+                .HasConstraintName("recommendation_diagnosis_id_fkey");
 
             entity.HasOne(d => d.Season).WithMany(p => p.Recommendations)
                 .HasForeignKey(d => d.SeasonId)
@@ -433,18 +318,42 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.ReportId)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("report_id");
+            entity.Property(e => e.ReportNo).HasColumnName("report_no");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.OwnerId).HasColumnName("owner_id");
+            entity.Property(e => e.Title).HasColumnName("title");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.ReportType).HasColumnName("report_type");
+            entity.Property(e => e.PlotId).HasColumnName("plot_id");
+            entity.Property(e => e.BedId).HasColumnName("bed_id");
+            entity.Property(e => e.SeasonId).HasColumnName("season_id");
+            entity.Property(e => e.AiResultsJson).HasColumnName("ai_results_json");
+            entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
-            entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.SubmitDate).HasColumnName("submit_date");
-            entity.Property(e => e.Title).HasColumnName("title");
-            entity.Property(e => e.WorkerId).HasColumnName("worker_id");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
 
-            entity.HasOne(d => d.Worker).WithMany(p => p.Reports)
-                .HasForeignKey(d => d.WorkerId)
-                .HasConstraintName("report_worker_id_fkey");
+            entity.HasOne(d => d.Creator).WithMany(p => p.CreatedReports)
+                .HasForeignKey(d => d.CreatedBy)
+                .HasConstraintName("report_created_by_fkey");
+
+            entity.HasOne(d => d.Owner).WithMany(p => p.OwnedReports)
+                .HasForeignKey(d => d.OwnerId)
+                .HasConstraintName("report_owner_id_fkey");
+
+            entity.HasOne(d => d.Plot).WithMany()
+                .HasForeignKey(d => d.PlotId)
+                .HasConstraintName("report_plot_id_fkey");
+
+            entity.HasOne(d => d.Bed).WithMany()
+                .HasForeignKey(d => d.BedId)
+                .HasConstraintName("report_bed_id_fkey");
+
+            entity.HasOne(d => d.Season).WithMany()
+                .HasForeignKey(d => d.SeasonId)
+                .HasConstraintName("report_season_id_fkey");
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -654,6 +563,8 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Longitude).HasColumnName("longitude");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasColumnType("timestamp with time zone");
+            entity.Property(e => e.DeviceCode).HasColumnName("device_code");
+            entity.Property(e => e.LastActiveAt).HasColumnName("last_active_at").HasColumnType("timestamp with time zone");
 
             entity.HasOne(d => d.Bed)
                   .WithMany(p => p.IotDevices)
@@ -679,6 +590,8 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Min).HasColumnName("min");
             entity.Property(e => e.Max).HasColumnName("max");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone");
+            entity.Property(e => e.SensorId).HasColumnName("sensor_id");
+            entity.Property(e => e.RawData).HasColumnName("raw_data");
 
             entity.HasOne(d => d.Device)
                   .WithMany(p => p.IotDatas)
@@ -689,6 +602,11 @@ public partial class AppDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(d => d.SeasonId)
                   .HasConstraintName("fk_iot_data_seasons");
+
+            entity.HasOne(d => d.Sensor)
+                  .WithMany(p => p.IotDatas)
+                  .HasForeignKey(d => d.SensorId)
+                  .HasConstraintName("iot_data_sensor_id_fkey");
         });
 
         modelBuilder.Entity<SoilCropCompatibility>(entity =>
@@ -840,6 +758,155 @@ public partial class AppDbContext : DbContext
                   .HasForeignKey(d => d.CropId)
                   .HasConstraintName("crop_bed_config_crop_id_fkey")
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Attachment>(entity =>
+        {
+            entity.ToTable("attachment");
+            entity.HasKey(e => e.Id).HasName("attachment_pkey");
+
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("id");
+            entity.Property(e => e.ObjectType).HasColumnName("object_type");
+            entity.Property(e => e.ObjectId).HasColumnName("object_id");
+            entity.Property(e => e.AttachmentType).HasColumnName("attachment_type");
+            entity.Property(e => e.FileName).HasColumnName("file_name");
+            entity.Property(e => e.FileUrl).HasColumnName("file_url");
+            entity.Property(e => e.CloudinaryPublicId).HasColumnName("cloudinary_public_id");
+            entity.Property(e => e.CloudinarySecureUrl).HasColumnName("cloudinary_secure_url");
+            entity.Property(e => e.FileExtension).HasColumnName("file_extension");
+            entity.Property(e => e.MimeType).HasColumnName("mime_type");
+            entity.Property(e => e.FileSize).HasColumnName("file_size");
+            entity.Property(e => e.UploadedBy).HasColumnName("uploaded_by");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false).HasColumnName("is_deleted");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+
+            entity.HasIndex(e => new { e.ObjectType, e.ObjectId })
+                  .HasDatabaseName("idx_attachment_object");
+
+            entity.HasOne(d => d.Uploader).WithMany()
+                .HasForeignKey(d => d.UploadedBy)
+                .HasConstraintName("attachment_uploaded_by_fkey");
+        });
+
+        modelBuilder.Entity<ReportAssignment>(entity =>
+        {
+            entity.ToTable("report_assignment");
+            entity.HasKey(e => e.Id).HasName("report_assignment_pkey");
+
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("id");
+            entity.Property(e => e.ReportId).HasColumnName("report_id");
+            entity.Property(e => e.AssignedBy).HasColumnName("assigned_by");
+            entity.Property(e => e.AssignedTo).HasColumnName("assigned_to");
+            entity.Property(e => e.AssignedAt).HasColumnName("assigned_at");
+            entity.Property(e => e.Note).HasColumnName("note");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+            entity.HasOne(d => d.Report).WithMany(p => p.ReportAssignments)
+                .HasForeignKey(d => d.ReportId)
+                .HasConstraintName("report_assignment_report_id_fkey");
+
+            entity.HasOne(d => d.Assigner).WithMany()
+                .HasForeignKey(d => d.AssignedBy)
+                .HasConstraintName("report_assignment_assigned_by_fkey");
+
+            entity.HasOne(d => d.Assignee).WithMany()
+                .HasForeignKey(d => d.AssignedTo)
+                .HasConstraintName("report_assignment_assigned_to_fkey");
+        });
+
+        modelBuilder.Entity<DiagnosisResult>(entity =>
+        {
+            entity.ToTable("diagnosis_result");
+            entity.HasKey(e => e.Id).HasName("diagnosis_result_pkey");
+
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("id");
+            entity.Property(e => e.ReportId).HasColumnName("report_id");
+            entity.Property(e => e.DiagnosedBy).HasColumnName("diagnosed_by");
+            entity.Property(e => e.DiseaseName).HasColumnName("disease_name");
+            entity.Property(e => e.Conclusion).HasColumnName("conclusion");
+            entity.Property(e => e.RecommendedAction).HasColumnName("recommended_action");
+            entity.Property(e => e.SeverityLevel).HasColumnName("severity_level");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+            entity.HasOne(d => d.Report).WithMany(p => p.DiagnosisResults)
+                .HasForeignKey(d => d.ReportId)
+                .HasConstraintName("diagnosis_result_report_id_fkey");
+
+            entity.HasOne(d => d.Diagnoser).WithMany()
+                .HasForeignKey(d => d.DiagnosedBy)
+                .HasConstraintName("diagnosis_result_diagnosed_by_fkey");
+        });
+
+        modelBuilder.Entity<IotSensor>(entity =>
+        {
+            entity.ToTable("iot_sensor");
+            entity.HasKey(e => e.Id).HasName("iot_sensor_pkey");
+
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("id");
+            entity.Property(e => e.DeviceId).HasColumnName("device_id");
+            entity.Property(e => e.SensorCode).HasColumnName("sensor_code");
+            entity.Property(e => e.SensorName).HasColumnName("sensor_name");
+            entity.Property(e => e.SensorType).HasColumnName("sensor_type");
+            entity.Property(e => e.Unit).HasColumnName("unit");
+            entity.Property(e => e.MinValue).HasColumnName("min_value");
+            entity.Property(e => e.MaxValue).HasColumnName("max_value");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+            entity.HasOne(d => d.Device).WithMany(p => p.IotSensors)
+                .HasForeignKey(d => d.DeviceId)
+                .HasConstraintName("iot_sensor_device_id_fkey");
+        });
+
+        modelBuilder.Entity<ReportEnvironmentSnapshot>(entity =>
+        {
+            entity.ToTable("report_environment_snapshot");
+            entity.HasKey(e => e.Id).HasName("report_environment_snapshot_pkey");
+
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("id");
+            entity.Property(e => e.ReportId).HasColumnName("report_id");
+            entity.Property(e => e.Temperature).HasColumnName("temperature");
+            entity.Property(e => e.Humidity).HasColumnName("humidity");
+            entity.Property(e => e.SoilMoisture).HasColumnName("soil_moisture");
+            entity.Property(e => e.Rainfall).HasColumnName("rainfall");
+            entity.Property(e => e.LightIntensity).HasColumnName("light_intensity");
+            entity.Property(e => e.RecordedAt).HasColumnName("recorded_at");
+            entity.Property(e => e.SourceDeviceId).HasColumnName("source_device_id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+
+            entity.HasOne(d => d.Report).WithMany(p => p.EnvironmentSnapshots)
+                .HasForeignKey(d => d.ReportId)
+                .HasConstraintName("report_env_snapshot_report_id_fkey");
+
+            entity.HasOne(d => d.SourceDevice).WithMany()
+                .HasForeignKey(d => d.SourceDeviceId)
+                .HasConstraintName("report_env_snapshot_device_id_fkey");
         });
 
         OnModelCreatingPartial(modelBuilder);

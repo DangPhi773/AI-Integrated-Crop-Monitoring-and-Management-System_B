@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -11,9 +10,11 @@ public partial class Notification
     [Key]
     public Guid NoteId { get; set; }
 
-    public Guid? PestDetectionId { get; set; }
-
     public Guid? UserId { get; set; }
+
+    public Guid? ReportId { get; set; }
+
+    public Guid? DiagnosisId { get; set; }
 
     [MaxLength(100)]
     public string? NoteType { get; set; }
@@ -24,14 +25,17 @@ public partial class Notification
     public string? NoteMessage { get; set; }
 
     [MaxLength(50)]
-    public string? NoteStatus { get; set; } 
+    public string? NoteStatus { get; set; }
 
     [Column(TypeName = "timestamp")]
-    public DateTime? NoteCreatedAt { get; set; } = DateTime.UtcNow;
-
-    [ForeignKey("PestDetectionId")]
-    public virtual PestDetection? PestDetection { get; set; }
+    public DateTime? NoteCreatedAt { get; set; }
 
     [ForeignKey("UserId")]
     public virtual User? User { get; set; }
+
+    [ForeignKey("ReportId")]
+    public virtual Report? Report { get; set; }
+
+    [ForeignKey("DiagnosisId")]
+    public virtual DiagnosisResult? Diagnosis { get; set; }
 }

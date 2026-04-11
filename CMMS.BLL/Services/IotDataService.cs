@@ -1,5 +1,6 @@
 using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
+using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.IotDatas;
 using CMMS.DAL.Entities;
@@ -22,7 +23,7 @@ namespace CMMS.BLL.Services
             try
             {
                 var data = await _repo.GetAllAsync();
-                var result = data.Select(MapToResponse);
+                var result = data.Select(IotDataMapper.ToResponse);
                 return new ApiResponse<IEnumerable<IotDataResponse>> { Success = true, Data = result };
             }
             catch (Exception ex)
@@ -37,7 +38,7 @@ namespace CMMS.BLL.Services
             {
                 var entity = await _repo.GetByIdAsync(id);
                 if (entity == null) return new ApiResponse<IotDataResponse> { Success = false, Message = "Data not found" };
-                return new ApiResponse<IotDataResponse> { Success = true, Data = MapToResponse(entity) };
+                return new ApiResponse<IotDataResponse> { Success = true, Data = IotDataMapper.ToResponse(entity) };
             }
             catch (Exception ex)
             {
@@ -50,7 +51,7 @@ namespace CMMS.BLL.Services
             try
             {
                 var data = await _repo.GetByDeviceIdAsync(deviceId);
-                var result = data.Select(MapToResponse);
+                var result = data.Select(IotDataMapper.ToResponse);
                 return new ApiResponse<IEnumerable<IotDataResponse>> { Success = true, Data = result };
             }
             catch (Exception ex)
@@ -108,19 +109,5 @@ namespace CMMS.BLL.Services
             }
         }
 
-        private static IotDataResponse MapToResponse(IotData d) => new IotDataResponse
-        {
-            SensorDataId = d.SensorDataId,
-            DeviceId = d.DeviceId,
-            SeasonId = d.SeasonId,
-            RecordedAt = d.RecordedAt,
-            Type = d.Type,
-            Value = d.Value,
-            Unit = d.Unit,
-            IsAlert = d.IsAlert,
-            Min = d.Min,
-            Max = d.Max,
-            CreatedAt = d.CreatedAt
-        };
     }
 }

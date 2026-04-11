@@ -1,7 +1,9 @@
-﻿using CMMS.BLL.Interfaces;
-using CMMS.DAL.DTOs.Reports;
+using CMMS.BLL.Interfaces;
+using CMMS.DAL.DTOs.Reports.Requests;
+using CMMS.DAL.DTOs.Reports.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CMMS.WebAPI.Controllers
 {
@@ -17,7 +19,7 @@ namespace CMMS.WebAPI.Controllers
             _reportService = reportService;
         }
 
-        [Authorize(Roles = "Owner,Worker")]
+        [Authorize(Roles = "Owner,Worker,Specialist")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -25,40 +27,47 @@ namespace CMMS.WebAPI.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Owner,Worker")]
-        [HttpGet("{id}")]
+        [Authorize(Roles = "Owner,Worker,Specialist")]
+        [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var result = await _reportService.GetReportByIdAsync(id);
-            if (!result.Success) return NotFound(result);
-            return Ok(result);
+            return result.Success ? Ok(result) : NotFound(result);
         }
 
-        [Authorize(Roles = "Owner,Worker")]
+        [Authorize(Roles = "Worker")]
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] ReportRequest request)
+        public async Task<IActionResult> Create([FromBody] CreateReportRequest request)
         {
-            var result = await _reportService.CreateReportAsync(request);
-            if (!result.Success) return BadRequest(result);
-            return Ok(result);
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _reportService.CreateReportAsync(request, userId);
+            return result.Success ? StatusCode(201, result) : BadRequest(result);
         }
 
-        [Authorize(Roles = "Owner,Worker")]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] ReportRequest request)
+        [Authorize(Roles = "Owner")]
+        [HttpPost("{reportId:guid}/assign")]
+        public async Task<IActionResult> Assign(Guid reportId, [FromBody] AssignReportRequest request)
         {
-            var result = await _reportService.UpdateReportAsync(id, request);
-            if (!result.Success) return BadRequest(result);
-            return Ok(result);
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _reportService.AssignReportAsync(reportId, request, userId);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [Authorize(Roles = "Owner,Worker")]
-        [HttpDelete("{id}")]
+        [Authorize(Roles = "Specialist")]
+        [HttpPost("{reportId:guid}/diagnosis")]
+        public async Task<IActionResult> CreateDiagnosis(Guid reportId, [FromBody] CreateDiagnosisRequest request)
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _reportService.CreateDiagnosisAsync(reportId, request, userId);
+            return result.Success ? StatusCode(201, result) : BadRequest(result);
+        }
+
+        [Authorize(Roles = "Owner")]
+        [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var result = await _reportService.DeleteReportAsync(id);
-            if (!result.Success) return BadRequest(result);
-            return Ok(result);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
     }
 }

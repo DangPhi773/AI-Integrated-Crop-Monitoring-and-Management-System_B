@@ -1,4 +1,5 @@
 using CMMS.BLL.Interfaces;
+using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Tasks;
 using CMMS.DAL.Entities;
@@ -21,7 +22,7 @@ namespace CMMS.BLL.Services
             try
             {
                 var details = await _repo.GetAllAsync();
-                return new ApiResponse<IEnumerable<TaskDetailResponse>> { Success = true, Data = details.Select(MapToResponse) };
+                return new ApiResponse<IEnumerable<TaskDetailResponse>> { Success = true, Data = details.Select(TaskDetailMapper.ToResponse) };
             }
             catch (Exception ex)
             {
@@ -35,7 +36,7 @@ namespace CMMS.BLL.Services
             {
                 var d = await _repo.GetByIdAsync(id);
                 if (d == null) return new ApiResponse<TaskDetailResponse> { Success = false, Message = "Task detail not found" };
-                return new ApiResponse<TaskDetailResponse> { Success = true, Data = MapToResponse(d) };
+                return new ApiResponse<TaskDetailResponse> { Success = true, Data = TaskDetailMapper.ToResponse(d) };
             }
             catch (Exception ex)
             {
@@ -48,7 +49,7 @@ namespace CMMS.BLL.Services
             try
             {
                 var details = await _repo.GetByTaskIdAsync(taskId);
-                return new ApiResponse<IEnumerable<TaskDetailResponse>> { Success = true, Data = details.Select(MapToResponse) };
+                return new ApiResponse<IEnumerable<TaskDetailResponse>> { Success = true, Data = details.Select(TaskDetailMapper.ToResponse) };
             }
             catch (Exception ex)
             {
@@ -61,7 +62,7 @@ namespace CMMS.BLL.Services
             try
             {
                 var details = await _repo.GetBySeasonIdAsync(seasonId);
-                return new ApiResponse<IEnumerable<TaskDetailResponse>> { Success = true, Data = details.Select(MapToResponse) };
+                return new ApiResponse<IEnumerable<TaskDetailResponse>> { Success = true, Data = details.Select(TaskDetailMapper.ToResponse) };
             }
             catch (Exception ex)
             {
@@ -74,7 +75,7 @@ namespace CMMS.BLL.Services
             try
             {
                 var details = await _repo.GetByWorkerIdAsync(workerId);
-                return new ApiResponse<IEnumerable<TaskDetailResponse>> { Success = true, Data = details.Select(MapToResponse) };
+                return new ApiResponse<IEnumerable<TaskDetailResponse>> { Success = true, Data = details.Select(TaskDetailMapper.ToResponse) };
             }
             catch (Exception ex)
             {
@@ -87,7 +88,7 @@ namespace CMMS.BLL.Services
             try
             {
                 var details = await _repo.GetByBedIdAsync(bedId);
-                return new ApiResponse<IEnumerable<TaskDetailResponse>> { Success = true, Data = details.Select(MapToResponse) };
+                return new ApiResponse<IEnumerable<TaskDetailResponse>> { Success = true, Data = details.Select(TaskDetailMapper.ToResponse) };
             }
             catch (Exception ex)
             {
@@ -165,18 +166,5 @@ namespace CMMS.BLL.Services
             }
         }
 
-        private static TaskDetailResponse MapToResponse(TaskDetail d) => new TaskDetailResponse
-        {
-            TaskDetailId = d.TaskDetailId,
-            TaskId = d.TaskId,
-            TaskTitle = d.Task?.TaskTitle,
-            SeasonId = d.SeasonId,
-            AssignedToWorkerIds = d.AssignedToWorkerIds,
-            BedIds = d.BedIds,
-            PlotIds = d.PlotIds,
-            StartDate = d.StartDate,
-            EndDate = d.EndDate,
-            Notes = d.Notes
-        };
     }
 }

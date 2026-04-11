@@ -1,9 +1,4 @@
-﻿using CMMS.DAL.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using CMMS.DAL.Entities;
 
 namespace CMMS.DAL.Interfaces
 {
@@ -11,12 +6,11 @@ namespace CMMS.DAL.Interfaces
     {
         Task<IEnumerable<Report>> GetAllAsync();
         Task<Report?> GetByIdAsync(Guid id);
+        Task<IEnumerable<Report>> GetAllWithDetailsAsync();
+        Task<Report?> GetByIdWithDetailsAsync(Guid id);
         System.Threading.Tasks.Task AddAsync(Report report);
         void Update(Report report);
         void Delete(Report report);
         Task<bool> SaveChangesAsync();
-
-        Task<IEnumerable<Report>> GetAllWithWorkerAsync();
-        Task<Report?> GetByIdWithWorkerAsync(Guid id);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
+using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Users;
 using CMMS.DAL.Entities;
@@ -25,16 +26,7 @@ namespace CMMS.BLL.Services
             try
             {
                 var staffs = await _staffRepo.GetAllStaffsAsync();
-                var data = staffs.Select(w => new UserResponse
-                {
-                    UserId = w.UserId,
-                    Email = w.Email,
-                    Fullname = w.Fullname,
-                    PhoneNumber = w.PhoneNumber,
-                    Status = w.Status,
-                    CreatedAt = w.CreatedAt,
-                    RoleName = w.Role?.RoleName
-                });
+                var data = staffs.Select(UserMapper.ToResponse);
                 return new ApiResponse<IEnumerable<UserResponse>> { Success = true, Data = data };
             }
             catch (Exception ex)
@@ -51,14 +43,7 @@ namespace CMMS.BLL.Services
             return new ApiResponse<UserResponse>
             {
                 Success = true,
-                Data = new UserResponse
-                {
-                    UserId = user.UserId,
-                    Email = user.Email,
-                    Fullname = user.Fullname,
-                    RoleName = user.Role?.RoleName,
-                    Status = user.Status
-                }
+                Data = UserMapper.ToResponse(user)
             };
         }
 

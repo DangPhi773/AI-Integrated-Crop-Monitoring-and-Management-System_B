@@ -1,4 +1,5 @@
 ﻿using CMMS.BLL.Interfaces;
+using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Crops;
 using CMMS.DAL.Entities;
@@ -19,15 +20,7 @@ namespace CMMS.BLL.Services
         public async Task<ApiResponse<IEnumerable<CropGrowthStageResponse>>> GetStagesAsync()
         {
             var stages = await _repo.GetAllAsync();
-            var data = stages.Select(s => new CropGrowthStageResponse
-            {
-                StageId = s.StageId,
-                CropId = s.CropId,
-                CropName = s.Crop?.CropName,
-                StageName = s.StageName,
-                TemperatureMin = s.TemperatureMin,
-                CreatedAt = s.CreatedAt
-            });
+            var data = stages.Select(CropGrowthStageMapper.ToResponse);
             return new ApiResponse<IEnumerable<CropGrowthStageResponse>> { Success = true, Data = data };
         }
 
@@ -81,7 +74,7 @@ namespace CMMS.BLL.Services
         {
             var s = await _repo.GetByIdAsync(id);
             if (s == null) return new ApiResponse<CropGrowthStageResponse> { Success = false, Message = "Không tìm thấy" };
-            return new ApiResponse<CropGrowthStageResponse> { Success = true, Data = new CropGrowthStageResponse { StageId = s.StageId, StageName = s.StageName } };
+            return new ApiResponse<CropGrowthStageResponse> { Success = true, Data = CropGrowthStageMapper.ToResponse(s) };
         }
     }
 }
