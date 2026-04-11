@@ -1,40 +1,41 @@
 using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
-using CMMS.DAL.DBContext;
 using CMMS.DAL.Entities;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using CMMS.DAL.Interfaces;
 
 namespace CMMS.BLL.Services
 {
     public class NotificationService : INotificationService
     {
-        private readonly AppDbContext _db;
+        private readonly IUserRepository _userRepo;
+        private readonly IReportRepository _reportRepo;
+        private readonly INotificationRepository _notificationRepo;
         private readonly IEmailService _emailService;
         private readonly IEmailTemplateService _templateService;
 
         public NotificationService(
-            AppDbContext db,
+            IUserRepository userRepo,
+            IReportRepository reportRepo,
+            INotificationRepository notificationRepo,
             IEmailService emailService,
             IEmailTemplateService templateService)
         {
-            _db = db;
+            _userRepo = userRepo;
+            _reportRepo = reportRepo;
+            _notificationRepo = notificationRepo;
             _emailService = emailService;
             _templateService = templateService;
         }
 
         public async System.Threading.Tasks.Task NotifyNewWorkerAsync(Guid workerId)
         {
-            var worker = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == workerId);
+            var worker = await _userRepo.GetByIdAsync(workerId);
             if (worker == null || string.IsNullOrWhiteSpace(worker.Email)) return;
 
             var (subject, htmlBody) = _templateService.BuildWelcomeWorkerEmail(worker.Fullname ?? "Worker", worker.Email);
             await _emailService.SendEmailAsync(worker.Email, subject, htmlBody);
 
-            _db.Notifications.Add(new Notification
+            await _notificationRepo.AddAsync(new Notification
             {
                 NoteId = Guid.NewGuid(),
                 UserId = workerId,
@@ -44,30 +45,22 @@ namespace CMMS.BLL.Services
                 NoteStatus = "sent",
                 NoteCreatedAt = DateTimeHelper.VnNow()
             });
-            await _db.SaveChangesAsync();
+            await _notificationRepo.SaveChangesAsync();
         }
 
         public async System.Threading.Tasks.Task NotifyNewReportAsync(Guid reportId)
         {
-            var report = await _db.Reports.AsNoTracking().FirstOrDefaultAsync(r => r.ReportId == reportId);
+            var report = await _reportRepo.GetByIdAsync(reportId);
             if (report == null) return;
 
             string workerName = "Worker";
-            if (report.WorkerId.HasValue)
+            if (report.CreatedBy.HasValue)
             {
-                var worker = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == report.WorkerId);
+                var worker = await _userRepo.GetByIdAsync(report.CreatedBy.Value);
                 if (worker != null) workerName = worker.Fullname ?? worker.Email ?? "Worker";
             }
 
-            var recipients = await _db.Users
-                .AsNoTracking()
-                .Include(u => u.Role)
-                .Where(u => u.Role != null
-                            && (u.Role.RoleName == "Owner" || u.Role.RoleName == "Specialist")
-                            && u.Email != null)
-                .Select(u => new { u.UserId, u.Email })
-                .ToListAsync();
-
+            var recipients = await _userRepo.GetByRoleNamesAsync("Owner", "Specialist");
             if (recipients.Count == 0) return;
 
             var emails = recipients.Select(r => r.Email!).Distinct().ToList();
@@ -77,20 +70,19 @@ namespace CMMS.BLL.Services
             await _emailService.SendEmailAsync(emails, subject, htmlBody);
 
             var now = DateTimeHelper.VnNow();
-            foreach (var r in recipients)
+            var notifications = recipients.Select(r => new Notification
             {
-                _db.Notifications.Add(new Notification
-                {
-                    NoteId = Guid.NewGuid(),
-                    UserId = r.UserId,
-                    NoteType = "email_new_report",
-                    NoteTitle = subject,
-                    NoteMessage = $"New report notification sent to {r.Email}",
-                    NoteStatus = "sent",
-                    NoteCreatedAt = now
-                });
-            }
-            await _db.SaveChangesAsync();
+                NoteId = Guid.NewGuid(),
+                UserId = r.UserId,
+                NoteType = "email_new_report",
+                NoteTitle = subject,
+                NoteMessage = $"New report notification sent to {r.Email}",
+                NoteStatus = "sent",
+                NoteCreatedAt = now
+            });
+
+            await _notificationRepo.AddRangeAsync(notifications);
+            await _notificationRepo.SaveChangesAsync();
         }
     }
 }

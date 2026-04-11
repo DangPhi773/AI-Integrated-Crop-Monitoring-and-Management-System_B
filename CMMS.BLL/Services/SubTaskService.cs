@@ -1,4 +1,5 @@
 ﻿using CMMS.BLL.Interfaces;
+using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Tasks;
 using CMMS.DAL.Entities;
@@ -31,14 +32,14 @@ namespace CMMS.BLL.Services
             return new ApiResponse<SubTaskResponse>
             {
                 Success = true,
-                Data = new SubTaskResponse { SubTaskId = subTask.SubTaskId, Title = subTask.Title, Description = subTask.Description, TaskDetailId = subTask.TaskDetailId }
+                Data = SubTaskMapper.ToResponse(subTask)
             };
         }
 
         public async Task<ApiResponse<IEnumerable<SubTaskResponse>>> GetSubTasksByTaskAsync(Guid taskDetailId)
         {
             var data = await _subTaskRepo.GetAllByTaskDetailIdAsync(taskDetailId);
-            var res = data.Select(s => new SubTaskResponse { SubTaskId = s.SubTaskId, Title = s.Title, Description = s.Description, TaskDetailId = s.TaskDetailId });
+            var res = data.Select(SubTaskMapper.ToResponse);
             return new ApiResponse<IEnumerable<SubTaskResponse>> { Success = true, Data = res };
         }
 

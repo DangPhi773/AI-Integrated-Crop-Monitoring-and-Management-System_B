@@ -1,5 +1,6 @@
 using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
+using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.CropBedConfigs;
 using CMMS.DAL.Entities;
@@ -20,7 +21,7 @@ namespace CMMS.BLL.Services
         {
             try
             {
-                var data = (await _repo.GetAllAsync()).Select(Map);
+                var data = (await _repo.GetAllAsync()).Select(CropBedConfigMapper.ToResponse);
                 return new ApiResponse<IEnumerable<CropBedConfigResponse>> { Success = true, Data = data };
             }
             catch (Exception ex)
@@ -33,12 +34,12 @@ namespace CMMS.BLL.Services
         {
             var entity = await _repo.GetByIdAsync(id);
             if (entity == null) return new ApiResponse<CropBedConfigResponse> { Success = false, Message = "Không tìm thấy config" };
-            return new ApiResponse<CropBedConfigResponse> { Success = true, Data = Map(entity) };
+            return new ApiResponse<CropBedConfigResponse> { Success = true, Data = CropBedConfigMapper.ToResponse(entity) };
         }
 
         public async Task<ApiResponse<IEnumerable<CropBedConfigResponse>>> GetByCropIdAsync(Guid cropId)
         {
-            var data = (await _repo.GetByCropIdAsync(cropId)).Select(Map);
+            var data = (await _repo.GetByCropIdAsync(cropId)).Select(CropBedConfigMapper.ToResponse);
             return new ApiResponse<IEnumerable<CropBedConfigResponse>> { Success = true, Data = data };
         }
 
@@ -129,26 +130,5 @@ namespace CMMS.BLL.Services
             return new ApiResponse<string> { Success = true, Message = "Xóa thành công" };
         }
 
-        private static CropBedConfigResponse Map(CropBedConfig c) => new()
-        {
-            ConfigId = c.ConfigId,
-            CropId = c.CropId,
-            CropName = c.Crop?.CropName,
-            PlantingPattern = c.PlantingPattern,
-            RowSpacing = c.RowSpacing,
-            PlantSpacing = c.PlantSpacing,
-            RowsPerBed = c.RowsPerBed,
-            BedWidthMin = c.BedWidthMin,
-            BedWidthMax = c.BedWidthMax,
-            PathWidthMin = c.PathWidthMin,
-            PathWidthMax = c.PathWidthMax,
-            BedHeight = c.BedHeight,
-            DensityPerHaMin = c.DensityPerHaMin,
-            DensityPerHaMax = c.DensityPerHaMax,
-            IsDefault = c.IsDefault,
-            Notes = c.Notes,
-            CreatedAt = c.CreatedAt,
-            UpdatedAt = c.UpdatedAt
-        };
     }
 }

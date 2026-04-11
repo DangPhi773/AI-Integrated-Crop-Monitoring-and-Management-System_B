@@ -1,5 +1,6 @@
 using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
+using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Beds;
 using CMMS.DAL.Entities;
@@ -36,7 +37,7 @@ namespace CMMS.BLL.Services
             try
             {
                 var beds = await _bedRepo.GetAllAsync();
-                var data = beds.Select(MapToResponse);
+                var data = beds.Select(BedMapper.ToResponse);
                 return new ApiResponse<IEnumerable<BedResponse>> { Success = true, Data = data };
             }
             catch (Exception ex)
@@ -51,7 +52,7 @@ namespace CMMS.BLL.Services
             {
                 var bed = await _bedRepo.GetByIdAsync(id);
                 if (bed == null) return new ApiResponse<BedResponse> { Success = false, Message = "Bed not found" };
-                return new ApiResponse<BedResponse> { Success = true, Data = MapToResponse(bed) };
+                return new ApiResponse<BedResponse> { Success = true, Data = BedMapper.ToResponse(bed) };
             }
             catch (Exception ex)
             {
@@ -358,18 +359,5 @@ namespace CMMS.BLL.Services
             }
         }
 
-        private static BedResponse MapToResponse(Bed b) =>
-            new BedResponse
-            {
-                BedId = b.BedId,
-                PlotId = b.PlotId,
-                BedName = b.BedName,
-                BedArea = b.BedArea,
-                BedStatus = b.BedStatus,
-                BedCreatedAt = b.BedCreatedAt,
-                CropQuantities = b.CropQuantities,
-                PlotName = b.Plot?.PlotName,
-                SeasonsDetailsCount = b.SeasonsDetails?.Count ?? 0
-            };
     }
 }

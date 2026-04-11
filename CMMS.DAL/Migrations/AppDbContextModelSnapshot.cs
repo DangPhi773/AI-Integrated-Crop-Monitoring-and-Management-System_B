@@ -24,6 +24,94 @@ namespace CMMS.DAL.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("CMMS.DAL.Entities.Attachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("AttachmentType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("attachment_type");
+
+                    b.Property<string>("CloudinaryPublicId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("cloudinary_public_id");
+
+                    b.Property<string>("CloudinarySecureUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("cloudinary_secure_url");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("FileExtension")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("file_extension");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("file_name");
+
+                    b.Property<long?>("FileSize")
+                        .HasColumnType("bigint")
+                        .HasColumnName("file_size");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("file_url");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("MimeType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("mime_type");
+
+                    b.Property<Guid>("ObjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("object_id");
+
+                    b.Property<string>("ObjectType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("object_type");
+
+                    b.Property<Guid>("UploadedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("uploaded_by");
+
+                    b.HasKey("Id")
+                        .HasName("attachment_pkey");
+
+                    b.HasIndex("UploadedBy");
+
+                    b.HasIndex("ObjectType", "ObjectId")
+                        .HasDatabaseName("idx_attachment_object");
+
+                    b.ToTable("attachment", "public");
+                });
+
             modelBuilder.Entity("CMMS.DAL.Entities.Bed", b =>
                 {
                     b.Property<Guid>("BedId")
@@ -344,6 +432,68 @@ namespace CMMS.DAL.Migrations
                     b.ToTable("crop_growth_tasks", "public");
                 });
 
+            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisResult", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Conclusion")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("conclusion");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<Guid>("DiagnosedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("diagnosed_by");
+
+                    b.Property<string>("DiseaseName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("disease_name");
+
+                    b.Property<string>("RecommendedAction")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("recommended_action");
+
+                    b.Property<Guid>("ReportId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("report_id");
+
+                    b.Property<string>("SeverityLevel")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("severity_level");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("diagnosis_result_pkey");
+
+                    b.HasIndex("DiagnosedBy");
+
+                    b.HasIndex("ReportId");
+
+                    b.ToTable("diagnosis_result", "public");
+                });
+
             modelBuilder.Entity("CMMS.DAL.Entities.Farm", b =>
                 {
                     b.Property<Guid>("FarmId")
@@ -448,120 +598,6 @@ namespace CMMS.DAL.Migrations
                     b.ToTable("growth_tracking", "public");
                 });
 
-            modelBuilder.Entity("CMMS.DAL.Entities.ImageAnalysis", b =>
-                {
-                    b.Property<Guid>("ImageAnalysisId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("image_analysis_id")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<int?>("AiLatencyMs")
-                        .HasColumnType("integer")
-                        .HasColumnName("ai_latency_ms");
-
-                    b.Property<string>("AiModel")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("ai_model");
-
-                    b.Property<string>("AiModelVersion")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("ai_model_version");
-
-                    b.Property<string>("AiPrompt")
-                        .HasColumnType("text")
-                        .HasColumnName("ai_prompt");
-
-                    b.Property<string>("AiProvider")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("ai_provider");
-
-                    b.Property<string>("AiRawResponseJson")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("ai_raw_response_json");
-
-                    b.Property<string>("AiRequestId")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("ai_request_id");
-
-                    b.Property<int?>("AiTokens")
-                        .HasColumnType("integer")
-                        .HasColumnName("ai_tokens");
-
-                    b.Property<string>("AnalysisStatus")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("analysis_status");
-
-                    b.Property<string>("AnalysisType")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("analysis_type");
-
-                    b.Property<Guid?>("PhotoId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("photo_id");
-
-                    b.HasKey("ImageAnalysisId")
-                        .HasName("image_analyses_pkey");
-
-                    b.HasIndex("PhotoId");
-
-                    b.ToTable("image_analyses", "public");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.ImageAnalysisResult", b =>
-                {
-                    b.Property<Guid>("ImageAnalysisResultId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("image_analysis_result_id")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<decimal?>("AiConfidence")
-                        .HasColumnType("decimal(5,4)")
-                        .HasColumnName("ai_confidence");
-
-                    b.Property<string>("AiLabel")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("ai_label");
-
-                    b.Property<string>("AiSeverity")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("ai_severity");
-
-                    b.Property<string>("BoundingBoxJson")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("bounding_box_json");
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp")
-                        .HasColumnName("created_at")
-                        .HasDefaultValueSql("now()");
-
-                    b.Property<string>("ExtraDataJson")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("extra_data_json");
-
-                    b.Property<Guid?>("ImageAnalysisId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("image_analysis_id");
-
-                    b.HasKey("ImageAnalysisResultId")
-                        .HasName("image_analysis_result_pkey");
-
-                    b.HasIndex("ImageAnalysisId");
-
-                    b.ToTable("image_analysis_result", "public");
-                });
-
             modelBuilder.Entity("CMMS.DAL.Entities.IotData", b =>
                 {
                     b.Property<Guid>("SensorDataId")
@@ -589,6 +625,10 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("min");
 
+                    b.Property<string>("RawData")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("raw_data");
+
                     b.Property<DateTime?>("RecordedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("recorded_at");
@@ -596,6 +636,10 @@ namespace CMMS.DAL.Migrations
                     b.Property<Guid?>("SeasonId")
                         .HasColumnType("uuid")
                         .HasColumnName("season_id");
+
+                    b.Property<Guid?>("SensorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sensor_id");
 
                     b.Property<string>("Type")
                         .HasMaxLength(100)
@@ -617,6 +661,8 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("SeasonId");
 
+                    b.HasIndex("SensorId");
+
                     b.ToTable("iot_data", "public");
                 });
 
@@ -635,9 +681,18 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("DeviceCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("device_code");
+
                     b.Property<DateTime?>("InstallationDate")
                         .HasColumnType("date")
                         .HasColumnName("installation_date");
+
+                    b.Property<DateTime?>("LastActiveAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_active_at");
 
                     b.Property<double?>("Latitude")
                         .HasColumnType("double precision")
@@ -674,6 +729,74 @@ namespace CMMS.DAL.Migrations
                     b.ToTable("iot_devices", "public");
                 });
 
+            modelBuilder.Entity("CMMS.DAL.Entities.IotSensor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("device_id");
+
+                    b.Property<double?>("MaxValue")
+                        .HasColumnType("double precision")
+                        .HasColumnName("max_value");
+
+                    b.Property<double?>("MinValue")
+                        .HasColumnType("double precision")
+                        .HasColumnName("min_value");
+
+                    b.Property<string>("SensorCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("sensor_code");
+
+                    b.Property<string>("SensorName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("sensor_name");
+
+                    b.Property<string>("SensorType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("sensor_type");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("unit");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("iot_sensor_pkey");
+
+                    b.HasIndex("DeviceId");
+
+                    b.ToTable("iot_sensor", "public");
+                });
+
             modelBuilder.Entity("CMMS.DAL.Entities.Notification", b =>
                 {
                     b.Property<Guid>("NoteId")
@@ -681,6 +804,10 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("note_id")
                         .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<Guid?>("DiagnosisId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("diagnosis_id");
 
                     b.Property<DateTime?>("NoteCreatedAt")
                         .ValueGeneratedOnAdd()
@@ -707,9 +834,9 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("note_type");
 
-                    b.Property<Guid?>("PestDetectionId")
+                    b.Property<Guid?>("ReportId")
                         .HasColumnType("uuid")
-                        .HasColumnName("pest_detection_id");
+                        .HasColumnName("report_id");
 
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uuid")
@@ -718,132 +845,13 @@ namespace CMMS.DAL.Migrations
                     b.HasKey("NoteId")
                         .HasName("notification_pkey");
 
-                    b.HasIndex("PestDetectionId");
+                    b.HasIndex("DiagnosisId");
+
+                    b.HasIndex("ReportId");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("notification", "public");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.PestDetection", b =>
-                {
-                    b.Property<Guid>("PestDetectionId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("pest_detection_id")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<string>("ConfidenceSource")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("confidence_source");
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp")
-                        .HasColumnName("created_at")
-                        .HasDefaultValueSql("now()");
-
-                    b.Property<DateTime?>("DetectedAt")
-                        .HasColumnType("timestamp")
-                        .HasColumnName("detected_at");
-
-                    b.Property<string>("DetectionStatus")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("detection_status");
-
-                    b.Property<string>("GeneralLabel")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("general_label");
-
-                    b.Property<string>("GeneralSeverity")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("general_severity");
-
-                    b.Property<Guid?>("ImageAnalysisResultId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("image_analysis_result_id");
-
-                    b.Property<string>("ReviewNotes")
-                        .HasColumnType("text")
-                        .HasColumnName("review_notes");
-
-                    b.Property<Guid?>("SeasonId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("season_id");
-
-                    b.Property<Guid?>("SpecialistId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("specialist_id");
-
-                    b.HasKey("PestDetectionId")
-                        .HasName("pest_detections_pkey");
-
-                    b.HasIndex("ImageAnalysisResultId");
-
-                    b.HasIndex("SeasonId");
-
-                    b.HasIndex("SpecialistId");
-
-                    b.ToTable("pest_detections", "public");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.Photo", b =>
-                {
-                    b.Property<Guid>("PhotoId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("photo_id")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<decimal?>("HumidityAtTheMomentTakePhoto")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("humidity_at_the_moment_take_photo");
-
-                    b.Property<DateOnly?>("PhotoDate")
-                        .HasColumnType("date")
-                        .HasColumnName("photo_date");
-
-                    b.Property<string>("PhotoSource")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("photo_source");
-
-                    b.Property<TimeOnly?>("PhotoTime")
-                        .HasColumnType("time without time zone")
-                        .HasColumnName("photo_time");
-
-                    b.Property<decimal?>("RainfallAtTheMomentTakePhoto")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("rainfall_at_the_moment_take_photo");
-
-                    b.Property<Guid?>("SeasonDetailId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("season_detail_id");
-
-                    b.Property<decimal?>("SoilMoistureAtTheMomentTakePhoto")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("soil_moisture_at_the_moment_take_photo");
-
-                    b.Property<decimal?>("TemperatureAtTheMomentTakePhoto")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("temperature_at_the_moment_take_photo");
-
-                    b.Property<DateTime?>("UploadedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp")
-                        .HasColumnName("uploaded_at")
-                        .HasDefaultValueSql("now()");
-
-                    b.HasKey("PhotoId")
-                        .HasName("photo_pkey");
-
-                    b.HasIndex("SeasonDetailId");
-
-                    b.ToTable("photo", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Plot", b =>
@@ -918,9 +926,9 @@ namespace CMMS.DAL.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("now()");
 
-                    b.Property<Guid?>("PestDetectionId")
+                    b.Property<Guid?>("DiagnosisId")
                         .HasColumnType("uuid")
-                        .HasColumnName("pest_detection_id");
+                        .HasColumnName("diagnosis_id");
 
                     b.Property<Guid?>("SeasonId")
                         .HasColumnType("uuid")
@@ -940,7 +948,7 @@ namespace CMMS.DAL.Migrations
                     b.HasKey("RecommendationId")
                         .HasName("recommendation_pkey");
 
-                    b.HasIndex("PestDetectionId");
+                    b.HasIndex("DiagnosisId");
 
                     b.HasIndex("SeasonId");
 
@@ -1058,15 +1066,49 @@ namespace CMMS.DAL.Migrations
                         .HasColumnName("report_id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
+                    b.Property<string>("AiResultsJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("ai_results_json");
+
+                    b.Property<Guid?>("BedId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("bed_id");
+
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("now()");
 
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
                     b.Property<string>("Description")
                         .HasColumnType("text")
                         .HasColumnName("description");
+
+                    b.Property<Guid?>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
+                    b.Property<Guid?>("PlotId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("plot_id");
+
+                    b.Property<string>("ReportNo")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("report_no");
+
+                    b.Property<string>("ReportType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("report_type");
+
+                    b.Property<Guid?>("SeasonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("season_id");
 
                     b.Property<string>("Status")
                         .HasMaxLength(50)
@@ -1082,16 +1124,136 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("character varying(255)")
                         .HasColumnName("title");
 
-                    b.Property<Guid?>("WorkerId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("worker_id");
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("ReportId")
                         .HasName("report_pkey");
 
-                    b.HasIndex("WorkerId");
+                    b.HasIndex("BedId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("OwnerId");
+
+                    b.HasIndex("PlotId");
+
+                    b.HasIndex("SeasonId");
 
                     b.ToTable("report", "public");
+                });
+
+            modelBuilder.Entity("CMMS.DAL.Entities.ReportAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("timestamp")
+                        .HasColumnName("assigned_at");
+
+                    b.Property<Guid>("AssignedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_by");
+
+                    b.Property<Guid>("AssignedTo")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_to");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text")
+                        .HasColumnName("note");
+
+                    b.Property<Guid>("ReportId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("report_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("report_assignment_pkey");
+
+                    b.HasIndex("AssignedBy");
+
+                    b.HasIndex("AssignedTo");
+
+                    b.HasIndex("ReportId");
+
+                    b.ToTable("report_assignment", "public");
+                });
+
+            modelBuilder.Entity("CMMS.DAL.Entities.ReportEnvironmentSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<double?>("Humidity")
+                        .HasColumnType("double precision")
+                        .HasColumnName("humidity");
+
+                    b.Property<double?>("LightIntensity")
+                        .HasColumnType("double precision")
+                        .HasColumnName("light_intensity");
+
+                    b.Property<double?>("Rainfall")
+                        .HasColumnType("double precision")
+                        .HasColumnName("rainfall");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("timestamp")
+                        .HasColumnName("recorded_at");
+
+                    b.Property<Guid>("ReportId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("report_id");
+
+                    b.Property<double?>("SoilMoisture")
+                        .HasColumnType("double precision")
+                        .HasColumnName("soil_moisture");
+
+                    b.Property<Guid?>("SourceDeviceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_device_id");
+
+                    b.Property<double?>("Temperature")
+                        .HasColumnType("double precision")
+                        .HasColumnName("temperature");
+
+                    b.HasKey("Id")
+                        .HasName("report_environment_snapshot_pkey");
+
+                    b.HasIndex("ReportId");
+
+                    b.HasIndex("SourceDeviceId");
+
+                    b.ToTable("report_environment_snapshot", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Role", b =>
@@ -1489,6 +1651,18 @@ namespace CMMS.DAL.Migrations
                     b.ToTable("worker_schedule", "public");
                 });
 
+            modelBuilder.Entity("CMMS.DAL.Entities.Attachment", b =>
+                {
+                    b.HasOne("CMMS.DAL.Entities.User", "Uploader")
+                        .WithMany()
+                        .HasForeignKey("UploadedBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("attachment_uploaded_by_fkey");
+
+                    b.Navigation("Uploader");
+                });
+
             modelBuilder.Entity("CMMS.DAL.Entities.Bed", b =>
                 {
                     b.HasOne("CMMS.DAL.Entities.Plot", "Plot")
@@ -1534,6 +1708,27 @@ namespace CMMS.DAL.Migrations
                     b.Navigation("CropGrowthStage");
                 });
 
+            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisResult", b =>
+                {
+                    b.HasOne("CMMS.DAL.Entities.User", "Diagnoser")
+                        .WithMany()
+                        .HasForeignKey("DiagnosedBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("diagnosis_result_diagnosed_by_fkey");
+
+                    b.HasOne("CMMS.DAL.Entities.Report", "Report")
+                        .WithMany("DiagnosisResults")
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("diagnosis_result_report_id_fkey");
+
+                    b.Navigation("Diagnoser");
+
+                    b.Navigation("Report");
+                });
+
             modelBuilder.Entity("CMMS.DAL.Entities.GrowthTracking", b =>
                 {
                     b.HasOne("CMMS.DAL.Entities.SeasonsDetail", "SeasonDetail")
@@ -1553,26 +1748,6 @@ namespace CMMS.DAL.Migrations
                     b.Navigation("SeasonDetail");
                 });
 
-            modelBuilder.Entity("CMMS.DAL.Entities.ImageAnalysis", b =>
-                {
-                    b.HasOne("CMMS.DAL.Entities.Photo", "Photo")
-                        .WithMany("ImageAnalyses")
-                        .HasForeignKey("PhotoId")
-                        .HasConstraintName("image_analyses_photo_id_fkey");
-
-                    b.Navigation("Photo");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.ImageAnalysisResult", b =>
-                {
-                    b.HasOne("CMMS.DAL.Entities.ImageAnalysis", "ImageAnalysis")
-                        .WithMany("ImageAnalysisResults")
-                        .HasForeignKey("ImageAnalysisId")
-                        .HasConstraintName("image_analysis_result_image_analysis_id_fkey");
-
-                    b.Navigation("ImageAnalysis");
-                });
-
             modelBuilder.Entity("CMMS.DAL.Entities.IotData", b =>
                 {
                     b.HasOne("CMMS.DAL.Entities.IotDevice", "Device")
@@ -1585,9 +1760,16 @@ namespace CMMS.DAL.Migrations
                         .HasForeignKey("SeasonId")
                         .HasConstraintName("fk_iot_data_seasons");
 
+                    b.HasOne("CMMS.DAL.Entities.IotSensor", "Sensor")
+                        .WithMany("IotDatas")
+                        .HasForeignKey("SensorId")
+                        .HasConstraintName("iot_data_sensor_id_fkey");
+
                     b.Navigation("Device");
 
                     b.Navigation("Season");
+
+                    b.Navigation("Sensor");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.IotDevice", b =>
@@ -1600,55 +1782,40 @@ namespace CMMS.DAL.Migrations
                     b.Navigation("Bed");
                 });
 
+            modelBuilder.Entity("CMMS.DAL.Entities.IotSensor", b =>
+                {
+                    b.HasOne("CMMS.DAL.Entities.IotDevice", "Device")
+                        .WithMany("IotSensors")
+                        .HasForeignKey("DeviceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("iot_sensor_device_id_fkey");
+
+                    b.Navigation("Device");
+                });
+
             modelBuilder.Entity("CMMS.DAL.Entities.Notification", b =>
                 {
-                    b.HasOne("CMMS.DAL.Entities.PestDetection", "PestDetection")
-                        .WithMany("Notifications")
-                        .HasForeignKey("PestDetectionId")
-                        .HasConstraintName("notification_pest_detection_id_fkey");
+                    b.HasOne("CMMS.DAL.Entities.DiagnosisResult", "Diagnosis")
+                        .WithMany()
+                        .HasForeignKey("DiagnosisId")
+                        .HasConstraintName("notification_diagnosis_id_fkey");
+
+                    b.HasOne("CMMS.DAL.Entities.Report", "Report")
+                        .WithMany()
+                        .HasForeignKey("ReportId")
+                        .HasConstraintName("notification_report_id_fkey");
 
                     b.HasOne("CMMS.DAL.Entities.User", "User")
                         .WithMany("Notifications")
                         .HasForeignKey("UserId")
                         .HasConstraintName("notification_user_id_fkey");
 
-                    b.Navigation("PestDetection");
+                    b.Navigation("Diagnosis");
+
+                    b.Navigation("Report");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.PestDetection", b =>
-                {
-                    b.HasOne("CMMS.DAL.Entities.ImageAnalysisResult", "ImageAnalysisResult")
-                        .WithMany("PestDetections")
-                        .HasForeignKey("ImageAnalysisResultId")
-                        .HasConstraintName("pest_detections_image_analysis_result_id_fkey");
-
-                    b.HasOne("CMMS.DAL.Entities.Season", "Season")
-                        .WithMany("PestDetections")
-                        .HasForeignKey("SeasonId")
-                        .HasConstraintName("pest_detections_season_id_fkey");
-
-                    b.HasOne("CMMS.DAL.Entities.User", "Specialist")
-                        .WithMany("PestDetections")
-                        .HasForeignKey("SpecialistId")
-                        .HasConstraintName("pest_detections_specialist_id_fkey");
-
-                    b.Navigation("ImageAnalysisResult");
-
-                    b.Navigation("Season");
-
-                    b.Navigation("Specialist");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.Photo", b =>
-                {
-                    b.HasOne("CMMS.DAL.Entities.SeasonsDetail", "SeasonDetail")
-                        .WithMany("Photos")
-                        .HasForeignKey("SeasonDetailId")
-                        .HasConstraintName("photo_season_detail_id_fkey");
-
-                    b.Navigation("SeasonDetail");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Plot", b =>
@@ -1670,17 +1837,17 @@ namespace CMMS.DAL.Migrations
 
             modelBuilder.Entity("CMMS.DAL.Entities.Recommendation", b =>
                 {
-                    b.HasOne("CMMS.DAL.Entities.PestDetection", "PestDetection")
+                    b.HasOne("CMMS.DAL.Entities.DiagnosisResult", "Diagnosis")
                         .WithMany("Recommendations")
-                        .HasForeignKey("PestDetectionId")
-                        .HasConstraintName("recommendation_pest_detection_id_fkey");
+                        .HasForeignKey("DiagnosisId")
+                        .HasConstraintName("recommendation_diagnosis_id_fkey");
 
                     b.HasOne("CMMS.DAL.Entities.Season", "Season")
                         .WithMany("Recommendations")
                         .HasForeignKey("SeasonId")
                         .HasConstraintName("recommendation_season_id_fkey");
 
-                    b.Navigation("PestDetection");
+                    b.Navigation("Diagnosis");
 
                     b.Navigation("Season");
                 });
@@ -1721,12 +1888,89 @@ namespace CMMS.DAL.Migrations
 
             modelBuilder.Entity("CMMS.DAL.Entities.Report", b =>
                 {
-                    b.HasOne("CMMS.DAL.Entities.User", "Worker")
-                        .WithMany("Reports")
-                        .HasForeignKey("WorkerId")
-                        .HasConstraintName("report_worker_id_fkey");
+                    b.HasOne("CMMS.DAL.Entities.Bed", "Bed")
+                        .WithMany()
+                        .HasForeignKey("BedId")
+                        .HasConstraintName("report_bed_id_fkey");
 
-                    b.Navigation("Worker");
+                    b.HasOne("CMMS.DAL.Entities.User", "Creator")
+                        .WithMany("CreatedReports")
+                        .HasForeignKey("CreatedBy")
+                        .HasConstraintName("report_created_by_fkey");
+
+                    b.HasOne("CMMS.DAL.Entities.User", "Owner")
+                        .WithMany("OwnedReports")
+                        .HasForeignKey("OwnerId")
+                        .HasConstraintName("report_owner_id_fkey");
+
+                    b.HasOne("CMMS.DAL.Entities.Plot", "Plot")
+                        .WithMany()
+                        .HasForeignKey("PlotId")
+                        .HasConstraintName("report_plot_id_fkey");
+
+                    b.HasOne("CMMS.DAL.Entities.Season", "Season")
+                        .WithMany()
+                        .HasForeignKey("SeasonId")
+                        .HasConstraintName("report_season_id_fkey");
+
+                    b.Navigation("Bed");
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Owner");
+
+                    b.Navigation("Plot");
+
+                    b.Navigation("Season");
+                });
+
+            modelBuilder.Entity("CMMS.DAL.Entities.ReportAssignment", b =>
+                {
+                    b.HasOne("CMMS.DAL.Entities.User", "Assigner")
+                        .WithMany()
+                        .HasForeignKey("AssignedBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("report_assignment_assigned_by_fkey");
+
+                    b.HasOne("CMMS.DAL.Entities.User", "Assignee")
+                        .WithMany()
+                        .HasForeignKey("AssignedTo")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("report_assignment_assigned_to_fkey");
+
+                    b.HasOne("CMMS.DAL.Entities.Report", "Report")
+                        .WithMany("ReportAssignments")
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("report_assignment_report_id_fkey");
+
+                    b.Navigation("Assignee");
+
+                    b.Navigation("Assigner");
+
+                    b.Navigation("Report");
+                });
+
+            modelBuilder.Entity("CMMS.DAL.Entities.ReportEnvironmentSnapshot", b =>
+                {
+                    b.HasOne("CMMS.DAL.Entities.Report", "Report")
+                        .WithMany("EnvironmentSnapshots")
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("report_env_snapshot_report_id_fkey");
+
+                    b.HasOne("CMMS.DAL.Entities.IotDevice", "SourceDevice")
+                        .WithMany()
+                        .HasForeignKey("SourceDeviceId")
+                        .HasConstraintName("report_env_snapshot_device_id_fkey");
+
+                    b.Navigation("Report");
+
+                    b.Navigation("SourceDevice");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Season", b =>
@@ -1866,6 +2110,11 @@ namespace CMMS.DAL.Migrations
                     b.Navigation("GrowthTrackings");
                 });
 
+            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisResult", b =>
+                {
+                    b.Navigation("Recommendations");
+                });
+
             modelBuilder.Entity("CMMS.DAL.Entities.Farm", b =>
                 {
                     b.Navigation("Plots");
@@ -1875,31 +2124,16 @@ namespace CMMS.DAL.Migrations
                     b.Navigation("TaskDetails");
                 });
 
-            modelBuilder.Entity("CMMS.DAL.Entities.ImageAnalysis", b =>
-                {
-                    b.Navigation("ImageAnalysisResults");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.ImageAnalysisResult", b =>
-                {
-                    b.Navigation("PestDetections");
-                });
-
             modelBuilder.Entity("CMMS.DAL.Entities.IotDevice", b =>
                 {
                     b.Navigation("IotDatas");
+
+                    b.Navigation("IotSensors");
                 });
 
-            modelBuilder.Entity("CMMS.DAL.Entities.PestDetection", b =>
+            modelBuilder.Entity("CMMS.DAL.Entities.IotSensor", b =>
                 {
-                    b.Navigation("Notifications");
-
-                    b.Navigation("Recommendations");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.Photo", b =>
-                {
-                    b.Navigation("ImageAnalyses");
+                    b.Navigation("IotDatas");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Plot", b =>
@@ -1912,6 +2146,15 @@ namespace CMMS.DAL.Migrations
                     b.Navigation("RecommendationTaskDetails");
                 });
 
+            modelBuilder.Entity("CMMS.DAL.Entities.Report", b =>
+                {
+                    b.Navigation("DiagnosisResults");
+
+                    b.Navigation("EnvironmentSnapshots");
+
+                    b.Navigation("ReportAssignments");
+                });
+
             modelBuilder.Entity("CMMS.DAL.Entities.Role", b =>
                 {
                     b.Navigation("Users");
@@ -1919,8 +2162,6 @@ namespace CMMS.DAL.Migrations
 
             modelBuilder.Entity("CMMS.DAL.Entities.Season", b =>
                 {
-                    b.Navigation("PestDetections");
-
                     b.Navigation("Recommendations");
 
                     b.Navigation("SeasonsDetails");
@@ -1931,8 +2172,6 @@ namespace CMMS.DAL.Migrations
             modelBuilder.Entity("CMMS.DAL.Entities.SeasonsDetail", b =>
                 {
                     b.Navigation("GrowthTrackings");
-
-                    b.Navigation("Photos");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Soil", b =>
@@ -1956,17 +2195,17 @@ namespace CMMS.DAL.Migrations
 
             modelBuilder.Entity("CMMS.DAL.Entities.User", b =>
                 {
+                    b.Navigation("CreatedReports");
+
                     b.Navigation("Notifications");
 
-                    b.Navigation("PestDetections");
+                    b.Navigation("OwnedReports");
 
                     b.Navigation("RecommendationTaskAssignedToWorkers");
 
                     b.Navigation("RecommendationTaskCreatedByOwners");
 
                     b.Navigation("RecommendationTaskDetails");
-
-                    b.Navigation("Reports");
 
                     b.Navigation("WorkerSchedules");
                 });

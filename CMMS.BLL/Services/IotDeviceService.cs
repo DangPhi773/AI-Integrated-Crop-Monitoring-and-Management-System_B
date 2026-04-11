@@ -1,5 +1,6 @@
 using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
+using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.IotDevices;
 using CMMS.DAL.Entities;
@@ -22,7 +23,7 @@ namespace CMMS.BLL.Services
             try
             {
                 var devices = await _repo.GetAllAsync();
-                var data = devices.Select(MapToResponse);
+                var data = devices.Select(IotDeviceMapper.ToResponse);
                 return new ApiResponse<IEnumerable<IotDeviceResponse>> { Success = true, Data = data };
             }
             catch (Exception ex)
@@ -37,7 +38,7 @@ namespace CMMS.BLL.Services
             {
                 var device = await _repo.GetByIdAsync(id);
                 if (device == null) return new ApiResponse<IotDeviceResponse> { Success = false, Message = "Device not found" };
-                return new ApiResponse<IotDeviceResponse> { Success = true, Data = MapToResponse(device) };
+                return new ApiResponse<IotDeviceResponse> { Success = true, Data = IotDeviceMapper.ToResponse(device) };
             }
             catch (Exception ex)
             {
@@ -119,18 +120,5 @@ namespace CMMS.BLL.Services
             }
         }
 
-        private static IotDeviceResponse MapToResponse(IotDevice d) => new IotDeviceResponse
-        {
-            DeviceId = d.DeviceId,
-            BedId = d.BedId,
-            Name = d.Name,
-            Type = d.Type,
-            Status = d.Status,
-            InstallationDate = d.InstallationDate,
-            Latitude = d.Latitude,
-            Longitude = d.Longitude,
-            CreatedAt = d.CreatedAt,
-            UpdatedAt = d.UpdatedAt
-        };
     }
 }
