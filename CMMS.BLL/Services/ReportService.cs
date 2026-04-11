@@ -222,8 +222,29 @@ namespace CMMS.BLL.Services
             return new ApiResponse<DiagnosisResponse>
             {
                 Success = true,
-                Data = ReportMapper.ToResponse(diagnosis, diagnoser?.Fullname)
+                Data = ReportMapper.ToDiagnosisResponse(diagnosis, diagnoser?.Fullname)
             };
+        }
+
+        public async Task<ApiResponse<IEnumerable<DiagnosisResponse>>> GetAllDiagnosisAsync()
+        {
+            var list = await _diagnosisRepo.GetAllWithDetailsAsync();
+            var data = list.Select(d => ReportMapper.ToDiagnosisResponse(d)).ToList();
+            return new ApiResponse<IEnumerable<DiagnosisResponse>> { Success = true, Data = data };
+        }
+
+        public async Task<ApiResponse<DiagnosisResponse>> GetDiagnosisByIdAsync(Guid diagnosisId)
+        {
+            var d = await _diagnosisRepo.GetByIdWithDetailsAsync(diagnosisId);
+            if (d == null) return new ApiResponse<DiagnosisResponse> { Success = false, Message = "Không tìm thấy kết quả chẩn đoán" };
+            return new ApiResponse<DiagnosisResponse> { Success = true, Data = ReportMapper.ToDiagnosisResponse(d) };
+        }
+
+        public async Task<ApiResponse<IEnumerable<DiagnosisResponse>>> GetDiagnosisByReportIdAsync(Guid reportId)
+        {
+            var list = await _diagnosisRepo.GetByReportIdAsync(reportId);
+            var data = list.Select(d => ReportMapper.ToDiagnosisResponse(d)).ToList();
+            return new ApiResponse<IEnumerable<DiagnosisResponse>> { Success = true, Data = data };
         }
 
         public async Task<ApiResponse<string>> DeleteReportAsync(Guid id)
