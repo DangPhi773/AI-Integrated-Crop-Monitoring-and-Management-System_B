@@ -35,7 +35,6 @@ public partial class Season
     [ForeignKey("FarmId")]
     public virtual Farm? Farm { get; set; }
 
-    public virtual ICollection<PestDetection> PestDetections { get; set; } = new List<PestDetection>();
     public virtual ICollection<Recommendation> Recommendations { get; set; } = new List<Recommendation>();
     public virtual ICollection<SeasonsDetail> SeasonsDetails { get; set; } = new List<SeasonsDetail>();
     public virtual ICollection<TaskDetail> TaskDetails { get; set; } = new List<TaskDetail>();

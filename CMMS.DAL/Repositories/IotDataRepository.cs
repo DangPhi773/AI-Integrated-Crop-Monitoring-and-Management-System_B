@@ -40,6 +40,17 @@ namespace CMMS.DAL.Repositories
                 .ToListAsync();
         }
 
+        public async System.Threading.Tasks.Task<List<IotData>> GetLatestByBedIdAsync(Guid bedId, int count)
+        {
+            return await _context.IotDatas
+                .AsNoTracking()
+                .Include(d => d.Device)
+                .Where(d => d.Device != null && d.Device.BedId == bedId)
+                .OrderByDescending(d => d.RecordedAt)
+                .Take(count)
+                .ToListAsync();
+        }
+
         public async System.Threading.Tasks.Task AddAsync(IotData entity) => await _context.IotDatas.AddAsync(entity);
 
         public void Delete(IotData entity) => _context.IotDatas.Remove(entity);

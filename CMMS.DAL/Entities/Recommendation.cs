@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -13,7 +12,7 @@ public partial class Recommendation
 
     public Guid? SeasonId { get; set; }
 
-    public Guid? PestDetectionId { get; set; }
+    public Guid? DiagnosisId { get; set; }
 
     [MaxLength(255)]
     public string? Title { get; set; }
@@ -21,13 +20,13 @@ public partial class Recommendation
     public string? Content { get; set; }
 
     [Column(TypeName = "timestamp")]
-    public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? CreatedAt { get; set; }
 
     [Column(TypeName = "timestamp")]
     public DateTime? UpdatedAt { get; set; }
 
-    [ForeignKey("PestDetectionId")]
-    public virtual PestDetection? PestDetection { get; set; }
+    [ForeignKey("DiagnosisId")]
+    public virtual DiagnosisResult? Diagnosis { get; set; }
 
     [ForeignKey("SeasonId")]
     public virtual Season? Season { get; set; }

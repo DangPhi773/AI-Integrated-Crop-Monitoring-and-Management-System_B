@@ -1,5 +1,6 @@
 ﻿using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
+using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Plots;
 using CMMS.DAL.Entities;
@@ -23,7 +24,7 @@ namespace CMMS.BLL.Services
             try
             {
                 var plots = await _plotRepo.GetAllAsync();
-                var data = plots.Select(MapToResponse);
+                var data = plots.Select(PlotMapper.ToResponse);
                 return new ApiResponse<IEnumerable<PlotResponse>> { Success = true, Data = data };
             }
             catch (Exception ex)
@@ -38,7 +39,7 @@ namespace CMMS.BLL.Services
             {
                 var plot = await _plotRepo.GetByIdAsync(id);
                 if (plot == null) return new ApiResponse<PlotResponse> { Success = false, Message = "Plot not found" };
-                return new ApiResponse<PlotResponse> { Success = true, Data = MapToResponse(plot) };
+                return new ApiResponse<PlotResponse> { Success = true, Data = PlotMapper.ToResponse(plot) };
             }
             catch (Exception ex)
             {
@@ -142,19 +143,5 @@ namespace CMMS.BLL.Services
             }
         }
 
-        private static PlotResponse MapToResponse(Plot p) =>
-            new PlotResponse
-            {
-                PlotId = p.PlotId,
-                FarmId = p.FarmId,
-                SoilId = p.SoilId,
-                PlotName = p.PlotName,
-                PlotArea = p.PlotArea,
-                PlotStatus = p.PlotStatus,
-                BedCreatedAt = p.BedCreatedAt,
-                FarmName = p.Farm?.FarmName,
-                SoilName = p.Soil?.Name,
-                BedsCount = p.Beds?.Count ?? 0
-            };
     }
 }

@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CMMS.DAL.Entities
 {
-    [Table("IotData")]
     public class IotData
     {
         [Key]
@@ -13,31 +11,37 @@ namespace CMMS.DAL.Entities
 
         public Guid? DeviceId { get; set; }
         public Guid? SeasonId { get; set; }
+        public Guid? SensorId { get; set; }
 
-        [Column(TypeName = "timestamp")] 
+        [Column(TypeName = "timestamp")]
         public DateTime? RecordedAt { get; set; }
 
         [MaxLength(100)]
-        public string? Type { get; set; } 
+        public string? Type { get; set; }
 
-        public double? Value { get; set; } 
+        public double? Value { get; set; }
 
         [MaxLength(20)]
         public string? Unit { get; set; }
 
-        public bool? IsAlert { get; set; } 
+        public bool? IsAlert { get; set; }
 
-        public double? Min { get; set; } 
+        public double? Min { get; set; }
         public double? Max { get; set; }
 
-        [Required]
+        [Column(TypeName = "jsonb")]
+        public string? RawData { get; set; }
+
         [Column(TypeName = "timestamp")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; }
 
         [ForeignKey("DeviceId")]
         public virtual IotDevice? Device { get; set; }
 
         [ForeignKey("SeasonId")]
         public virtual Season? Season { get; set; }
+
+        [ForeignKey("SensorId")]
+        public virtual IotSensor? Sensor { get; set; }
     }
 }

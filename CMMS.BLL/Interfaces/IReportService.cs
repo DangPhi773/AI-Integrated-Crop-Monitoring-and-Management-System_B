@@ -1,10 +1,6 @@
-﻿using CMMS.DAL.DTOs.Auth;
-using CMMS.DAL.DTOs.Reports;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using CMMS.DAL.DTOs.Auth;
+using CMMS.DAL.DTOs.Reports.Requests;
+using CMMS.DAL.DTOs.Reports.Responses;
 
 namespace CMMS.BLL.Interfaces
 {
@@ -12,8 +8,9 @@ namespace CMMS.BLL.Interfaces
     {
         Task<ApiResponse<IEnumerable<ReportResponse>>> GetAllReportsAsync();
         Task<ApiResponse<ReportResponse>> GetReportByIdAsync(Guid id);
-        Task<ApiResponse<string>> CreateReportAsync(ReportRequest request);
-        Task<ApiResponse<string>> UpdateReportAsync(Guid id, ReportRequest request);
+        Task<ApiResponse<ReportResponse>> CreateReportAsync(CreateReportRequest request, Guid createdByUserId);
+        Task<ApiResponse<string>> AssignReportAsync(Guid reportId, AssignReportRequest request, Guid assignedByUserId);
+        Task<ApiResponse<DiagnosisResponse>> CreateDiagnosisAsync(Guid reportId, CreateDiagnosisRequest request, Guid diagnosedByUserId);
         Task<ApiResponse<string>> DeleteReportAsync(Guid id);
     }
 }

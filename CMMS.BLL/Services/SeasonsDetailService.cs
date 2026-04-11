@@ -1,4 +1,5 @@
 using CMMS.BLL.Interfaces;
+using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.SeasonsDetails;
 using CMMS.DAL.Entities;
@@ -22,7 +23,7 @@ namespace CMMS.BLL.Services
             try
             {
                 var details = await _seasonsDetailRepo.GetAllAsync();
-                var data = details.Select(MapToResponse);
+                var data = details.Select(SeasonsDetailMapper.ToResponse);
                 return new ApiResponse<IEnumerable<SeasonsDetailResponse>> { Success = true, Data = data };
             }
             catch (Exception ex)
@@ -37,7 +38,7 @@ namespace CMMS.BLL.Services
             {
                 var detail = await _seasonsDetailRepo.GetByIdAsync(id);
                 if (detail == null) return new ApiResponse<SeasonsDetailResponse> { Success = false, Message = "Seasons detail not found" };
-                return new ApiResponse<SeasonsDetailResponse> { Success = true, Data = MapToResponse(detail) };
+                return new ApiResponse<SeasonsDetailResponse> { Success = true, Data = SeasonsDetailMapper.ToResponse(detail) };
             }
             catch (Exception ex)
             {
@@ -119,22 +120,5 @@ namespace CMMS.BLL.Services
             }
         }
 
-        private static SeasonsDetailResponse MapToResponse(SeasonsDetail sd) =>
-            new SeasonsDetailResponse
-            {
-                SeasonDetailId = sd.SeasonDetailId,
-                SeasonId = sd.SeasonId,
-                BedId = sd.BedId,
-                CropId = sd.CropId,
-                CropQuantity = sd.CropQuantity,
-                StartDate = sd.StartDate,
-                EndDate = sd.EndDate,
-                SeasonExpectedHarvestDate = sd.SeasonExpectedHarvestDate,
-                TotalHarvestYield = sd.TotalHarvestYield,
-                SeasonName = sd.Season?.SeasonName,
-                BedName = sd.Bed?.BedName,
-                CropName = sd.Crop?.CropName,
-                PhotosCount = sd.Photos?.Count ?? 0
-            };
     }
 }
