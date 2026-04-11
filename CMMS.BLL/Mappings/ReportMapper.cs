@@ -26,12 +26,14 @@ namespace CMMS.BLL.Mappings
             UpdatedAt = r.UpdatedAt
         };
 
-        public static DiagnosisResponse ToResponse(DiagnosisResult d, string? diagnoserName = null) => new()
+        public static DiagnosisResponse ToDiagnosisResponse(DiagnosisResult d, string? diagnoserName = null) => new()
         {
             Id = d.Id,
             ReportId = d.ReportId,
+            ReportNo = d.Report?.ReportNo,
+            ReportTitle = d.Report?.Title,
             DiagnosedBy = d.DiagnosedBy,
-            DiagnoserName = diagnoserName,
+            DiagnoserName = diagnoserName ?? d.Diagnoser?.Fullname,
             DiseaseName = d.DiseaseName,
             Conclusion = d.Conclusion,
             RecommendedAction = d.RecommendedAction,

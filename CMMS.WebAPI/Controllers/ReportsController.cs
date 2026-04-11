@@ -62,6 +62,30 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? StatusCode(201, result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Owner,Specialist")]
+        [HttpGet("diagnosis")]
+        public async Task<IActionResult> GetAllDiagnosis()
+        {
+            var result = await _reportService.GetAllDiagnosisAsync();
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Owner,Specialist")]
+        [HttpGet("diagnosis/{diagnosisId:guid}")]
+        public async Task<IActionResult> GetDiagnosisById(Guid diagnosisId)
+        {
+            var result = await _reportService.GetDiagnosisByIdAsync(diagnosisId);
+            return result.Success ? Ok(result) : NotFound(result);
+        }
+
+        [Authorize(Roles = "Owner,Worker,Specialist")]
+        [HttpGet("{reportId:guid}/diagnosis")]
+        public async Task<IActionResult> GetDiagnosisByReportId(Guid reportId)
+        {
+            var result = await _reportService.GetDiagnosisByReportIdAsync(reportId);
+            return Ok(result);
+        }
+
         [Authorize(Roles = "Owner")]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
