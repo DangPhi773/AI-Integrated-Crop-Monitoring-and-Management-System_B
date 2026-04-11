@@ -4,6 +4,8 @@ namespace CMMS.DAL.DTOs.Reports.Responses
     {
         public Guid Id { get; set; }
         public Guid ReportId { get; set; }
+        public string? ReportNo { get; set; }
+        public string? ReportTitle { get; set; }
         public Guid DiagnosedBy { get; set; }
         public string? DiagnoserName { get; set; }
         public string DiseaseName { get; set; } = null!;
