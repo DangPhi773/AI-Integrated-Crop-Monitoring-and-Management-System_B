@@ -18,7 +18,7 @@ namespace CMMS.DAL.Repositories
         public async Task<IEnumerable<Recommendation>> GetAllWithDetailsAsync()
         {
             return await _context.Recommendations
-                .Include(r => r.PestDetection) 
+                .Include(r => r.Diagnosis) 
                 .Include(r => r.Season)
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
@@ -27,7 +27,7 @@ namespace CMMS.DAL.Repositories
         public async Task<Recommendation?> GetByIdWithDetailsAsync(Guid id)
         {
             return await _context.Recommendations
-                .Include(r => r.PestDetection)
+                .Include(r => r.Diagnosis)
                 .FirstOrDefaultAsync(r => r.RecommendationId == id);
         }
 

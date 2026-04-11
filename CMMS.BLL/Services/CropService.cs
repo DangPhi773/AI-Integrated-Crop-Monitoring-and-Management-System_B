@@ -1,4 +1,5 @@
 using CMMS.BLL.Interfaces;
+using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Crops;
 using CMMS.DAL.Entities;
@@ -21,22 +22,7 @@ namespace CMMS.BLL.Services
             {
                 var crops = await _cropRepo.GetAllAsync();
 
-                var response = crops.Select(c => new CropResponse
-                {
-                    CropId = c.CropId,
-                    CropName = c.CropName,
-                    CropScientificName = c.CropScientificName,
-                    CropDefaultGrowthDays = c.CropDefaultGrowthDays,
-                    PlantSpacing = c.PlantSpacing,
-                    CropQuantities = c.CropQuantities,
-                    CropStatus = c.CropStatus,
-                    CompatibleSoils = c.SoilCropCompatibilities?.Select(sc => new SoilCompatibilityDto
-                    {
-                        SoilId = sc.SoilId,
-                        SoilName = sc.Soil?.Name,
-                        Compatibility = sc.Compatibility
-                    }).ToList() ?? new List<SoilCompatibilityDto>()
-                }).ToList();
+                var response = crops.Select(CropMapper.ToResponse).ToList();
 
                 return new ApiResponse<IEnumerable<CropResponse>> { Success = true, Data = response };
             }
@@ -55,22 +41,7 @@ namespace CMMS.BLL.Services
                 if (crop == null)
                     return new ApiResponse<CropResponse> { Success = false, Message = "Không tìm thấy cây trồng" };
 
-                var response = new CropResponse
-                {
-                    CropId = crop.CropId,
-                    CropName = crop.CropName,
-                    CropScientificName = crop.CropScientificName,
-                    CropDefaultGrowthDays = crop.CropDefaultGrowthDays,
-                    PlantSpacing = crop.PlantSpacing,
-                    CropQuantities = crop.CropQuantities,
-                    CropStatus = crop.CropStatus,
-                    CompatibleSoils = crop.SoilCropCompatibilities?.Select(sc => new SoilCompatibilityDto
-                    {
-                        SoilId = sc.SoilId,
-                        SoilName = sc.Soil?.Name,
-                        Compatibility = sc.Compatibility
-                    }).ToList() ?? new List<SoilCompatibilityDto>()
-                };
+                var response = CropMapper.ToResponse(crop);
 
                 return new ApiResponse<CropResponse> { Success = true, Data = response };
             }

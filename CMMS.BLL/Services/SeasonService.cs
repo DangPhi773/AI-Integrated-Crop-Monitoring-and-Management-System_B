@@ -1,5 +1,6 @@
 ﻿using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
+using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Seasons;
 using CMMS.DAL.Entities;
@@ -23,7 +24,7 @@ namespace CMMS.BLL.Services
             try
             {
                 var seasons = await _seasonRepo.GetAllAsync();
-                var data = seasons.Select(MapToResponse);
+                var data = seasons.Select(SeasonMapper.ToResponse);
                 return new ApiResponse<IEnumerable<SeasonResponse>> { Success = true, Data = data };
             }
             catch (Exception ex)
@@ -38,7 +39,7 @@ namespace CMMS.BLL.Services
             {
                 var s = await _seasonRepo.GetByIdAsync(id);
                 if (s == null) return new ApiResponse<SeasonResponse> { Success = false, Message = "Season not found" };
-                return new ApiResponse<SeasonResponse> { Success = true, Data = MapToResponse(s) };
+                return new ApiResponse<SeasonResponse> { Success = true, Data = SeasonMapper.ToResponse(s) };
             }
             catch (Exception ex)
             {
@@ -119,31 +120,5 @@ namespace CMMS.BLL.Services
             }
         }
 
-        private static SeasonResponse MapToResponse(Season s) =>
-            new SeasonResponse
-            {
-                SeasonId = s.SeasonId,
-                FarmId = s.FarmId,
-                SeasonName = s.SeasonName,
-                SeasonStartDate = s.SeasonStartDate,
-                SeasonEndDate = s.SeasonEndDate,
-                Description = s.Description,
-                SeasonNotes = s.SeasonNotes,
-                SeasonCreatedAt = s.SeasonCreatedAt,
-                Status = s.Status,
-                SeasonsDetailsCount = s.SeasonsDetails?.Count ?? 0,
-                TasksCount = s.TaskDetails?.Count ?? 0,
-                SeasonsDetails = s.SeasonsDetails?.Select(d => new SeasonsDetailDto
-                {
-                    SeasonDetailId = d.SeasonDetailId,
-                    BedId = d.BedId,
-                    CropId = d.CropId,
-                    CropQuantity = d.CropQuantity,
-                    StartDate = d.StartDate,
-                    EndDate = d.EndDate,
-                    SeasonExpectedHarvestDate = d.SeasonExpectedHarvestDate,
-                    TotalHarvestYield = d.TotalHarvestYield
-                }).ToList() ?? new List<SeasonsDetailDto>()
-            };
     }
 }

@@ -1,4 +1,5 @@
 using CMMS.BLL.Interfaces;
+using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Tasks;
 using CMMS.DAL.Interfaces;
@@ -20,15 +21,7 @@ namespace CMMS.BLL.Services
             try
             {
                 var tasks = await _taskRepo.GetAllAsync();
-                var data = tasks.Select(t => new TaskResponse
-                {
-                    TaskId = t.TaskId,
-                    TaskTitle = t.TaskTitle,
-                    TaskStatus = t.TaskStatus,
-                    TaskNotes = t.TaskNotes,
-                    TaskCreatedAt = t.TaskCreatedAt,
-                    TaskDetailsCount = t.TaskDetails?.Count ?? 0
-                });
+                var data = tasks.Select(TaskMapper.ToResponse);
                 return new ApiResponse<IEnumerable<TaskResponse>> { Success = true, Data = data };
             }
             catch (Exception ex)
@@ -47,15 +40,7 @@ namespace CMMS.BLL.Services
                 return new ApiResponse<TaskResponse>
                 {
                     Success = true,
-                    Data = new TaskResponse
-                    {
-                        TaskId = t.TaskId,
-                        TaskTitle = t.TaskTitle,
-                        TaskStatus = t.TaskStatus,
-                        TaskNotes = t.TaskNotes,
-                        TaskCreatedAt = t.TaskCreatedAt,
-                        TaskDetailsCount = t.TaskDetails?.Count ?? 0
-                    }
+                    Data = TaskMapper.ToResponse(t)
                 };
             }
             catch (Exception ex)

@@ -36,7 +36,6 @@ builder.Services.AddScoped<ISoilRepository, SoilRepository>();
 builder.Services.AddScoped<IPlotRepository, PlotRepository>();
 builder.Services.AddScoped<IBedRepository, BedRepository>();
 builder.Services.AddScoped<ISeasonsDetailRepository, SeasonsDetailRepository>();
-builder.Services.AddScoped<IReportRepository, ReportRepository>();
 builder.Services.AddScoped<IIotDeviceRepository, IotDeviceRepository>();
 builder.Services.AddScoped<IIotDataRepository, IotDataRepository>();
 builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>();
@@ -44,6 +43,12 @@ builder.Services.AddScoped<ICropGrowthTaskRepository, CropGrowthTaskRepository>(
 builder.Services.AddScoped<ISubTaskRepository, SubTaskRepository>();
 builder.Services.AddScoped<ICropBedConfigRepository, CropBedConfigRepository>();
 builder.Services.AddScoped<ICropGrowthStageRepository, CropGrowthStageRepository>();
+builder.Services.AddScoped<IReportRepository, ReportRepository>();
+builder.Services.AddScoped<IAttachmentRepository, AttachmentRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IReportAssignmentRepository, ReportAssignmentRepository>();
+builder.Services.AddScoped<IDiagnosisResultRepository, DiagnosisResultRepository>();
+builder.Services.AddScoped<IReportEnvironmentSnapshotRepository, ReportEnvironmentSnapshotRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICropService, CropService>();
@@ -66,9 +71,15 @@ builder.Services.AddScoped<ICropBedConfigService, CropBedConfigService>();
 builder.Services.AddScoped<ICropGrowthStageService, CropGrowthStageService>();
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("Cloudinary"));
+builder.Services.Configure<PlantNetSettings>(builder.Configuration.GetSection("PlantNet"));
+
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+builder.Services.AddScoped<IAttachmentService, AttachmentService>();
+builder.Services.AddHttpClient<IPlantNetService, PlantNetService>();
 
 builder.Services.AddEndpointsApiExplorer();
 

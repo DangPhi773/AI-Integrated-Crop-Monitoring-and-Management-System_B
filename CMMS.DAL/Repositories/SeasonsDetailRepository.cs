@@ -20,7 +20,6 @@ namespace CMMS.DAL.Repositories
                 .Include(sd => sd.Season)
                 .Include(sd => sd.Bed)
                 .Include(sd => sd.Crop)
-                .Include(sd => sd.Photos)
                 .AsNoTracking()
                 .ToListAsync();
 
@@ -29,7 +28,6 @@ namespace CMMS.DAL.Repositories
                 .Include(sd => sd.Season)
                 .Include(sd => sd.Bed)
                 .Include(sd => sd.Crop)
-                .Include(sd => sd.Photos)
                 .FirstOrDefaultAsync(sd => sd.SeasonDetailId == id);
 
         public async System.Threading.Tasks.Task AddAsync(SeasonsDetail seasonsDetail) => await _context.SeasonsDetails.AddAsync(seasonsDetail);

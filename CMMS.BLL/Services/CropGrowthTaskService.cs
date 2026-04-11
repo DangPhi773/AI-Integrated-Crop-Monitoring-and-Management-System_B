@@ -1,4 +1,5 @@
 ﻿using CMMS.BLL.Interfaces;
+using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Tasks;
 using CMMS.DAL.Entities;
@@ -25,7 +26,7 @@ namespace CMMS.BLL.Services
                 return new ApiResponse<IEnumerable<CropGrowthTaskResponse>>
                 {
                     Success = true,
-                    Data = tasks.Select(MapToResponse)
+                    Data = tasks.Select(CropGrowthTaskMapper.ToResponse)
                 };
             }
             catch (Exception ex)
@@ -38,13 +39,13 @@ namespace CMMS.BLL.Services
         {
             var task = await _repo.GetByIdAsync(id);
             if (task == null) return new ApiResponse<CropGrowthTaskResponse> { Success = false, Message = "Không tìm thấy mẫu công việc." };
-            return new ApiResponse<CropGrowthTaskResponse> { Success = true, Data = MapToResponse(task) };
+            return new ApiResponse<CropGrowthTaskResponse> { Success = true, Data = CropGrowthTaskMapper.ToResponse(task) };
         }
 
         public async Task<ApiResponse<IEnumerable<CropGrowthTaskResponse>>> GetByStageIdAsync(Guid stageId)
         {
             var tasks = await _repo.GetByStageIdAsync(stageId);
-            return new ApiResponse<IEnumerable<CropGrowthTaskResponse>> { Success = true, Data = tasks.Select(MapToResponse) };
+            return new ApiResponse<IEnumerable<CropGrowthTaskResponse>> { Success = true, Data = tasks.Select(CropGrowthTaskMapper.ToResponse) };
         }
 
         public async Task<ApiResponse<string>> CreateAsync(CropGrowthTaskRequest request)
@@ -131,25 +132,6 @@ namespace CMMS.BLL.Services
             await _repo.SaveChangesAsync(); 
             return new ApiResponse<string> { Success = true, Message = "Xóa thành công." };
         }
-
-        private static CropGrowthTaskResponse MapToResponse(CropGrowthTask t) => new CropGrowthTaskResponse
-        {
-            GrowthTaskId = t.GrowthTaskId,
-            StageId = t.StageId,
-            StageName = t.CropGrowthStage?.StageName,
-            TaskName = t.TaskName,
-            TaskDescription = t.TaskDescription,
-            Frequency = t.Frequency,
-            DurationMinutes = t.DurationMinutes,
-            RequiredTools = t.RequiredTools,
-            RequiredMaterials = t.RequiredMaterials,
-            QuantityPerUnit = t.QuantityPerUnit,
-            QuantityUnit = t.QuantityUnit,
-            Priority = t.Priority,
-            IsMandatory = t.IsMandatory,
-            Notes = t.Notes,
-            CreatedAt = DateTime.SpecifyKind(t.CreatedAt, DateTimeKind.Utc)
-        };
 
         public async Task<bool> SaveAsync() => await _repo.SaveChangesAsync();
     }
