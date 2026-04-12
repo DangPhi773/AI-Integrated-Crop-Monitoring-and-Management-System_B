@@ -11,6 +11,7 @@ namespace CMMS.BLL.Mappings
             TaskId = d.TaskId,
             TaskTitle = d.Task?.TaskTitle,
             SeasonId = d.SeasonId,
+            FarmId = d.FarmId,
             AssignedToWorkerIds = d.AssignedToWorkerIds,
             BedIds = d.BedIds,
             PlotIds = d.PlotIds,

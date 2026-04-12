@@ -14,8 +14,18 @@ namespace CMMS.BLL.Services
     public class TaskDetailService : ITaskDetailService
     {
         private readonly ITaskDetailRepository _repo;
+        private readonly IWorkerScheduleRepository _scheduleRepo;
+        private readonly IUserRepository _userRepo;
 
-        public TaskDetailService(ITaskDetailRepository repo) => _repo = repo;
+        public TaskDetailService(
+            ITaskDetailRepository repo,
+            IWorkerScheduleRepository scheduleRepo,
+            IUserRepository userRepo)
+        {
+            _repo = repo;
+            _scheduleRepo = scheduleRepo;
+            _userRepo = userRepo;
+        }
 
         public async Task<ApiResponse<IEnumerable<TaskDetailResponse>>> GetAllAsync()
         {
@@ -100,12 +110,18 @@ namespace CMMS.BLL.Services
         {
             try
             {
+                var workerIds = request.AssignedToWorkerIds ?? new List<Guid>();
+
+                var validationResult = await ValidateWorkersAsync(workerIds);
+                if (validationResult != null) return validationResult;
+
                 var entity = new TaskDetail
                 {
                     TaskDetailId = Guid.NewGuid(),
                     TaskId = request.TaskId,
                     SeasonId = request.SeasonId,
-                    AssignedToWorkerIds = request.AssignedToWorkerIds ?? new List<Guid>(),
+                    FarmId = request.FarmId,
+                    AssignedToWorkerIds = workerIds,
                     BedIds = request.BedIds ?? new List<Guid>(),
                     PlotIds = request.PlotIds ?? new List<Guid>(),
                     StartDate = request.StartDate,
@@ -116,6 +132,9 @@ namespace CMMS.BLL.Services
 
                 await _repo.AddAsync(entity);
                 await _repo.SaveChangesAsync();
+
+                await SyncWorkerSchedulesAsync(entity.TaskDetailId, workerIds, entity.Task?.TaskTitle);
+
                 return new ApiResponse<string> { Success = true, Message = "Task detail created" };
             }
             catch (Exception ex)
@@ -131,9 +150,17 @@ namespace CMMS.BLL.Services
                 var entity = await _repo.GetByIdAsync(id);
                 if (entity == null) return new ApiResponse<string> { Success = false, Message = "Task detail not found" };
 
+                var newWorkerIds = request.AssignedToWorkerIds;
+                if (newWorkerIds != null)
+                {
+                    var validationResult = await ValidateWorkersAsync(newWorkerIds);
+                    if (validationResult != null) return validationResult;
+                }
+
                 entity.TaskId = request.TaskId ?? entity.TaskId;
                 entity.SeasonId = request.SeasonId ?? entity.SeasonId;
-                entity.AssignedToWorkerIds = request.AssignedToWorkerIds ?? entity.AssignedToWorkerIds;
+                entity.FarmId = request.FarmId ?? entity.FarmId;
+                entity.AssignedToWorkerIds = newWorkerIds ?? entity.AssignedToWorkerIds;
                 entity.BedIds = request.BedIds ?? entity.BedIds;
                 entity.PlotIds = request.PlotIds ?? entity.PlotIds;
                 entity.StartDate = request.StartDate ?? entity.StartDate;
@@ -143,6 +170,12 @@ namespace CMMS.BLL.Services
 
                 _repo.Update(entity);
                 await _repo.SaveChangesAsync();
+
+                if (newWorkerIds != null)
+                {
+                    await SyncWorkerSchedulesAsync(entity.TaskDetailId, newWorkerIds, entity.Task?.TaskTitle);
+                }
+
                 return new ApiResponse<string> { Success = true, Message = "Task detail updated" };
             }
             catch (Exception ex)
@@ -185,6 +218,10 @@ namespace CMMS.BLL.Services
                 var entity = await _repo.GetByIdAsync(id);
                 if (entity == null) return new ApiResponse<string> { Success = false, Message = "Task detail not found" };
 
+                var existingSchedules = await _scheduleRepo.GetByTaskDetailIdAsync(id);
+                if (existingSchedules.Any())
+                    _scheduleRepo.DeleteRange(existingSchedules);
+
                 _repo.Delete(entity);
                 await _repo.SaveChangesAsync();
                 return new ApiResponse<string> { Success = true, Message = "Task detail deleted" };
@@ -195,5 +232,50 @@ namespace CMMS.BLL.Services
             }
         }
 
+        private async Task<ApiResponse<string>?> ValidateWorkersAsync(List<Guid> workerIds)
+        {
+            if (!workerIds.Any()) return null;
+
+            var workers = await _userRepo.GetByRoleNamesAsync("Worker");
+            var validWorkerIds = workers.Select(w => w.UserId).ToHashSet();
+            var invalidIds = workerIds.Where(id => !validWorkerIds.Contains(id)).ToList();
+
+            if (invalidIds.Any())
+                return new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = $"Worker không hợp lệ: {string.Join(", ", invalidIds)}"
+                };
+
+            return null;
+        }
+
+        private async System.Threading.Tasks.Task SyncWorkerSchedulesAsync(Guid taskDetailId, List<Guid> workerIds, string? taskTitle)
+        {
+            var existingSchedules = (await _scheduleRepo.GetByTaskDetailIdAsync(taskDetailId)).ToList();
+            var existingWorkerIds = existingSchedules.Select(s => s.WorkerId!.Value).ToHashSet();
+            var newWorkerIdSet = workerIds.ToHashSet();
+
+            var toRemove = existingSchedules.Where(s => !newWorkerIdSet.Contains(s.WorkerId!.Value)).ToList();
+            if (toRemove.Any())
+                _scheduleRepo.DeleteRange(toRemove);
+
+            var toAdd = workerIds.Where(id => !existingWorkerIds.Contains(id)).ToList();
+            if (toAdd.Any())
+            {
+                var newSchedules = toAdd.Select(wId => new WorkerSchedule
+                {
+                    ScheduleId = Guid.NewGuid(),
+                    TaskDetailId = taskDetailId,
+                    WorkerId = wId,
+                    Description = taskTitle,
+                    Status = "Assigned"
+                });
+                await _scheduleRepo.AddRangeAsync(newSchedules);
+            }
+
+            if (toRemove.Any() || toAdd.Any())
+                await _scheduleRepo.SaveChangesAsync();
+        }
     }
 }
