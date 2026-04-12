@@ -39,6 +39,15 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Worker")]
+        [HttpGet("my-tasks")]
+        public async Task<IActionResult> GetMyTasks()
+        {
+            var workerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _service.GetByWorkerIdAsync(workerId);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
         [Authorize(Roles = "Owner")]
         [HttpGet("worker/{workerId:guid}")]
         public async Task<IActionResult> GetByWorker(Guid workerId)
