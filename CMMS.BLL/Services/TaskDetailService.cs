@@ -110,7 +110,8 @@ namespace CMMS.BLL.Services
                     PlotIds = request.PlotIds ?? new List<Guid>(),
                     StartDate = request.StartDate,
                     EndDate = request.EndDate,
-                    Notes = request.Notes
+                    Notes = request.Notes,
+                    Status = request.Status ?? "Pending"
                 };
 
                 await _repo.AddAsync(entity);
@@ -138,6 +139,7 @@ namespace CMMS.BLL.Services
                 entity.StartDate = request.StartDate ?? entity.StartDate;
                 entity.EndDate = request.EndDate ?? entity.EndDate;
                 entity.Notes = request.Notes ?? entity.Notes;
+                entity.Status = request.Status ?? entity.Status;
 
                 _repo.Update(entity);
                 await _repo.SaveChangesAsync();
@@ -146,6 +148,33 @@ namespace CMMS.BLL.Services
             catch (Exception ex)
             {
                 return new ApiResponse<string> { Success = false, Message = "Error updating task detail", Errors = new List<string> { ex.Message } };
+            }
+        }
+
+        public async Task<ApiResponse<string>> UpdateStatusAsync(Guid id, string status, Guid workerId)
+        {
+            try
+            {
+                var validStatuses = new[] { "Pending", "InProgress", "Completed", "Cancelled" };
+                if (!validStatuses.Contains(status))
+                    return new ApiResponse<string> { Success = false, Message = $"Trạng thái không hợp lệ. Chỉ chấp nhận: {string.Join(", ", validStatuses)}" };
+
+                var entity = await _repo.GetByIdAsync(id);
+                if (entity == null)
+                    return new ApiResponse<string> { Success = false, Message = "Không tìm thấy task detail" };
+
+                if (!entity.AssignedToWorkerIds.Contains(workerId))
+                    return new ApiResponse<string> { Success = false, Message = "Bạn không được phân công cho công việc này" };
+
+                entity.Status = status;
+                _repo.Update(entity);
+                await _repo.SaveChangesAsync();
+
+                return new ApiResponse<string> { Success = true, Message = $"Đã cập nhật trạng thái thành '{status}'" };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<string> { Success = false, Message = "Lỗi cập nhật trạng thái", Errors = new List<string> { ex.Message } };
             }
         }
 

@@ -16,7 +16,8 @@ namespace CMMS.BLL.Mappings
             PlotIds = d.PlotIds,
             StartDate = d.StartDate,
             EndDate = d.EndDate,
-            Notes = d.Notes
+            Notes = d.Notes,
+            Status = d.Status
         };
     }
 }

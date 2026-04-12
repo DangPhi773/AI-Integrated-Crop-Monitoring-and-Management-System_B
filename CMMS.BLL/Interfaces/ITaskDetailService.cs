@@ -16,6 +16,7 @@ namespace CMMS.BLL.Interfaces
         Task<ApiResponse<IEnumerable<TaskDetailResponse>>> GetByTaskIdAsync(Guid taskId);
         Task<ApiResponse<string>> CreateAsync(TaskDetailRequest request);
         Task<ApiResponse<string>> UpdateAsync(Guid id, TaskDetailRequest request);
+        Task<ApiResponse<string>> UpdateStatusAsync(Guid id, string status, Guid workerId);
         Task<ApiResponse<string>> DeleteAsync(Guid id);
     }
 }

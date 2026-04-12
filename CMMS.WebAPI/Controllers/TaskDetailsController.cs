@@ -2,6 +2,7 @@ using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CMMS.WebAPI.Controllers
 {
@@ -76,6 +77,15 @@ namespace CMMS.WebAPI.Controllers
         public async Task<IActionResult> Update(Guid id, [FromBody] TaskDetailRequest request)
         {
             var result = await _service.UpdateAsync(id, request);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [Authorize(Roles = "Worker")]
+        [HttpPatch("{id:guid}/status")]
+        public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateTaskDetailStatusRequest request)
+        {
+            var workerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _service.UpdateStatusAsync(id, request.Status, workerId);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
