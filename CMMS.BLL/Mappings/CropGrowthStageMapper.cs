@@ -11,8 +11,17 @@ namespace CMMS.BLL.Mappings
             CropId = s.CropId,
             CropName = s.Crop?.CropName,
             StageName = s.StageName,
+            StageDescription = s.StageDescription,
             TemperatureMin = s.TemperatureMin,
+            HumidityMin = s.HumidityMin,
+            SoilMoistureMin = s.SoilMoistureMin,
+            GrowthIndicators = s.GrowthIndicators,
+            CommonDiseases = s.CommonDiseases,
+            Notes = s.Notes,
             CreatedAt = s.CreatedAt
         };
+
+        public static IEnumerable<CropGrowthStageResponse> ToResponseList(IEnumerable<CropGrowthStage> list)
+            => list.Select(ToResponse);
     }
 }

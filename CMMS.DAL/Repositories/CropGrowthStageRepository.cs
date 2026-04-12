@@ -21,6 +21,13 @@ namespace CMMS.DAL.Repositories
         public async Task<CropGrowthStage?> GetByIdAsync(Guid id) =>
             await _context.CropGrowthStages.Include(s => s.Crop).FirstOrDefaultAsync(s => s.StageId == id);
 
+        public async Task<IEnumerable<CropGrowthStage>> GetByCropIdAsync(Guid cropId) =>
+    await _context.CropGrowthStages
+        .Include(s => s.Crop)
+        .Where(s => s.CropId == cropId)
+        .OrderBy(s => s.CreatedAt) 
+        .ToListAsync();
+
         public async System.Threading.Tasks.Task AddAsync(CropGrowthStage stage) => await _context.CropGrowthStages.AddAsync(stage);
         public void Update(CropGrowthStage stage) => _context.CropGrowthStages.Update(stage);
         public void Delete(CropGrowthStage stage) => _context.CropGrowthStages.Remove(stage);
