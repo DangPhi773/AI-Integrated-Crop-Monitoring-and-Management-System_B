@@ -1,29 +1,24 @@
-﻿using CMMS.BLL.Helpers;
+using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.Entities;
 using CMMS.DAL.Interfaces;
-using CMMS.DAL.Repositories;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Net;
-using System.Net.Mail;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace CMMS.BLL.Services
 {
     public class AuthService : IAuthService
     {
         private readonly IUserRepository _userRepo;
+        private readonly IEmailService _emailService;
 
-        public AuthService(IUserRepository userRepo)
+        public AuthService(IUserRepository userRepo, IEmailService emailService)
         {
             _userRepo = userRepo;
+            _emailService = emailService;
         }
 
         public async Task<ApiResponse<string>> RegisterAsync(RegisterRequest request)
@@ -37,9 +32,7 @@ namespace CMMS.BLL.Services
                 {
                     UserId = Guid.NewGuid(),
                     Email = request.Email,
-                    Password = request.Password,
-                    HashPassword = PasswordHelper.HashPassword(request.Password), 
-
+                    HashPassword = PasswordHelper.HashPassword(request.Password),
                     Fullname = request.Fullname,
                     PhoneNumber = request.PhoneNumber,
                     CreatedAt = DateTimeHelper.VnNow(),
@@ -49,7 +42,7 @@ namespace CMMS.BLL.Services
                 await _userRepo.AddAsync(newUser);
                 if (await _userRepo.SaveChangesAsync())
                 {
-                    _ = SendEmailAsync(newUser.Email, "Chào mừng", "Bạn đã đăng ký thành công hệ thống CMMS.");
+                    _ = _emailService.SendEmailAsync(newUser.Email, "Chào mừng", "Bạn đã đăng ký thành công hệ thống CMMS.");
 
                     return new ApiResponse<string> { Success = true, Message = "Đăng ký thành công!" };
                 }
@@ -82,7 +75,7 @@ namespace CMMS.BLL.Services
                         new Claim(ClaimTypes.Email, user.Email),
                         new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "User")
                     }),
-                    Expires = DateTime.UtcNow.AddDays(7), 
+                    Expires = DateTime.UtcNow.AddDays(7),
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
                 };
                 var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -104,21 +97,6 @@ namespace CMMS.BLL.Services
             }
         }
 
-        private async System.Threading.Tasks.Task SendEmailAsync(string toEmail, string subject, string body)
-        {
-            try
-            {
-                var fromMail = "your-email@gmail.com";
-                var pw = "your-app-password";
-                using var client = new SmtpClient("smtp.gmail.com", 587)
-                {
-                    EnableSsl = true,
-                    Credentials = new NetworkCredential(fromMail, pw)
-                };
-                await client.SendMailAsync(new MailMessage(fromMail, toEmail, subject, body));
-            }
-            catch {  }
-        }
         public async Task<ApiResponse<object>> GetRolesAsync()
         {
             var roles = await _userRepo.GetAllRolesAsync();

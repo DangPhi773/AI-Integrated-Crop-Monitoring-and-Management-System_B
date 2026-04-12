@@ -86,7 +86,6 @@ namespace CMMS.BLL.Services
                 {
                     UserId = Guid.NewGuid(),
                     Email = request.Email,
-                    Password = request.Password,
                     HashPassword = PasswordHelper.HashPassword(request.Password),
                     Fullname = request.Fullname,
                     PhoneNumber = request.PhoneNumber,
