@@ -34,6 +34,7 @@ namespace CMMS.DAL.DTOs.Tasks
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string? Notes { get; set; }
+        public string? Status { get; set; }
     }
 
     public class TaskDetailResponse
@@ -48,5 +49,11 @@ namespace CMMS.DAL.DTOs.Tasks
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string? Notes { get; set; }
+        public string? Status { get; set; }
+    }
+
+    public class UpdateTaskDetailStatusRequest
+    {
+        public string Status { get; set; } = null!;
     }
 }
