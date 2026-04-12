@@ -43,6 +43,12 @@ namespace CMMS.DAL.Repositories
             return await _context.SaveChangesAsync() > 0;
         }
 
+        public async Task<Role?> GetRoleByNameAsync(string roleName)
+        {
+            return await _context.Roles
+                .FirstOrDefaultAsync(r => r.RoleName.ToLower().Trim() == roleName.ToLower().Trim());
+        }
+
         public async Task<IEnumerable<Role>> GetAllRolesAsync()
         {
             return await _context.Roles.OrderBy(r => r.RoleName).ToListAsync();
