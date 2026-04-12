@@ -30,6 +30,10 @@ public partial class TaskDetail
     [Column("notes")]
     public string? Notes { get; set; }
 
+    [Column("status")]
+    [MaxLength(50)]
+    public string? Status { get; set; } = "Pending";
+
     [Column("assigned_to_worker_ids")]
     public List<Guid> AssignedToWorkerIds { get; set; } = new List<Guid>();
 
