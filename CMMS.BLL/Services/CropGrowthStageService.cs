@@ -24,6 +24,13 @@ namespace CMMS.BLL.Services
             return new ApiResponse<IEnumerable<CropGrowthStageResponse>> { Success = true, Data = data };
         }
 
+        public async Task<ApiResponse<IEnumerable<CropGrowthStageResponse>>> GetByCropIdAsync(Guid cropId)
+        {
+            var stages = await _repo.GetByCropIdAsync(cropId);
+            var data = CropGrowthStageMapper.ToResponseList(stages);
+            return new ApiResponse<IEnumerable<CropGrowthStageResponse>> { Success = true, Data = data };
+        }
+
         public async Task<ApiResponse<string>> CreateStageAsync(CropGrowthStageRequest request)
         {
             var stage = new CropGrowthStage
@@ -38,7 +45,8 @@ namespace CMMS.BLL.Services
                 GrowthIndicators = request.GrowthIndicators,
                 CommonDiseases = request.CommonDiseases,
                 Notes = request.Notes,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
             };
             await _repo.AddAsync(stage);
             return await _repo.SaveChangesAsync() ?
@@ -54,11 +62,17 @@ namespace CMMS.BLL.Services
             stage.StageName = request.StageName;
             stage.StageDescription = request.StageDescription;
             stage.TemperatureMin = request.TemperatureMin;
+            stage.HumidityMin = request.HumidityMin;
+            stage.SoilMoistureMin = request.SoilMoistureMin;
+            stage.GrowthIndicators = request.GrowthIndicators;
+            stage.CommonDiseases = request.CommonDiseases;
+            stage.Notes = request.Notes;
             stage.UpdatedAt = DateTime.UtcNow;
 
             _repo.Update(stage);
-            await _repo.SaveChangesAsync();
-            return new ApiResponse<string> { Success = true, Message = "Cập nhật thành công" };
+            return await _repo.SaveChangesAsync() ?
+                new ApiResponse<string> { Success = true, Message = "Cập nhật giai đoạn thành công" } :
+                new ApiResponse<string> { Success = false, Message = "Lỗi khi cập nhật dữ liệu" };
         }
 
         public async Task<ApiResponse<string>> RemoveStageAsync(Guid id)
@@ -66,8 +80,9 @@ namespace CMMS.BLL.Services
             var stage = await _repo.GetByIdAsync(id);
             if (stage == null) return new ApiResponse<string> { Success = false, Message = "Không tìm thấy" };
             _repo.Delete(stage);
-            await _repo.SaveChangesAsync();
-            return new ApiResponse<string> { Success = true, Message = "Xóa thành công" };
+            return await _repo.SaveChangesAsync() ?
+                new ApiResponse<string> { Success = true, Message = "Xóa giai đoạn thành công" } :
+                new ApiResponse<string> { Success = false, Message = "Lỗi khi thực hiện xóa dữ liệu" };
         }
 
         public async Task<ApiResponse<CropGrowthStageResponse>> GetStageByIdAsync(Guid id)
