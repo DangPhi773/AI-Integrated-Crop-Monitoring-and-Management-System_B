@@ -28,6 +28,7 @@ namespace CMMS.DAL.DTOs.Tasks
     {
         public Guid? TaskId { get; set; }
         public Guid? SeasonId { get; set; }
+        public Guid? FarmId { get; set; }
         public List<Guid>? AssignedToWorkerIds { get; set; }
         public List<Guid>? BedIds { get; set; }
         public List<Guid>? PlotIds { get; set; }
@@ -43,6 +44,7 @@ namespace CMMS.DAL.DTOs.Tasks
         public Guid? TaskId { get; set; }
         public string? TaskTitle { get; set; }
         public Guid? SeasonId { get; set; }
+        public Guid? FarmId { get; set; }
         public List<Guid> AssignedToWorkerIds { get; set; } = new();
         public List<Guid> BedIds { get; set; } = new();
         public List<Guid> PlotIds { get; set; } = new();
