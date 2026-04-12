@@ -13,6 +13,13 @@ namespace CMMS.WebAPI.Controllers
         private readonly ICropGrowthStageService _service;
         public CropGrowthStagesController(ICropGrowthStageService service) => _service = service;
 
+        [HttpGet("crop/{cropId}")]
+        public async Task<IActionResult> GetByCropId(Guid cropId)
+        {
+            var result = await _service.GetByCropIdAsync(cropId);
+            return Ok(result);
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetAll() => Ok(await _service.GetStagesAsync());
 

@@ -12,6 +12,7 @@ namespace CMMS.BLL.Interfaces
     {
         Task<ApiResponse<IEnumerable<CropGrowthStageResponse>>> GetStagesAsync();
         Task<ApiResponse<CropGrowthStageResponse>> GetStageByIdAsync(Guid id);
+        Task<ApiResponse<IEnumerable<CropGrowthStageResponse>>> GetByCropIdAsync(Guid cropId);
         Task<ApiResponse<string>> CreateStageAsync(CropGrowthStageRequest request);
         Task<ApiResponse<string>> UpdateStageAsync(Guid id, CropGrowthStageRequest request);
         Task<ApiResponse<string>> RemoveStageAsync(Guid id);
