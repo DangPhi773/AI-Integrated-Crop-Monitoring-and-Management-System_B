@@ -6,6 +6,7 @@ using CMMS.DAL.DTOs.Reports.Requests;
 using CMMS.DAL.DTOs.Reports.Responses;
 using CMMS.DAL.Entities;
 using CMMS.DAL.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CMMS.BLL.Services
@@ -19,6 +20,8 @@ namespace CMMS.BLL.Services
         private readonly IReportAssignmentRepository _assignmentRepo;
         private readonly IDiagnosisResultRepository _diagnosisRepo;
         private readonly INotificationRepository _notificationRepo;
+        private readonly IAttachmentService _attachmentService;
+        private readonly IAttachmentRepository _attachmentRepo;
         private readonly IServiceScopeFactory _scopeFactory;
 
         public ReportService(
@@ -29,6 +32,8 @@ namespace CMMS.BLL.Services
             IReportAssignmentRepository assignmentRepo,
             IDiagnosisResultRepository diagnosisRepo,
             INotificationRepository notificationRepo,
+            IAttachmentService attachmentService,
+            IAttachmentRepository attachmentRepo,
             IServiceScopeFactory scopeFactory)
         {
             _reportRepo = reportRepo;
@@ -38,13 +43,22 @@ namespace CMMS.BLL.Services
             _assignmentRepo = assignmentRepo;
             _diagnosisRepo = diagnosisRepo;
             _notificationRepo = notificationRepo;
+            _attachmentService = attachmentService;
+            _attachmentRepo = attachmentRepo;
             _scopeFactory = scopeFactory;
         }
 
         public async Task<ApiResponse<IEnumerable<ReportResponse>>> GetAllReportsAsync()
         {
             var reports = await _reportRepo.GetAllWithDetailsAsync();
-            var data = reports.Select(ReportMapper.ToResponse).ToList();
+            var data = new List<ReportResponse>();
+            foreach (var r in reports)
+            {
+                var response = ReportMapper.ToResponse(r);
+                var attachments = await _attachmentRepo.GetByObjectAsync("report", r.ReportId);
+                response.Attachments = attachments.Select(AttachmentMapper.ToDto).ToList();
+                data.Add(response);
+            }
             return new ApiResponse<IEnumerable<ReportResponse>> { Success = true, Data = data };
         }
 
@@ -52,10 +66,13 @@ namespace CMMS.BLL.Services
         {
             var r = await _reportRepo.GetByIdWithDetailsAsync(id);
             if (r == null) return new ApiResponse<ReportResponse> { Success = false, Message = "Không tìm thấy báo cáo" };
-            return new ApiResponse<ReportResponse> { Success = true, Data = ReportMapper.ToResponse(r) };
+            var response = ReportMapper.ToResponse(r);
+            var attachments = await _attachmentRepo.GetByObjectAsync("report", r.ReportId);
+            response.Attachments = attachments.Select(AttachmentMapper.ToDto).ToList();
+            return new ApiResponse<ReportResponse> { Success = true, Data = response };
         }
 
-        public async Task<ApiResponse<ReportResponse>> CreateReportAsync(CreateReportRequest request, Guid createdByUserId)
+        public async Task<ApiResponse<ReportResponse>> CreateReportAsync(CreateReportRequest request, Guid createdByUserId, List<IFormFile>? images = null)
         {
             var now = DateTimeHelper.VnNow();
             var reportNo = $"RPT-{now:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..3].ToUpper()}";
@@ -120,9 +137,20 @@ namespace CMMS.BLL.Services
                 });
             }
 
-            var created = await _reportRepo.GetByIdWithDetailsAsync(report.ReportId);
+            if (images != null && images.Any())
+            {
+                foreach (var img in images)
+                {
+                    await _attachmentService.UploadAsync(img, "report", report.ReportId, "report_image", createdByUserId);
+                }
+            }
 
-            return new ApiResponse<ReportResponse> { Success = true, Data = ReportMapper.ToResponse(created!) };
+            var created = await _reportRepo.GetByIdWithDetailsAsync(report.ReportId);
+            var response = ReportMapper.ToResponse(created!);
+            var createdAttachments = await _attachmentRepo.GetByObjectAsync("report", report.ReportId);
+            response.Attachments = createdAttachments.Select(AttachmentMapper.ToDto).ToList();
+
+            return new ApiResponse<ReportResponse> { Success = true, Data = response };
         }
 
         public async Task<ApiResponse<string>> AssignReportAsync(Guid reportId, AssignReportRequest request, Guid assignedByUserId)

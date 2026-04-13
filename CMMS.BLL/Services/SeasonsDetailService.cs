@@ -4,19 +4,27 @@ using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.SeasonsDetails;
 using CMMS.DAL.Entities;
 using CMMS.DAL.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CMMS.BLL.Services
 {
     public class SeasonsDetailService : ISeasonsDetailService
     {
         private readonly ISeasonsDetailRepository _seasonsDetailRepo;
+        private readonly ISeasonRepository _seasonRepo;
+        private readonly IBedRepository _bedRepo;
+        private readonly ICropRepository _cropRepo;
 
-        public SeasonsDetailService(ISeasonsDetailRepository seasonsDetailRepo) => _seasonsDetailRepo = seasonsDetailRepo;
+        public SeasonsDetailService(
+            ISeasonsDetailRepository seasonsDetailRepo,
+            ISeasonRepository seasonRepo,
+            IBedRepository bedRepo,
+            ICropRepository cropRepo)
+        {
+            _seasonsDetailRepo = seasonsDetailRepo;
+            _seasonRepo = seasonRepo;
+            _bedRepo = bedRepo;
+            _cropRepo = cropRepo;
+        }
 
         public async Task<ApiResponse<IEnumerable<SeasonsDetailResponse>>> GetAllSeasonsDetailsAsync()
         {
@@ -50,6 +58,27 @@ namespace CMMS.BLL.Services
         {
             try
             {
+                if (request.SeasonId.HasValue)
+                {
+                    var season = await _seasonRepo.GetByIdAsync(request.SeasonId.Value);
+                    if (season == null)
+                        return new ApiResponse<string> { Success = false, Message = "Season không tồn tại" };
+                }
+
+                if (request.BedId.HasValue)
+                {
+                    var bed = await _bedRepo.GetByIdAsync(request.BedId.Value);
+                    if (bed == null)
+                        return new ApiResponse<string> { Success = false, Message = "Bed không tồn tại" };
+                }
+
+                if (request.CropId.HasValue)
+                {
+                    var crop = await _cropRepo.GetByIdAsync(request.CropId.Value);
+                    if (crop == null)
+                        return new ApiResponse<string> { Success = false, Message = "Crop không tồn tại" };
+                }
+
                 var entity = new SeasonsDetail
                 {
                     SeasonDetailId = Guid.NewGuid(),
@@ -119,6 +148,5 @@ namespace CMMS.BLL.Services
                 return new ApiResponse<string> { Success = false, Message = "Error deleting seasons detail", Errors = new List<string> { ex.Message } };
             }
         }
-
     }
 }

@@ -1,3 +1,5 @@
+using CMMS.DAL.DTOs.Attachments;
+
 namespace CMMS.DAL.DTOs.Reports.Responses
 {
     public class ReportResponse
@@ -19,5 +21,6 @@ namespace CMMS.DAL.DTOs.Reports.Responses
         public DateTime? CreatedAt { get; set; }
         public DateTime? SubmitDate { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        public List<AttachmentDto> Attachments { get; set; } = new();
     }
 }

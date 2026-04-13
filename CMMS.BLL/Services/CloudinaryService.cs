@@ -27,6 +27,8 @@ namespace CMMS.BLL.Services
 
             var isImage = file.ContentType.StartsWith("image/");
 
+            RawUploadResult result;
+
             if (isImage)
             {
                 var uploadParams = new ImageUploadParams
@@ -35,19 +37,7 @@ namespace CMMS.BLL.Services
                     Folder = folder,
                     PublicId = $"{fileName}_{Guid.NewGuid():N}"
                 };
-
-                var result = await _cloudinary.UploadAsync(uploadParams);
-
-                return new CloudinaryUploadResult
-                {
-                    PublicId = result.PublicId,
-                    Url = result.Url?.ToString() ?? string.Empty,
-                    SecureUrl = result.SecureUrl?.ToString() ?? string.Empty,
-                    FileName = file.FileName,
-                    FileExtension = ext,
-                    MimeType = file.ContentType,
-                    FileSize = file.Length
-                };
+                result = await _cloudinary.UploadAsync(uploadParams);
             }
             else
             {
@@ -57,20 +47,22 @@ namespace CMMS.BLL.Services
                     Folder = folder,
                     PublicId = $"{fileName}_{Guid.NewGuid():N}"
                 };
-
-                var result = await _cloudinary.UploadAsync(uploadParams);
-
-                return new CloudinaryUploadResult
-                {
-                    PublicId = result.PublicId,
-                    Url = result.Url?.ToString() ?? string.Empty,
-                    SecureUrl = result.SecureUrl?.ToString() ?? string.Empty,
-                    FileName = file.FileName,
-                    FileExtension = ext,
-                    MimeType = file.ContentType,
-                    FileSize = file.Length
-                };
+                result = await _cloudinary.UploadAsync(uploadParams);
             }
+
+            if (result.Error != null)
+                throw new InvalidOperationException($"Cloudinary upload failed: {result.Error.Message}");
+
+            return new CloudinaryUploadResult
+            {
+                PublicId = result.PublicId,
+                Url = result.Url?.ToString() ?? string.Empty,
+                SecureUrl = result.SecureUrl?.ToString() ?? string.Empty,
+                FileName = file.FileName,
+                FileExtension = ext,
+                MimeType = file.ContentType,
+                FileSize = file.Length
+            };
         }
 
         public async Task<bool> DeleteFileAsync(string publicId)
