@@ -218,7 +218,7 @@ namespace CMMS.BLL.Services
                 var entity = await _repo.GetByIdAsync(id);
                 if (entity == null) return new ApiResponse<string> { Success = false, Message = "Task detail not found" };
 
-                var existingSchedules = await _scheduleRepo.GetByTaskDetailIdAsync(id);
+                var existingSchedules = await _scheduleRepo.GetByTaskDetailIdTrackingAsync(id);
                 if (existingSchedules.Any())
                     _scheduleRepo.DeleteRange(existingSchedules);
 
@@ -252,7 +252,7 @@ namespace CMMS.BLL.Services
 
         private async System.Threading.Tasks.Task SyncWorkerSchedulesAsync(Guid taskDetailId, List<Guid> workerIds, string? taskTitle)
         {
-            var existingSchedules = (await _scheduleRepo.GetByTaskDetailIdAsync(taskDetailId)).ToList();
+            var existingSchedules = await _scheduleRepo.GetByTaskDetailIdTrackingAsync(taskDetailId);
             var existingWorkerIds = existingSchedules.Select(s => s.WorkerId!.Value).ToHashSet();
             var newWorkerIdSet = workerIds.ToHashSet();
 
