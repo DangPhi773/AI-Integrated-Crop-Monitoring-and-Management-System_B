@@ -37,10 +37,10 @@ namespace CMMS.WebAPI.Controllers
 
         [Authorize(Roles = "Worker")]
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateReportRequest request)
+        public async Task<IActionResult> Create([FromForm] CreateReportRequest request, [FromForm] List<IFormFile>? images)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var result = await _reportService.CreateReportAsync(request, userId);
+            var result = await _reportService.CreateReportAsync(request, userId, images);
             return result.Success ? StatusCode(201, result) : BadRequest(result);
         }
 
