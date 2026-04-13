@@ -82,12 +82,12 @@ namespace CMMS.BLL.Services
                 var crop = await _cropRepo.GetByIdAsync(id);
                 if (crop == null) return new ApiResponse<string> { Success = false, Message = "Không tồn tại" };
 
-                crop.CropName = request.CropName;
-                crop.CropScientificName = request.CropScientificName;
-                crop.CropDefaultGrowthDays = request.CropDefaultGrowthDays;
-                crop.PlantSpacing = request.PlantSpacing;
-                crop.CropQuantities = request.CropQuantities;
-                crop.CropStatus = request.CropStatus;
+                crop.CropName = !string.IsNullOrWhiteSpace(request.CropName) ? request.CropName : crop.CropName;
+                crop.CropScientificName = request.CropScientificName ?? crop.CropScientificName;
+                crop.CropDefaultGrowthDays = request.CropDefaultGrowthDays ?? crop.CropDefaultGrowthDays;
+                crop.PlantSpacing = request.PlantSpacing ?? crop.PlantSpacing;
+                crop.CropQuantities = request.CropQuantities ?? crop.CropQuantities;
+                crop.CropStatus = request.CropStatus ?? crop.CropStatus;
 
                 _cropRepo.Update(crop);
                 await _cropRepo.SaveChangesAsync();
@@ -95,7 +95,7 @@ namespace CMMS.BLL.Services
             }
             catch (Exception ex)
             {
-                return new ApiResponse<string> { Success = false, Errors = new List<string> { ex.Message } };
+                return new ApiResponse<string> { Success = false, Message = "Lỗi cập nhật cây trồng", Errors = new List<string> { ex.Message } };
             }
         }
 
@@ -111,7 +111,7 @@ namespace CMMS.BLL.Services
             }
             catch (Exception ex)
             {
-                return new ApiResponse<string> { Success = false, Errors = new List<string> { ex.Message } };
+                return new ApiResponse<string> { Success = false, Message = "Lỗi xóa cây trồng", Errors = new List<string> { ex.Message } };
             }
         }
     }

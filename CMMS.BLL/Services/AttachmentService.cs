@@ -3,6 +3,7 @@ using CMMS.BLL.Interfaces;
 using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Attachments;
 using CMMS.DAL.DTOs.Auth;
+using CMMS.DAL.DTOs.CloudStorage;
 using CMMS.DAL.Entities;
 using CMMS.DAL.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -13,6 +14,8 @@ namespace CMMS.BLL.Services
     {
         private readonly IAttachmentRepository _attachmentRepo;
         private readonly ICloudinaryService _cloudinary;
+        private readonly IReportRepository _reportRepo;
+        private readonly IDiagnosisResultRepository _diagnosisRepo;
 
         private static readonly HashSet<string> AllowedMimeTypes = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -23,10 +26,21 @@ namespace CMMS.BLL.Services
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         };
 
-        public AttachmentService(IAttachmentRepository attachmentRepo, ICloudinaryService cloudinary)
+        private static readonly HashSet<string> AllowedObjectTypes = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "report", "diagnosis_result"
+        };
+
+        public AttachmentService(
+            IAttachmentRepository attachmentRepo,
+            ICloudinaryService cloudinary,
+            IReportRepository reportRepo,
+            IDiagnosisResultRepository diagnosisRepo)
         {
             _attachmentRepo = attachmentRepo;
             _cloudinary = cloudinary;
+            _reportRepo = reportRepo;
+            _diagnosisRepo = diagnosisRepo;
         }
 
         public async Task<ApiResponse<AttachmentDto>> UploadAsync(IFormFile file, string objectType, Guid objectId, string attachmentType, Guid uploadedBy, string? description = null)
@@ -41,19 +55,35 @@ namespace CMMS.BLL.Services
             if (file.Length > maxSize)
                 return new ApiResponse<AttachmentDto> { Success = false, Message = $"File vượt quá {maxSize / (1024 * 1024)}MB" };
 
-            var folder = objectType.ToLower() switch
+            var normalizedType = objectType.ToLower();
+            if (!AllowedObjectTypes.Contains(normalizedType))
+                return new ApiResponse<AttachmentDto> { Success = false, Message = $"objectType '{objectType}' không hợp lệ. Chỉ chấp nhận: {string.Join(", ", AllowedObjectTypes)}" };
+
+            var objectExists = await ValidateObjectExistsAsync(normalizedType, objectId);
+            if (!objectExists)
+                return new ApiResponse<AttachmentDto> { Success = false, Message = $"Không tìm thấy {normalizedType} với id '{objectId}'" };
+
+            var folder = normalizedType switch
             {
                 "report" => "smart-farm/reports",
                 "diagnosis_result" => "smart-farm/diagnosis",
                 _ => "smart-farm/documents"
             };
 
-            var uploadResult = await _cloudinary.UploadFileAsync(file, folder);
+            CloudinaryUploadResult uploadResult;
+            try
+            {
+                uploadResult = await _cloudinary.UploadFileAsync(file, folder);
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<AttachmentDto> { Success = false, Message = "Lỗi upload file lên cloud", Errors = new List<string> { ex.Message } };
+            }
 
             var entity = new Attachment
             {
                 Id = Guid.NewGuid(),
-                ObjectType = objectType,
+                ObjectType = normalizedType,
                 ObjectId = objectId,
                 AttachmentType = attachmentType,
                 FileName = uploadResult.FileName,
@@ -93,13 +123,22 @@ namespace CMMS.BLL.Services
                 return new ApiResponse<string> { Success = false, Message = "Không tìm thấy" };
 
             entity.IsDeleted = true;
+            await _attachmentRepo.SaveChangesAsync();
 
             if (!string.IsNullOrEmpty(entity.CloudinaryPublicId))
                 await _cloudinary.DeleteFileAsync(entity.CloudinaryPublicId);
 
-            await _attachmentRepo.SaveChangesAsync();
             return new ApiResponse<string> { Success = true, Message = "Đã xóa" };
         }
 
+        private async Task<bool> ValidateObjectExistsAsync(string objectType, Guid objectId)
+        {
+            return objectType switch
+            {
+                "report" => await _reportRepo.GetByIdAsync(objectId) != null,
+                "diagnosis_result" => await _diagnosisRepo.GetByIdWithDetailsAsync(objectId) != null,
+                _ => false
+            };
+        }
     }
 }
