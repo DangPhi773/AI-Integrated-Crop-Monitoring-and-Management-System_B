@@ -28,6 +28,11 @@ namespace CMMS.DAL.Repositories
                 .AsNoTracking()
                 .ToListAsync();
 
+        public async Task<List<WorkerSchedule>> GetByTaskDetailIdTrackingAsync(Guid taskDetailId)
+            => await _context.WorkerSchedules
+                .Where(ws => ws.TaskDetailId == taskDetailId)
+                .ToListAsync();
+
         public async Task<WorkerSchedule?> GetByIdAsync(Guid id)
             => await BaseQuery().FirstOrDefaultAsync(ws => ws.ScheduleId == id);
 
