@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 
 namespace CMMS.BLL.Services
 {
@@ -14,11 +15,13 @@ namespace CMMS.BLL.Services
     {
         private readonly IUserRepository _userRepo;
         private readonly IEmailService _emailService;
+        private readonly IConfiguration _config;
 
-        public AuthService(IUserRepository userRepo, IEmailService emailService)
+        public AuthService(IUserRepository userRepo, IEmailService emailService, IConfiguration config)
         {
             _userRepo = userRepo;
             _emailService = emailService;
+            _config = config;
         }
 
         public async Task<ApiResponse<string>> RegisterAsync(RegisterRequest request)
@@ -65,8 +68,11 @@ namespace CMMS.BLL.Services
                     return new ApiResponse<object> { Success = false, Message = "Thông tin đăng nhập không chính xác." };
                 }
 
+                var jwtSettings = _config.GetSection("JwtSettings");
+                var secretKey = jwtSettings["SecretKey"];
+                var key = Encoding.UTF8.GetBytes(secretKey);
+
                 var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.UTF8.GetBytes("CMMS_Secret_Key_Vip_Pro_2026_Generation");
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
                     Subject = new ClaimsIdentity(new[]
@@ -76,8 +82,11 @@ namespace CMMS.BLL.Services
                         new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "User")
                     }),
                     Expires = DateTime.UtcNow.AddDays(7),
+                    Issuer = jwtSettings["Issuer"],
+                    Audience = jwtSettings["Audience"],
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
                 };
+
                 var token = tokenHandler.CreateToken(tokenDescriptor);
                 var tokenString = tokenHandler.WriteToken(token);
 
@@ -85,10 +94,7 @@ namespace CMMS.BLL.Services
                 {
                     Success = true,
                     Message = "Đăng nhập thành công",
-                    Data = new
-                    {
-                        Token = tokenString,
-                    }
+                    Data = new { Token = tokenString }
                 };
             }
             catch (Exception ex)
