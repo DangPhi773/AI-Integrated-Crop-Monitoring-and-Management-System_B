@@ -54,12 +54,14 @@ namespace CMMS.BLL.Services
                 {
                     DeviceId = Guid.NewGuid(),
                     BedId = request.BedId,
+                    DeviceCode = request.DeviceCode,
                     Name = request.Name ?? "",
                     Type = request.Type,
                     Status = request.Status ?? "Active",
                     InstallationDate = request.InstallationDate,
                     Latitude = request.Latitude,
                     Longitude = request.Longitude,
+                    AlertConfigJson = request.AlertConfigJson,
                     CreatedAt = DateTimeHelper.VnNow()
                 };
 
@@ -83,12 +85,14 @@ namespace CMMS.BLL.Services
                 if (entity == null) return new ApiResponse<string> { Success = false, Message = "Device not found" };
 
                 entity.BedId = request.BedId ?? entity.BedId;
+                entity.DeviceCode = request.DeviceCode ?? entity.DeviceCode;
                 entity.Name = request.Name ?? entity.Name;
                 entity.Type = request.Type ?? entity.Type;
                 entity.Status = request.Status ?? entity.Status;
                 entity.InstallationDate = request.InstallationDate ?? entity.InstallationDate;
                 entity.Latitude = request.Latitude ?? entity.Latitude;
                 entity.Longitude = request.Longitude ?? entity.Longitude;
+                entity.AlertConfigJson = request.AlertConfigJson ?? entity.AlertConfigJson;
                 entity.UpdatedAt = DateTimeHelper.VnNow();
 
                 _repo.Update(entity);
@@ -119,6 +123,5 @@ namespace CMMS.BLL.Services
                 return new ApiResponse<string> { Success = false, Message = "Error deleting device", Errors = new List<string> { ex.Message } };
             }
         }
-
     }
 }

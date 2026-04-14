@@ -11,12 +11,12 @@ namespace CMMS.BLL.Mappings
             DeviceId = d.DeviceId,
             SeasonId = d.SeasonId,
             RecordedAt = d.RecordedAt,
-            Type = d.Type,
-            Value = d.Value,
-            Unit = d.Unit,
+            Temperature = d.Temperature,
+            Humidity = d.Humidity,
+            SoilMoisture = d.SoilMoisture,
+            Light = d.Light,
+            IsRaining = d.IsRaining,
             IsAlert = d.IsAlert,
-            Min = d.Min,
-            Max = d.Max,
             CreatedAt = d.CreatedAt
         };
     }

@@ -11,28 +11,22 @@ namespace CMMS.DAL.Entities
 
         public Guid? DeviceId { get; set; }
         public Guid? SeasonId { get; set; }
-        public Guid? SensorId { get; set; }
 
-        [Column(TypeName = "timestamp")]
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime? RecordedAt { get; set; }
 
-        [MaxLength(100)]
-        public string? Type { get; set; }
+        public double? Temperature { get; set; }
+        public double? Humidity { get; set; }
+        public double? SoilMoisture { get; set; }
+        public double? Light { get; set; }
+        public bool? IsRaining { get; set; }
 
-        public double? Value { get; set; }
-
-        [MaxLength(20)]
-        public string? Unit { get; set; }
-
-        public bool? IsAlert { get; set; }
-
-        public double? Min { get; set; }
-        public double? Max { get; set; }
+        public bool IsAlert { get; set; } = false;
 
         [Column(TypeName = "jsonb")]
         public string? RawData { get; set; }
 
-        [Column(TypeName = "timestamp")]
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime CreatedAt { get; set; }
 
         [ForeignKey("DeviceId")]
@@ -40,8 +34,5 @@ namespace CMMS.DAL.Entities
 
         [ForeignKey("SeasonId")]
         public virtual Season? Season { get; set; }
-
-        [ForeignKey("SensorId")]
-        public virtual IotSensor? Sensor { get; set; }
     }
 }

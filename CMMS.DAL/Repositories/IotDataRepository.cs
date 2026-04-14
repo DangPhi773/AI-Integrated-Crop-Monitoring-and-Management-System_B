@@ -40,6 +40,15 @@ namespace CMMS.DAL.Repositories
                 .ToListAsync();
         }
 
+        public async System.Threading.Tasks.Task<IotData?> GetLatestByDeviceIdAsync(Guid deviceId)
+        {
+            return await _context.IotDatas
+                .Where(d => d.DeviceId == deviceId)
+                .OrderByDescending(d => d.RecordedAt)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+        }
+
         public async System.Threading.Tasks.Task<List<IotData>> GetLatestByBedIdAsync(Guid bedId, int count)
         {
             return await _context.IotDatas
@@ -48,6 +57,31 @@ namespace CMMS.DAL.Repositories
                 .Where(d => d.Device != null && d.Device.BedId == bedId)
                 .OrderByDescending(d => d.RecordedAt)
                 .Take(count)
+                .ToListAsync();
+        }
+
+        public async System.Threading.Tasks.Task<List<IotData>> GetHistoryAsync(Guid deviceId, DateTime from, DateTime to)
+        {
+            return await _context.IotDatas
+                .Where(d => d.DeviceId == deviceId && d.RecordedAt >= from && d.RecordedAt <= to)
+                .OrderByDescending(d => d.RecordedAt)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        public async System.Threading.Tasks.Task<List<IotData>> GetAlertsByFarmIdAsync(Guid farmId)
+        {
+            return await _context.IotDatas
+                .Include(d => d.Device)
+                    .ThenInclude(dev => dev!.Bed)
+                        .ThenInclude(bed => bed!.Plot)
+                .Where(d => d.IsAlert
+                    && d.Device != null
+                    && d.Device.Bed != null
+                    && d.Device.Bed.Plot != null
+                    && d.Device.Bed.Plot.FarmId == farmId)
+                .OrderByDescending(d => d.RecordedAt)
+                .AsNoTracking()
                 .ToListAsync();
         }
 

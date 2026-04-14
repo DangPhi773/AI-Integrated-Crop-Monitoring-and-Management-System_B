@@ -99,21 +99,22 @@ namespace CMMS.BLL.Services
 
             if (request.BedId.HasValue)
             {
-                var latestData = await _iotDataRepo.GetLatestByBedIdAsync(request.BedId.Value, 10);
+                var latestData = await _iotDataRepo.GetLatestByBedIdAsync(request.BedId.Value, 1);
+                var latest = latestData.FirstOrDefault();
 
-                if (latestData.Any())
+                if (latest != null)
                 {
                     var snapshot = new ReportEnvironmentSnapshot
                     {
                         Id = Guid.NewGuid(),
                         ReportId = report.ReportId,
-                        Temperature = latestData.FirstOrDefault(d => d.Type == "TEMPERATURE")?.Value,
-                        Humidity = latestData.FirstOrDefault(d => d.Type == "HUMIDITY")?.Value,
-                        SoilMoisture = latestData.FirstOrDefault(d => d.Type == "SOIL_MOISTURE")?.Value,
-                        Rainfall = latestData.FirstOrDefault(d => d.Type == "RAIN")?.Value,
-                        LightIntensity = latestData.FirstOrDefault(d => d.Type == "LIGHT")?.Value,
-                        RecordedAt = latestData.Max(d => d.RecordedAt) ?? now,
-                        SourceDeviceId = latestData.First().DeviceId,
+                        Temperature = latest.Temperature,
+                        Humidity = latest.Humidity,
+                        SoilMoisture = latest.SoilMoisture,
+                        Rainfall = null,
+                        LightIntensity = latest.Light,
+                        RecordedAt = latest.RecordedAt ?? now,
+                        SourceDeviceId = latest.DeviceId,
                         CreatedAt = now
                     };
                     await _snapshotRepo.AddAsync(snapshot);

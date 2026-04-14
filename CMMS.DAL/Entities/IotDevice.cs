@@ -32,19 +32,21 @@ namespace CMMS.DAL.Entities
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
 
-        [Column(TypeName = "timestamp")]
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime CreatedAt { get; set; }
 
-        [Column(TypeName = "timestamp")]
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime? UpdatedAt { get; set; }
 
-        [Column(TypeName = "timestamp")]
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime? LastActiveAt { get; set; }
+
+        [Column(TypeName = "jsonb")]
+        public string? AlertConfigJson { get; set; }
 
         [ForeignKey("BedId")]
         public virtual Bed? Bed { get; set; }
 
         public virtual ICollection<IotData> IotDatas { get; set; } = new List<IotData>();
-        public virtual ICollection<IotSensor> IotSensors { get; set; } = new List<IotSensor>();
     }
 }

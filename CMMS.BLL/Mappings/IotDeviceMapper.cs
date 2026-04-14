@@ -9,6 +9,7 @@ namespace CMMS.BLL.Mappings
         {
             DeviceId = d.DeviceId,
             BedId = d.BedId,
+            DeviceCode = d.DeviceCode,
             Name = d.Name,
             Type = d.Type,
             Status = d.Status,
@@ -16,7 +17,9 @@ namespace CMMS.BLL.Mappings
             Latitude = d.Latitude,
             Longitude = d.Longitude,
             CreatedAt = d.CreatedAt,
-            UpdatedAt = d.UpdatedAt
+            UpdatedAt = d.UpdatedAt,
+            LastActiveAt = d.LastActiveAt,
+            AlertConfigJson = d.AlertConfigJson
         };
     }
 }
