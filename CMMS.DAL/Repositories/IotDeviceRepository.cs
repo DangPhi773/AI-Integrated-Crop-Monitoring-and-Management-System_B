@@ -27,6 +27,14 @@ namespace CMMS.DAL.Repositories
                 .FirstOrDefaultAsync(d => d.DeviceId == id);
         }
 
+        public async System.Threading.Tasks.Task<IotDevice?> GetByDeviceCodeAsync(string deviceCode)
+        {
+            return await _context.IotDevices
+                .Include(d => d.Bed)
+                    .ThenInclude(b => b!.Plot)
+                .FirstOrDefaultAsync(d => d.DeviceCode == deviceCode);
+        }
+
         public async System.Threading.Tasks.Task AddAsync(IotDevice entity) => await _context.IotDevices.AddAsync(entity);
 
         public void Update(IotDevice entity) => _context.IotDevices.Update(entity);

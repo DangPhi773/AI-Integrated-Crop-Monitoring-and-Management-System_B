@@ -64,7 +64,6 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<Attachment> Attachments { get; set; }
     public virtual DbSet<ReportAssignment> ReportAssignments { get; set; }
     public virtual DbSet<DiagnosisResult> DiagnosisResults { get; set; }
-    public virtual DbSet<IotSensor> IotSensors { get; set; }
     public virtual DbSet<ReportEnvironmentSnapshot> ReportEnvironmentSnapshots { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -565,6 +564,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasColumnType("timestamp with time zone");
             entity.Property(e => e.DeviceCode).HasColumnName("device_code");
             entity.Property(e => e.LastActiveAt).HasColumnName("last_active_at").HasColumnType("timestamp with time zone");
+            entity.Property(e => e.AlertConfigJson).HasColumnName("alert_config_json").HasColumnType("jsonb");
 
             entity.HasOne(d => d.Bed)
                   .WithMany(p => p.IotDevices)
@@ -576,22 +576,21 @@ public partial class AppDbContext : DbContext
         {
             entity.ToTable("iot_data");
 
-            entity.HasKey(e => e.SensorDataId); 
+            entity.HasKey(e => e.SensorDataId);
             entity.Property(e => e.SensorDataId).HasColumnName("sensor_data_id");
 
             entity.Property(e => e.DeviceId).HasColumnName("device_id");
             entity.Property(e => e.SeasonId).HasColumnName("season_id");
 
             entity.Property(e => e.RecordedAt).HasColumnName("recorded_at").HasColumnType("timestamp with time zone");
-            entity.Property(e => e.Type).HasColumnName("type");
-            entity.Property(e => e.Value).HasColumnName("value");
-            entity.Property(e => e.Unit).HasColumnName("unit");
-            entity.Property(e => e.IsAlert).HasColumnName("is_alert");
-            entity.Property(e => e.Min).HasColumnName("min");
-            entity.Property(e => e.Max).HasColumnName("max");
-            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone");
-            entity.Property(e => e.SensorId).HasColumnName("sensor_id");
+            entity.Property(e => e.Temperature).HasColumnName("temperature");
+            entity.Property(e => e.Humidity).HasColumnName("humidity");
+            entity.Property(e => e.SoilMoisture).HasColumnName("soil_moisture");
+            entity.Property(e => e.Light).HasColumnName("light");
+            entity.Property(e => e.IsRaining).HasColumnName("is_raining");
+            entity.Property(e => e.IsAlert).HasColumnName("is_alert").HasDefaultValue(false);
             entity.Property(e => e.RawData).HasColumnName("raw_data");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone");
 
             entity.HasOne(d => d.Device)
                   .WithMany(p => p.IotDatas)
@@ -602,11 +601,6 @@ public partial class AppDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(d => d.SeasonId)
                   .HasConstraintName("fk_iot_data_seasons");
-
-            entity.HasOne(d => d.Sensor)
-                  .WithMany(p => p.IotDatas)
-                  .HasForeignKey(d => d.SensorId)
-                  .HasConstraintName("iot_data_sensor_id_fkey");
         });
 
         modelBuilder.Entity<SoilCropCompatibility>(entity =>
@@ -854,31 +848,6 @@ public partial class AppDbContext : DbContext
                 .HasConstraintName("diagnosis_result_diagnosed_by_fkey");
         });
 
-        modelBuilder.Entity<IotSensor>(entity =>
-        {
-            entity.ToTable("iot_sensor");
-            entity.HasKey(e => e.Id).HasName("iot_sensor_pkey");
-
-            entity.Property(e => e.Id)
-                .HasDefaultValueSql("gen_random_uuid()")
-                .HasColumnName("id");
-            entity.Property(e => e.DeviceId).HasColumnName("device_id");
-            entity.Property(e => e.SensorCode).HasColumnName("sensor_code");
-            entity.Property(e => e.SensorName).HasColumnName("sensor_name");
-            entity.Property(e => e.SensorType).HasColumnName("sensor_type");
-            entity.Property(e => e.Unit).HasColumnName("unit");
-            entity.Property(e => e.MinValue).HasColumnName("min_value");
-            entity.Property(e => e.MaxValue).HasColumnName("max_value");
-            entity.Property(e => e.Status).HasColumnName("status");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("now()")
-                .HasColumnName("created_at");
-            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-
-            entity.HasOne(d => d.Device).WithMany(p => p.IotSensors)
-                .HasForeignKey(d => d.DeviceId)
-                .HasConstraintName("iot_sensor_device_id_fkey");
-        });
 
         modelBuilder.Entity<ReportEnvironmentSnapshot>(entity =>
         {

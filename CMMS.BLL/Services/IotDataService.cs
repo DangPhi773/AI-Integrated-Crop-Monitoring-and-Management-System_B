@@ -70,12 +70,12 @@ namespace CMMS.BLL.Services
                     DeviceId = request.DeviceId,
                     SeasonId = request.SeasonId,
                     RecordedAt = DateTimeHelper.VnNow(),
-                    Type = request.Type,
-                    Value = request.Value,
-                    Unit = request.Unit,
+                    Temperature = request.Temperature,
+                    Humidity = request.Humidity,
+                    SoilMoisture = request.SoilMoisture,
+                    Light = request.Light,
+                    IsRaining = request.IsRaining,
                     IsAlert = request.IsAlert,
-                    Min = request.Min,
-                    Max = request.Max,
                     CreatedAt = DateTimeHelper.VnNow()
                 };
 
@@ -108,6 +108,5 @@ namespace CMMS.BLL.Services
                 return new ApiResponse<string> { Success = false, Message = "Error deleting IoT data", Errors = new List<string> { ex.Message } };
             }
         }
-
     }
 }
