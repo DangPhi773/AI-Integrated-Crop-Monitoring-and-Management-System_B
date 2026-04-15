@@ -22,5 +22,6 @@ namespace CMMS.DAL.DTOs.Reports.Responses
         public DateTime? SubmitDate { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public List<AttachmentDto> Attachments { get; set; } = new();
+        public List<EnvironmentSnapshotDto> EnvironmentSnapshots { get; set; } = new();
     }
 }

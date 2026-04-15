@@ -30,6 +30,7 @@ namespace CMMS.DAL.Repositories
                 .AsNoTracking()
                 .Include(r => r.Creator)
                 .Include(r => r.Owner)
+                .Include(r => r.EnvironmentSnapshots)
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
         }
@@ -40,6 +41,7 @@ namespace CMMS.DAL.Repositories
                 .AsNoTracking()
                 .Include(r => r.Creator)
                 .Include(r => r.Owner)
+                .Include(r => r.EnvironmentSnapshots)
                 .FirstOrDefaultAsync(r => r.ReportId == id);
         }
 

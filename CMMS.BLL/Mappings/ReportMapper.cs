@@ -23,7 +23,17 @@ namespace CMMS.BLL.Mappings
             Status = r.Status,
             CreatedAt = r.CreatedAt,
             SubmitDate = r.SubmitDate,
-            UpdatedAt = r.UpdatedAt
+            UpdatedAt = r.UpdatedAt,
+            EnvironmentSnapshots = r.EnvironmentSnapshots?.Select(s => new EnvironmentSnapshotDto
+            {
+                Temperature = s.Temperature,
+                Humidity = s.Humidity,
+                SoilMoisture = s.SoilMoisture,
+                Rainfall = s.Rainfall,
+                LightIntensity = s.LightIntensity,
+                RecordedAt = s.RecordedAt,
+                SourceDeviceId = s.SourceDeviceId
+            }).ToList() ?? new()
         };
 
         public static DiagnosisResponse ToDiagnosisResponse(DiagnosisResult d, string? diagnoserName = null) => new()
