@@ -111,7 +111,7 @@ namespace CMMS.BLL.Services
                         Temperature = latest.Temperature,
                         Humidity = latest.Humidity,
                         SoilMoisture = latest.SoilMoisture,
-                        Rainfall = null,
+                        Rainfall = latest.IsRaining.HasValue ? (latest.IsRaining.Value ? 1.0 : 0.0) : null,
                         LightIntensity = latest.Light,
                         RecordedAt = latest.RecordedAt ?? now,
                         SourceDeviceId = latest.DeviceId,
