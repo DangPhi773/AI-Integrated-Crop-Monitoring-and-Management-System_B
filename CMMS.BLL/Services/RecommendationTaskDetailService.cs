@@ -2,6 +2,7 @@
 using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Tasks;
+using CMMS.DAL.DTOs.Tasks.CMMS.DAL.DTOs.Tasks;
 using CMMS.DAL.Entities;
 using CMMS.DAL.Interfaces;
 using System;
@@ -42,15 +43,20 @@ namespace CMMS.BLL.Services
             {
                 TaskDetailId = Guid.NewGuid(),
                 TaskId = request.TaskId,
-                WorkerId = request.WorkerId,
+                SeasonId = request.SeasonId, 
+                FarmId = request.FarmId,    
                 Title = request.Title,
                 Quantity = request.Quantity,
                 Status = request.Status ?? "Pending",
                 Unit = request.Unit,
                 Notes = request.Notes,
                 StartDate = request.StartDate,
-                EndDate = request.EndDate
+                EndDate = request.EndDate,
+                AssignedToWorkerIds = request.AssignedToWorkerIds ?? new List<Guid>(),
+                PlotIds = request.PlotIds ?? new List<Guid>(),
+                BedIds = request.BedIds ?? new List<Guid>()
             };
+
             await _repo.AddAsync(detail);
             return await _repo.SaveChangesAsync()
                 ? new ApiResponse<string> { Success = true, Message = "Thêm chi tiết công việc thành công" }
@@ -63,13 +69,17 @@ namespace CMMS.BLL.Services
             if (detail == null) return new ApiResponse<string> { Success = false, Message = "Không tìm thấy dữ liệu" };
 
             detail.Title = request.Title;
-            detail.WorkerId = request.WorkerId;
+            detail.SeasonId = request.SeasonId;
+            detail.FarmId = request.FarmId;
             detail.Quantity = request.Quantity;
             detail.Status = request.Status;
             detail.Unit = request.Unit;
             detail.Notes = request.Notes;
             detail.StartDate = request.StartDate;
             detail.EndDate = request.EndDate;
+            detail.AssignedToWorkerIds = request.AssignedToWorkerIds ?? new List<Guid>();
+            detail.PlotIds = request.PlotIds ?? new List<Guid>();
+            detail.BedIds = request.BedIds ?? new List<Guid>();
 
             _repo.Update(detail);
             await _repo.SaveChangesAsync();
