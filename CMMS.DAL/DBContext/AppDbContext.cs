@@ -283,29 +283,53 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<RecommendationTaskDetail>(entity =>
         {
             entity.HasKey(e => e.TaskDetailId).HasName("recommendation_task_detail_pkey");
-
             entity.ToTable("recommendation_task_detail");
 
             entity.Property(e => e.TaskDetailId)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("task_detail_id");
-            entity.Property(e => e.EndDate).HasColumnName("end_date");
-            entity.Property(e => e.Notes).HasColumnName("notes");
-            entity.Property(e => e.Quantity).HasColumnName("quantity");
-            entity.Property(e => e.StartDate).HasColumnName("start_date");
-            entity.Property(e => e.Status).HasColumnName("status");
+
             entity.Property(e => e.TaskId).HasColumnName("task_id");
+            entity.Property(e => e.SeasonId).HasColumnName("season_id");
+            entity.Property(e => e.FarmId).HasColumnName("farm_id"); 
             entity.Property(e => e.Title).HasColumnName("title");
-            entity.Property(e => e.Unit).HasColumnName("unit");
-            entity.Property(e => e.WorkerId).HasColumnName("worker_id");
+            entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property(e => e.Status).HasColumnName("status").HasMaxLength(50);
+            entity.Property(e => e.Unit).HasColumnName("unit").HasMaxLength(50);
+            entity.Property(e => e.Notes).HasColumnName("notes");
+            entity.Property(e => e.StartDate).HasColumnName("start_date");
+            entity.Property(e => e.EndDate).HasColumnName("end_date");
+
+            entity.Property(e => e.AssignedToWorkerIds)
+             .HasColumnName("assigned_to_worker_ids")
+             .HasColumnType("jsonb") 
+             .HasConversion(
+                 v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions)null),
+                 v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions)null));
+
+            entity.Property(e => e.PlotIds)
+                .HasColumnName("plot_ids")
+                .HasColumnType("jsonb")
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions)null));
+
+            entity.Property(e => e.BedIds)
+                .HasColumnName("bed_ids")
+                .HasColumnType("jsonb")
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions)null));
 
             entity.HasOne(d => d.Task).WithMany(p => p.RecommendationTaskDetails)
                 .HasForeignKey(d => d.TaskId)
                 .HasConstraintName("recommendation_task_detail_task_id_fkey");
 
-            entity.HasOne(d => d.Worker).WithMany(p => p.RecommendationTaskDetails)
-                .HasForeignKey(d => d.WorkerId)
-                .HasConstraintName("recommendation_task_detail_worker_id_fkey");
+            entity.HasOne(d => d.Season).WithMany()
+                .HasForeignKey(d => d.SeasonId);
+
+            entity.HasOne(d => d.Farm).WithMany()
+                .HasForeignKey(d => d.FarmId);
         });
 
         modelBuilder.Entity<Report>(entity =>

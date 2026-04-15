@@ -18,19 +18,21 @@ namespace CMMS.DAL.Repositories
         public async Task<IEnumerable<RecommendationTaskDetail>> GetAllAsync() =>
             await _context.RecommendationTaskDetails
                 .Include(d => d.Task)
-                .Include(d => d.Worker)
+                .Include(d => d.Season) 
+                .Include(d => d.Farm) 
                 .ToListAsync();
 
         public async Task<IEnumerable<RecommendationTaskDetail>> GetByTaskIdAsync(Guid taskId) =>
             await _context.RecommendationTaskDetails
-                .Include(d => d.Worker)
+                .Include(d => d.Task)
                 .Where(d => d.TaskId == taskId)
                 .ToListAsync();
 
         public async Task<RecommendationTaskDetail?> GetByIdAsync(Guid id) =>
             await _context.RecommendationTaskDetails
                 .Include(d => d.Task)
-                .Include(d => d.Worker)
+                .Include(d => d.Season)
+                .Include(d => d.Farm)
                 .FirstOrDefaultAsync(d => d.TaskDetailId == id);
 
         public async System.Threading.Tasks.Task AddAsync(RecommendationTaskDetail detail) => await _context.RecommendationTaskDetails.AddAsync(detail);

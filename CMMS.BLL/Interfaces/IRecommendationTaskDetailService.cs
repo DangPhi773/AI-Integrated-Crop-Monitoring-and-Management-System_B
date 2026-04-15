@@ -1,5 +1,6 @@
 ﻿using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Tasks;
+using CMMS.DAL.DTOs.Tasks.CMMS.DAL.DTOs.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;

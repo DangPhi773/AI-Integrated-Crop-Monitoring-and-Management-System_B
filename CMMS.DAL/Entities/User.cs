@@ -13,20 +13,27 @@ public partial class User
 
     public Guid? RoleId { get; set; }
 
-    [Required]
-    [EmailAddress]
+    [Required(ErrorMessage = "Email là bắt buộc.")]
+    [EmailAddress(ErrorMessage = "Định dạng Email không hợp lệ.")]
     [MaxLength(255)]
     public string Email { get; set; } = null!;
 
+    [Required(ErrorMessage = "Mật khẩu là bắt buộc.")]
+    [MinLength(8, ErrorMessage = "Mật khẩu phải từ 8 ký tự trở lên.")]
     [MaxLength(255)]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
+        ErrorMessage = "Mật khẩu phải có chữ hoa, chữ thường, số và ký tự đặc biệt.")]
     public string? Password { get; set; }
 
     public string? HashPassword { get; set; }
 
+    [Required(ErrorMessage = "Họ tên không được để trống.")]
     [MaxLength(255)]
     public string? Fullname { get; set; }
 
-    [MaxLength(20)]
+    [Required(ErrorMessage = "Số điện thoại là bắt buộc.")]
+    [RegularExpression(@"^0\d{9}$", ErrorMessage = "Số điện thoại phải có 10 chữ số và bắt đầu bằng số 0.")]
+    [MaxLength(10)]
     public string? PhoneNumber { get; set; }
 
     [MaxLength(50)]
