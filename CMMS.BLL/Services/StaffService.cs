@@ -26,7 +26,8 @@ namespace CMMS.BLL.Services
             try
             {
                 var staffs = await _staffRepo.GetAllStaffsAsync();
-                var data = staffs.Select(UserMapper.ToResponse);
+                var activeStaffs = staffs.Where(u => u.Status == "ACTIVE");
+                var data = activeStaffs.Select(UserMapper.ToResponse);
                 return new ApiResponse<IEnumerable<UserResponse>> { Success = true, Data = data };
             }
             catch (Exception ex)
@@ -38,7 +39,7 @@ namespace CMMS.BLL.Services
         public async Task<ApiResponse<UserResponse>> GetStaffDetailAsync(Guid id)
         {
             var user = await _staffRepo.GetUserByIdAsync(id);
-            if (user == null) return new ApiResponse<UserResponse> { Success = false, Message = "Không tìm thấy người dùng." };
+            if (user == null || user.Status != "ACTIVE") return new ApiResponse<UserResponse> { Success = false, Message = "Không tìm thấy người dùng." };
 
             return new ApiResponse<UserResponse>
             {
@@ -137,9 +138,13 @@ namespace CMMS.BLL.Services
             var user = await _staffRepo.GetUserByIdAsync(id);
             if (user == null) return new ApiResponse<string> { Success = false, Message = "Không tìm thấy để xóa." };
 
-            _staffRepo.DeleteUser(user);
+            if (user.Status == "INACTIVE")
+                return new ApiResponse<string> { Success = false, Message = "Nhân viên này đã bị xóa trước đó." };
+
+            user.Status = "INACTIVE";
+            _staffRepo.UpdateUser(user);
             await _staffRepo.SaveChangesAsync();
-            return new ApiResponse<string> { Success = true, Message = "Xóa thành công." };
+            return new ApiResponse<string> { Success = true, Message = "Xóa mềm thành công." };
         }
     }
 }
