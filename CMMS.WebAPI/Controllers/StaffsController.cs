@@ -33,6 +33,13 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [HttpGet("unassigned-role")]
+        public async Task<IActionResult> GetUnassignedUsers()
+        {
+            var result = await _staffService.GetUsersWithoutRoleAsync();
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateStaff(Guid id, [FromBody] StaffRequest request) => Ok(await _staffService.UpdateStaffAsync(id, request));
 

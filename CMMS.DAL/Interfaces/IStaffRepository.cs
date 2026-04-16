@@ -16,6 +16,7 @@ namespace CMMS.DAL.Interfaces
         Task<bool> EmailExistsAsync(string email);
         void UpdateUser(User user);
         void DeleteUser(User user);
+        Task<IEnumerable<User>> GetUsersWithoutRoleAsync();
         Task<bool> SaveChangesAsync();
     }
 }

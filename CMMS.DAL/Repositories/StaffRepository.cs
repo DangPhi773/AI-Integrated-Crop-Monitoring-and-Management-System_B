@@ -25,9 +25,9 @@ namespace CMMS.DAL.Repositories
         {
             return await _context.Users
                 .Include(u => u.Role)
-                .Where(u => u.Status.ToLower() == "active" &&
+                .Where(u => u.Status.ToUpper() == "ACTIVE" &&
                u.Role != null &&
-               (u.Role.RoleName.ToLower() == "worker" || u.Role.RoleName.ToLower() == "specialist"))
+               (u.Role.RoleName.ToUpper() == "WORKER" || u.Role.RoleName.ToUpper() == "SPECIALIST"))
                 .ToListAsync();
         }
 
@@ -35,7 +35,7 @@ namespace CMMS.DAL.Repositories
         {
             return await _context.Users
                 .Include(u => u.Role)
-                .FirstOrDefaultAsync(u => u.UserId == id && u.Status.ToLower() == "active");
+                .FirstOrDefaultAsync(u => u.UserId == id && u.Status.ToUpper() == "ACTIVE");
         }
 
         public async System.Threading.Tasks.Task AddUserAsync(User user) => await _context.Users.AddAsync(user);
@@ -47,8 +47,14 @@ namespace CMMS.DAL.Repositories
 
         public void DeleteUser(User user)
         {
-            user.Status = "Inactive";
+            user.Status = "INACTIVE";
             _context.Users.Update(user);
+        }
+        public async Task<IEnumerable<User>> GetUsersWithoutRoleAsync()
+        {
+            return await _context.Users
+                .Where(u => u.RoleId == null && u.Status.ToUpper() == "ACTIVE")
+                .ToListAsync();
         }
 
         public async Task<bool> SaveChangesAsync() => await _context.SaveChangesAsync() > 0;

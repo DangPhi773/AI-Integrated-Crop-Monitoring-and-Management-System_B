@@ -17,5 +17,6 @@ namespace CMMS.BLL.Interfaces
         Task<ApiResponse<string>> CreateStaffAsync(StaffRequest request, string roleName);
         Task<ApiResponse<string>> UpdateStaffAsync(Guid id, StaffRequest request);
         Task<ApiResponse<string>> RemoveStaffAsync(Guid id);
+        Task<ApiResponse<IEnumerable<UserResponse>>> GetUsersWithoutRoleAsync();
     }
 }

@@ -140,5 +140,30 @@ namespace CMMS.BLL.Services
             await _staffRepo.SaveChangesAsync();
             return new ApiResponse<string> { Success = true, Message = "Xóa mềm thành công." };
         }
+
+        public async Task<ApiResponse<IEnumerable<UserResponse>>> GetUsersWithoutRoleAsync()
+        {
+            try
+            {
+                var users = await _staffRepo.GetUsersWithoutRoleAsync();
+                var data = users.Select(UserMapper.ToResponse);
+
+                return new ApiResponse<IEnumerable<UserResponse>>
+                {
+                    Success = true,
+                    Data = data,
+                    Message = data.Any() ? "Lấy danh sách thành công" : "Không có user nào chưa phân role"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<IEnumerable<UserResponse>>
+                {
+                    Success = false,
+                    Message = "Lỗi lấy danh sách user chưa có role",
+                    Errors = new List<string> { ex.Message }
+                };
+            }
+        }
     }
 }
