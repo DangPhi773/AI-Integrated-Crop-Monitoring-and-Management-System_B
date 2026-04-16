@@ -37,7 +37,7 @@ public partial class User
     public string? PhoneNumber { get; set; }
 
     [MaxLength(50)]
-    public string? Status { get; set; }
+    public string? Status { get; set; } = "ACTIVE";
 
     [Column(TypeName = "timestamp")]
     public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
