@@ -18,13 +18,14 @@ public partial class User
     [MaxLength(255)]
     public string Email { get; set; } = null!;
 
-    [Required(ErrorMessage = "Mật khẩu là bắt buộc.")]
+    [NotMapped]
     [MinLength(8, ErrorMessage = "Mật khẩu phải từ 8 ký tự trở lên.")]
     [MaxLength(255)]
     [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
         ErrorMessage = "Mật khẩu phải có chữ hoa, chữ thường, số và ký tự đặc biệt.")]
     public string? Password { get; set; }
 
+    [Required]
     public string? HashPassword { get; set; }
 
     [Required(ErrorMessage = "Họ tên không được để trống.")]

@@ -26,7 +26,7 @@ namespace CMMS.BLL.Services
             try
             {
                 var staffs = await _staffRepo.GetAllStaffsAsync();
-                var activeStaffs = staffs.Where(u => u.Status == "ACTIVE");
+                var activeStaffs = staffs.Where(u => u.Status != null && u.Status.ToUpper() == "ACTIVE");
                 var data = activeStaffs.Select(UserMapper.ToResponse);
                 return new ApiResponse<IEnumerable<UserResponse>> { Success = true, Data = data };
             }
@@ -83,17 +83,11 @@ namespace CMMS.BLL.Services
                 var role = await _staffRepo.GetRoleByNameAsync(roleName);
                 if (role == null) return new ApiResponse<string> { Success = false, Message = "Role không hợp lệ." };
 
-                var newUser = new User
-                {
-                    UserId = Guid.NewGuid(),
-                    Email = request.Email,
-                    HashPassword = PasswordHelper.HashPassword(request.Password),
-                    Fullname = request.Fullname,
-                    PhoneNumber = request.PhoneNumber,
-                    RoleId = role.RoleId,
-                    Status = "Active",
-                    CreatedAt = DateTimeHelper.VnNow()
-                };
+                var newUser = UserMapper.ToEntity(request);
+                newUser.UserId = Guid.NewGuid();
+                newUser.RoleId = role.RoleId;
+                newUser.CreatedAt = DateTimeHelper.VnNow();
+                newUser.Status = "ACTIVE";
 
                 await _staffRepo.AddUserAsync(newUser);
                 await _staffRepo.SaveChangesAsync();
