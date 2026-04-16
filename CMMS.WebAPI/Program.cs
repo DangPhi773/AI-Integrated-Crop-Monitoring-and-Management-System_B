@@ -85,6 +85,7 @@ builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Emai
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("Cloudinary"));
 builder.Services.Configure<VNPaySettings>(builder.Configuration.GetSection("PaymentSettings:VNPay"));
 builder.Services.Configure<PayOSSettings>(builder.Configuration.GetSection("PaymentSettings:PayOS"));
+builder.Services.AddHttpClient<IPlantAnalysisService, PlantAnalysisService>();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
