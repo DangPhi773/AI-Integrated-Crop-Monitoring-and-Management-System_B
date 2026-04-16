@@ -41,9 +41,6 @@ namespace CMMS.DAL.Entities
         [Column(TypeName = "timestamp with time zone")]
         public DateTime? LastActiveAt { get; set; }
 
-        [Column(TypeName = "jsonb")]
-        public string? AlertConfigJson { get; set; }
-
         [ForeignKey("BedId")]
         public virtual Bed? Bed { get; set; }
 

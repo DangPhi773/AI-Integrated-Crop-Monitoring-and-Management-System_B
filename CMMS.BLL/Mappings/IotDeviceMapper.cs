@@ -18,8 +18,7 @@ namespace CMMS.BLL.Mappings
             Longitude = d.Longitude,
             CreatedAt = d.CreatedAt,
             UpdatedAt = d.UpdatedAt,
-            LastActiveAt = d.LastActiveAt,
-            AlertConfigJson = d.AlertConfigJson
+            LastActiveAt = d.LastActiveAt
         };
     }
 }

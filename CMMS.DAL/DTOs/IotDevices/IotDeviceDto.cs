@@ -12,7 +12,6 @@ namespace CMMS.DAL.DTOs.IotDevices
         public DateTime? InstallationDate { get; set; }
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
-        public string? AlertConfigJson { get; set; }
     }
 
     public class IotDeviceResponse
@@ -29,6 +28,5 @@ namespace CMMS.DAL.DTOs.IotDevices
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? LastActiveAt { get; set; }
-        public string? AlertConfigJson { get; set; }
     }
 }

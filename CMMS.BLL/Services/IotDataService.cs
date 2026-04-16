@@ -75,7 +75,7 @@ namespace CMMS.BLL.Services
                     SoilMoisture = request.SoilMoisture,
                     Light = request.Light,
                     IsRaining = request.IsRaining,
-                    IsAlert = request.IsAlert,
+                    IsAlert = false,
                     CreatedAt = DateTimeHelper.VnNow()
                 };
 

@@ -8,6 +8,5 @@ namespace CMMS.BLL.Interfaces
         Task<SensorDataResponse> ProcessSensorDataAsync(SensorDataRequest request);
         Task<ApiResponse<IotDataResponse>> GetLatestAsync(string deviceCode);
         Task<ApiResponse<IEnumerable<IotDataResponse>>> GetHistoryAsync(string deviceCode, DateTime from, DateTime to);
-        Task<ApiResponse<IEnumerable<IotDataResponse>>> GetAlertsByFarmIdAsync(Guid farmId);
     }
 }

@@ -69,22 +69,6 @@ namespace CMMS.DAL.Repositories
                 .ToListAsync();
         }
 
-        public async System.Threading.Tasks.Task<List<IotData>> GetAlertsByFarmIdAsync(Guid farmId)
-        {
-            return await _context.IotDatas
-                .Include(d => d.Device)
-                    .ThenInclude(dev => dev!.Bed)
-                        .ThenInclude(bed => bed!.Plot)
-                .Where(d => d.IsAlert
-                    && d.Device != null
-                    && d.Device.Bed != null
-                    && d.Device.Bed.Plot != null
-                    && d.Device.Bed.Plot.FarmId == farmId)
-                .OrderByDescending(d => d.RecordedAt)
-                .AsNoTracking()
-                .ToListAsync();
-        }
-
         public async System.Threading.Tasks.Task AddAsync(IotData entity) => await _context.IotDatas.AddAsync(entity);
 
         public void Delete(IotData entity) => _context.IotDatas.Remove(entity);

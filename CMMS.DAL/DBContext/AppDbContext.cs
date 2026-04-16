@@ -590,7 +590,6 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasColumnType("timestamp with time zone");
             entity.Property(e => e.DeviceCode).HasColumnName("device_code");
             entity.Property(e => e.LastActiveAt).HasColumnName("last_active_at").HasColumnType("timestamp with time zone");
-            entity.Property(e => e.AlertConfigJson).HasColumnName("alert_config_json").HasColumnType("jsonb");
 
             entity.HasOne(d => d.Bed)
                   .WithMany(p => p.IotDevices)
