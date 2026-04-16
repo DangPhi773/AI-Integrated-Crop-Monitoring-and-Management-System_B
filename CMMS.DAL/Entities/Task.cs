@@ -26,6 +26,10 @@ public partial class Task
     [Column("task_notes")]
     public string? TaskNotes { get; set; }
 
+    [Column("task_type")]
+    [MaxLength(50)]
+    public string? TaskType { get; set; }
+
     [Column("task_created_at", TypeName = "timestamp")]
     public DateTime? TaskCreatedAt { get; set; } = DateTime.UtcNow;
 
