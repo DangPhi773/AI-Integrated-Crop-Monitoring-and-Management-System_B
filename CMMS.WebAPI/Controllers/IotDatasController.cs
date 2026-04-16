@@ -14,7 +14,7 @@ namespace CMMS.WebAPI.Controllers
 
         public IotDatasController(IIotDataService service) => _service = service;
 
-        [Authorize(Roles = "Owner,Worker")]
+        [Authorize(Roles = "Owner,Worker,Specialist")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -22,7 +22,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [Authorize(Roles = "Owner,Worker")]
+        [Authorize(Roles = "Owner,Worker,Specialist")]
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
