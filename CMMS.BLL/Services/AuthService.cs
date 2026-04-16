@@ -39,7 +39,7 @@ namespace CMMS.BLL.Services
                     Fullname = request.Fullname,
                     PhoneNumber = request.PhoneNumber,
                     CreatedAt = DateTimeHelper.VnNow(),
-                    Status = "Active"
+                    Status = "ACTIVE"
                 };
 
                 await _userRepo.AddAsync(newUser);
