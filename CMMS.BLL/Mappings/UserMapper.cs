@@ -15,5 +15,21 @@ namespace CMMS.BLL.Mappings
             CreatedAt = u.CreatedAt,
             RoleName = u.Role?.RoleName
         };
+
+        public static User ToEntity(StaffRequest request)
+        {
+            return new User
+            {
+                Email = request.Email,
+                Fullname = request.Fullname,
+                PhoneNumber = request.PhoneNumber,
+                RoleId = request.RoleId,
+                Status = request.Status ?? "Active",
+
+                HashPassword = !string.IsNullOrEmpty(request.Password)
+                               ? BCrypt.Net.BCrypt.HashPassword(request.Password)
+                               : null
+            };
+        }
     }
 }
