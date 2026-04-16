@@ -65,6 +65,8 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<ReportAssignment> ReportAssignments { get; set; }
     public virtual DbSet<DiagnosisResult> DiagnosisResults { get; set; }
     public virtual DbSet<ReportEnvironmentSnapshot> ReportEnvironmentSnapshots { get; set; }
+    public virtual DbSet<DiagnosisPriceSetting> DiagnosisPriceSettings { get; set; }
+    public virtual DbSet<DiagnosisPayment> DiagnosisPayments { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -900,6 +902,71 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.SourceDevice).WithMany()
                 .HasForeignKey(d => d.SourceDeviceId)
                 .HasConstraintName("report_env_snapshot_device_id_fkey");
+        });
+
+        modelBuilder.Entity<DiagnosisPriceSetting>(entity =>
+        {
+            entity.ToTable("diagnosis_price_setting");
+            entity.HasKey(e => e.Id).HasName("diagnosis_price_setting_pkey");
+
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("id");
+            entity.Property(e => e.FarmId).HasColumnName("farm_id");
+            entity.Property(e => e.ExpertId).HasColumnName("expert_id");
+            entity.Property(e => e.Month).HasColumnName("month").HasColumnType("date");
+            entity.Property(e => e.PricePerDiagnosis).HasColumnName("price_per_diagnosis");
+            entity.Property(e => e.Notes).HasColumnName("notes");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+
+            entity.HasIndex(e => new { e.FarmId, e.ExpertId, e.Month })
+                .IsUnique()
+                .HasDatabaseName("diagnosis_price_setting_unique");
+
+            entity.HasIndex(e => new { e.FarmId, e.Month })
+                .HasDatabaseName("idx_price_setting_farm_month");
+
+            entity.HasOne(d => d.Farm).WithMany()
+                .HasForeignKey(d => d.FarmId)
+                .HasConstraintName("diagnosis_price_setting_farm_fkey");
+
+            entity.HasOne(d => d.Expert).WithMany()
+                .HasForeignKey(d => d.ExpertId)
+                .HasConstraintName("diagnosis_price_setting_expert_fkey");
+
+            entity.HasOne(d => d.Creator).WithMany()
+                .HasForeignKey(d => d.CreatedBy)
+                .HasConstraintName("diagnosis_price_setting_created_by_fkey");
+        });
+
+        modelBuilder.Entity<DiagnosisPayment>(entity =>
+        {
+            entity.ToTable("diagnosis_payment");
+            entity.HasKey(e => e.Id).HasName("diagnosis_payment_pkey");
+
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("id");
+            entity.Property(e => e.PriceSettingId).HasColumnName("price_setting_id");
+            entity.Property(e => e.TotalDiagnoses).HasColumnName("total_diagnoses");
+            entity.Property(e => e.Amount).HasColumnName("amount");
+            entity.Property(e => e.Status).HasColumnName("status").HasDefaultValue("pending");
+            entity.Property(e => e.PaymentProvider).HasColumnName("payment_provider");
+            entity.Property(e => e.ProviderData).HasColumnName("provider_data");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+            entity.Property(e => e.PaidAt).HasColumnName("paid_at");
+
+            entity.HasIndex(e => e.Status).HasDatabaseName("idx_payment_status");
+            entity.HasIndex(e => e.PaymentProvider).HasDatabaseName("idx_payment_provider");
+
+            entity.HasOne(d => d.PriceSetting).WithMany(p => p.Payments)
+                .HasForeignKey(d => d.PriceSettingId)
+                .HasConstraintName("diagnosis_payment_price_setting_fkey");
         });
 
         OnModelCreatingPartial(modelBuilder);

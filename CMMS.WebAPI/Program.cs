@@ -84,6 +84,8 @@ builder.Services.AddScoped<IRecommendationTaskDetailService, RecommendationTaskD
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("Cloudinary"));
 builder.Services.Configure<PlantNetSettings>(builder.Configuration.GetSection("PlantNet"));
+builder.Services.Configure<VNPaySettings>(builder.Configuration.GetSection("PaymentSettings:VNPay"));
+builder.Services.Configure<PayOSSettings>(builder.Configuration.GetSection("PaymentSettings:PayOS"));
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
@@ -91,6 +93,10 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 builder.Services.AddHttpClient<IPlantNetService, PlantNetService>();
+
+builder.Services.AddScoped<VNPayService>();
+builder.Services.AddHttpClient<PayOSService>();
+builder.Services.AddScoped<IDiagnosisBillingService, DiagnosisBillingService>();
 
 builder.Services.AddEndpointsApiExplorer();
 
