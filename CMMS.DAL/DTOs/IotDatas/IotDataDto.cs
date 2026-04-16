@@ -11,7 +11,6 @@ namespace CMMS.DAL.DTOs.IotDatas
         public double? SoilMoisture { get; set; }
         public double? Light { get; set; }
         public bool? IsRaining { get; set; }
-        public bool IsAlert { get; set; }
     }
 
     public class IotDataResponse

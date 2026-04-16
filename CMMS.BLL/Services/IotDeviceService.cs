@@ -61,7 +61,6 @@ namespace CMMS.BLL.Services
                     InstallationDate = request.InstallationDate,
                     Latitude = request.Latitude,
                     Longitude = request.Longitude,
-                    AlertConfigJson = request.AlertConfigJson,
                     CreatedAt = DateTimeHelper.VnNow()
                 };
 
@@ -92,7 +91,6 @@ namespace CMMS.BLL.Services
                 entity.InstallationDate = request.InstallationDate ?? entity.InstallationDate;
                 entity.Latitude = request.Latitude ?? entity.Latitude;
                 entity.Longitude = request.Longitude ?? entity.Longitude;
-                entity.AlertConfigJson = request.AlertConfigJson ?? entity.AlertConfigJson;
                 entity.UpdatedAt = DateTimeHelper.VnNow();
 
                 _repo.Update(entity);

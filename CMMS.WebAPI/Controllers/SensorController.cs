@@ -42,13 +42,5 @@ namespace CMMS.WebAPI.Controllers
             var result = await _service.GetHistoryAsync(deviceCode, from, to);
             return result.Success ? Ok(result) : NotFound(result);
         }
-
-        [Authorize(Roles = "Owner,Worker")]
-        [HttpGet("alerts")]
-        public async Task<IActionResult> GetAlerts([FromQuery] Guid farmId)
-        {
-            var result = await _service.GetAlertsByFarmIdAsync(farmId);
-            return Ok(result);
-        }
     }
 }

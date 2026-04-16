@@ -10,7 +10,6 @@ namespace CMMS.DAL.Interfaces
         System.Threading.Tasks.Task<IotData?> GetLatestByDeviceIdAsync(Guid deviceId);
         System.Threading.Tasks.Task<List<IotData>> GetLatestByBedIdAsync(Guid bedId, int count);
         System.Threading.Tasks.Task<List<IotData>> GetHistoryAsync(Guid deviceId, DateTime from, DateTime to);
-        System.Threading.Tasks.Task<List<IotData>> GetAlertsByFarmIdAsync(Guid farmId);
         System.Threading.Tasks.Task AddAsync(IotData entity);
         void Delete(IotData entity);
         System.Threading.Tasks.Task<bool> SaveChangesAsync();
