@@ -89,7 +89,7 @@ namespace CMMS.BLL.Services
                 PlotId = request.PlotId,
                 BedId = request.BedId,
                 SeasonId = request.SeasonId,
-                //AiResultsJson = request.AiResultsJson,
+                AiResultsJson = request.AiResultsJson,
                 Status = "SENT_TO_OWNER",
                 CreatedAt = now,
                 SubmitDate = now

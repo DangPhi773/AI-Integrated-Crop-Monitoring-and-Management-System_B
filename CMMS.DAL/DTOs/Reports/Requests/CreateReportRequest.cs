@@ -9,5 +9,6 @@ namespace CMMS.DAL.DTOs.Reports.Requests
         public Guid? BedId { get; set; }
         public Guid? SeasonId { get; set; }
         public Guid? OwnerId { get; set; }
+        public string? AiResultsJson { get; set; }
     }
 }
