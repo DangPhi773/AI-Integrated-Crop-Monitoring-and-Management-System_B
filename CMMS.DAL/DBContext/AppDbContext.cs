@@ -477,6 +477,10 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.TaskStatus).HasColumnName("task_status");
             entity.Property(e => e.TaskNotes).HasColumnName("task_notes");
 
+            entity.Property(e => e.TaskType)
+                .HasColumnName("task_type")
+                .HasMaxLength(50);
+
             entity.Property(e => e.TaskCreatedAt)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("task_created_at");
