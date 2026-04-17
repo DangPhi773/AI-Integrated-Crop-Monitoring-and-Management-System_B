@@ -38,5 +38,15 @@ namespace CMMS.DAL.Repositories
 
         public async Task<bool> SaveChangesAsync()
             => await _context.SaveChangesAsync() > 0;
+
+        public async Task<IEnumerable<Bed>> GetBedsByPlotIdAsync(Guid plotId)
+        {
+            return await _context.Beds
+                .Include(b => b.Plot)
+                .Include(b => b.Crop)
+                .Include(b => b.SeasonsDetails)
+                .Where(b => b.PlotId == plotId)
+                .ToListAsync();
+        }
     }
 }

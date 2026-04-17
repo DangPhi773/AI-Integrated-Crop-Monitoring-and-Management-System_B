@@ -15,6 +15,7 @@ namespace CMMS.BLL.Interfaces
         Task<ApiResponse<string>> CreateBedAsync(BedRequest request);
         Task<ApiResponse<string>> UpdateBedAsync(Guid id, BedRequest request);
         Task<ApiResponse<string>> DeleteBedAsync(Guid id);
+        Task<ApiResponse<IEnumerable<BedResponse>>> GetBedsByPlotIdAsync(Guid plotId);
 
         Task<ApiResponse<BedSplitPreview>> PreviewAutoAllocateAsync(BedSplitRequest request);
         Task<ApiResponse<string>> ConfirmAutoAllocateAsync(BedSplitConfirmRequest request);
