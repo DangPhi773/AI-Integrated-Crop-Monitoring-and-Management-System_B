@@ -213,4 +213,40 @@ public class DiagnosisBillingService : IDiagnosisBillingService
             _ => throw new ArgumentException($"Provider không hỗ trợ: {provider}")
         };
     }
+
+    public async Task<ApiResponse<IEnumerable<BillInfoResponse>>> GetAllPriceSettingsAsync()
+    {
+        try
+        {
+            var settingsIds = await _db.DiagnosisPriceSettings
+                .AsNoTracking()
+                .OrderByDescending(x => x.Month)
+                .Select(x => x.Id)
+                .ToListAsync();
+
+            var resultList = new List<BillInfoResponse>();
+
+            foreach (var id in settingsIds)
+            {
+                var bill = await BuildBillInfo(id);
+                if (bill != null) resultList.Add(bill);
+            }
+
+            return new ApiResponse<IEnumerable<BillInfoResponse>>
+            {
+                Success = true,
+                Data = resultList,
+                Message = $"Lấy được {resultList.Count} bản ghi cấu hình giá."
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ApiResponse<IEnumerable<BillInfoResponse>>
+            {
+                Success = false,
+                Message = "Lỗi khi lấy danh sách cấu hình giá",
+                Errors = new List<string> { ex.Message }
+            };
+        }
+    }
 }

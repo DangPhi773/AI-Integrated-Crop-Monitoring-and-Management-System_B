@@ -11,4 +11,5 @@ public interface IDiagnosisBillingService
     Task<ApiResponse<BillInfoResponse>> GetBillInfoByParamsAsync(Guid farmId, Guid expertId, DateTime month);
     Task<ApiResponse<PaymentUrlResponse>> CreatePaymentAsync(CreatePaymentRequest request);
     Task<ApiResponse<string>> ProcessPaymentCallbackAsync(string provider, IQueryCollection query);
+    Task<ApiResponse<IEnumerable<BillInfoResponse>>> GetAllPriceSettingsAsync();
 }

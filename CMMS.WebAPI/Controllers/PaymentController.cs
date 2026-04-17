@@ -88,4 +88,12 @@ public class PaymentController : ControllerBase
         var frontendUrl = _config["FrontendUrl"] ?? "http://localhost:3000";
         return Redirect($"{frontendUrl}/payment/cancelled");
     }
+
+    [HttpGet("price-settings")]
+    [Authorize(Policy = "OwnerOnly")] 
+    public async Task<IActionResult> GetAllPriceSettings()
+    {
+        var result = await _billingService.GetAllPriceSettingsAsync();
+        return Ok(result);
+    }
 }
