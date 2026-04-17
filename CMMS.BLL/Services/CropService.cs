@@ -62,6 +62,10 @@ namespace CMMS.BLL.Services
                     CropScientificName = request.CropScientificName,
                     CropDefaultGrowthDays = request.CropDefaultGrowthDays,
                     PlantSpacing = request.PlantSpacing,
+                    BedWidthDefault = request.BedWidthDefault,
+                    PathWidthDefault = request.PathWidthDefault,
+                    RowsPerBed = request.RowsPerBed,
+                    RowSpacing = request.RowSpacing,
                     CropQuantities = request.CropQuantities,
                     CropStatus = request.CropStatus ?? "Active"
                 };
@@ -86,6 +90,10 @@ namespace CMMS.BLL.Services
                 crop.CropScientificName = request.CropScientificName ?? crop.CropScientificName;
                 crop.CropDefaultGrowthDays = request.CropDefaultGrowthDays ?? crop.CropDefaultGrowthDays;
                 crop.PlantSpacing = request.PlantSpacing ?? crop.PlantSpacing;
+                crop.BedWidthDefault = request.BedWidthDefault ?? crop.BedWidthDefault;
+                crop.PathWidthDefault = request.PathWidthDefault ?? crop.PathWidthDefault;
+                crop.RowsPerBed = request.RowsPerBed ?? crop.RowsPerBed;
+                crop.RowSpacing = request.RowSpacing ?? crop.RowSpacing;
                 crop.CropQuantities = request.CropQuantities ?? crop.CropQuantities;
                 crop.CropStatus = request.CropStatus ?? crop.CropStatus;
 

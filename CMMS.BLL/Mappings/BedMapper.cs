@@ -14,7 +14,14 @@ namespace CMMS.BLL.Mappings
             BedStatus = b.BedStatus,
             BedCreatedAt = b.BedCreatedAt,
             CropQuantities = b.CropQuantities,
+            CropId = b.CropId,
+            BedWidth = b.BedWidth,
+            BedLength = b.BedLength,
+            PathWidth = b.PathWidth,
+            PlantCount = b.PlantCount,
+            RowCount = b.RowCount,
             PlotName = b.Plot?.PlotName,
+            CropName = b.Crop?.CropName,
             SeasonsDetailsCount = b.SeasonsDetails?.Count ?? 0
         };
     }

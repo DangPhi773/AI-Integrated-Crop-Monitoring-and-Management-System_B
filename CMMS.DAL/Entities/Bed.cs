@@ -36,8 +36,17 @@ public partial class Bed
 
     public double? BedLength { get; set; }
 
+    public double? PathWidth { get; set; }
+
+    public int? PlantCount { get; set; }
+
+    public Guid? CropId { get; set; }
+
     [ForeignKey("PlotId")]
     public virtual Plot? Plot { get; set; }
+
+    [ForeignKey("CropId")]
+    public virtual Crop? Crop { get; set; }
 
     public virtual ICollection<SeasonsDetail> SeasonsDetails { get; set; } = new List<SeasonsDetail>();
 
