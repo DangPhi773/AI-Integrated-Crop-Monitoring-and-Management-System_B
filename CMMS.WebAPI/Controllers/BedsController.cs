@@ -16,7 +16,7 @@ namespace CMMS.WebAPI.Controllers
 
         public BedsController(IBedService bedService) => _bedService = bedService;
 
-        [Authorize(Roles = "Owner,Worker")] 
+        [Authorize(Roles = "Owner,Worker,Specialist")] 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -24,7 +24,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [Authorize(Roles = "Owner")] 
+        [Authorize(Roles = "Owner,Specialist")] 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -59,7 +59,7 @@ namespace CMMS.WebAPI.Controllers
 
         [Authorize(Roles = "Owner")]
         [HttpPost("auto-allocate/preview")]
-        public async Task<IActionResult> PreviewAutoAllocate([FromBody] BedAutoAllocateRequest request)
+        public async Task<IActionResult> PreviewAutoAllocate([FromBody] BedSplitRequest request)
         {
             var result = await _bedService.PreviewAutoAllocateAsync(request);
             return result.Success ? Ok(result) : BadRequest(result);
@@ -67,7 +67,7 @@ namespace CMMS.WebAPI.Controllers
 
         [Authorize(Roles = "Owner")]
         [HttpPost("auto-allocate/confirm")]
-        public async Task<IActionResult> ConfirmAutoAllocate([FromBody] BedAutoAllocateRequest request)
+        public async Task<IActionResult> ConfirmAutoAllocate([FromBody] BedSplitConfirmRequest request)
         {
             var result = await _bedService.ConfirmAutoAllocateAsync(request);
             return result.Success ? Ok(result) : BadRequest(result);

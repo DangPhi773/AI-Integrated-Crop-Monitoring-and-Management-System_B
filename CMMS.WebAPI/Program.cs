@@ -44,7 +44,6 @@ builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>(
 builder.Services.AddScoped<ICropGrowthTaskRepository, CropGrowthTaskRepository>();
 builder.Services.AddScoped<ISubTaskRepository, SubTaskRepository>();
 builder.Services.AddScoped<IWorkerScheduleRepository, WorkerScheduleRepository>();
-builder.Services.AddScoped<ICropBedConfigRepository, CropBedConfigRepository>();
 builder.Services.AddScoped<ICropGrowthStageRepository, CropGrowthStageRepository>();
 builder.Services.AddScoped<IReportRepository, ReportRepository>();
 builder.Services.AddScoped<IAttachmentRepository, AttachmentRepository>();
@@ -75,7 +74,6 @@ builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddScoped<ICropGrowthTaskService, CropGrowthTaskService>();
 builder.Services.AddScoped<ISubTaskService, SubTaskService>();
 builder.Services.AddScoped<IWorkerScheduleService, WorkerScheduleService>();
-builder.Services.AddScoped<ICropBedConfigService, CropBedConfigService>();
 builder.Services.AddScoped<ICropGrowthStageService, CropGrowthStageService>();
 builder.Services.AddScoped<ISoilCropCompatibilityService, SoilCropCompatibilityService>();
 builder.Services.AddScoped<IRecommendationTaskService, RecommendationTaskService>();
@@ -83,16 +81,15 @@ builder.Services.AddScoped<IRecommendationTaskDetailService, RecommendationTaskD
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("Cloudinary"));
-builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("Gemini"));
 builder.Services.Configure<VNPaySettings>(builder.Configuration.GetSection("PaymentSettings:VNPay"));
 builder.Services.Configure<PayOSSettings>(builder.Configuration.GetSection("PaymentSettings:PayOS"));
+builder.Services.AddHttpClient<IPlantAnalysisService, PlantAnalysisService>();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IAttachmentService, AttachmentService>();
-builder.Services.AddHttpClient<IGeminiDiseaseService, GeminiDiseaseService>();
 
 builder.Services.AddScoped<VNPayService>();
 builder.Services.AddHttpClient<PayOSService>();

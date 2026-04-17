@@ -16,7 +16,7 @@ namespace CMMS.BLL.Interfaces
         Task<ApiResponse<string>> UpdateBedAsync(Guid id, BedRequest request);
         Task<ApiResponse<string>> DeleteBedAsync(Guid id);
 
-        Task<ApiResponse<BedAutoAllocateResponse>> PreviewAutoAllocateAsync(BedAutoAllocateRequest request);
-        Task<ApiResponse<BedAutoAllocateResponse>> ConfirmAutoAllocateAsync(BedAutoAllocateRequest request);
+        Task<ApiResponse<BedSplitPreview>> PreviewAutoAllocateAsync(BedSplitRequest request);
+        Task<ApiResponse<string>> ConfirmAutoAllocateAsync(BedSplitConfirmRequest request);
     }
 }

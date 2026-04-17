@@ -18,6 +18,7 @@ namespace CMMS.DAL.Repositories
         public async Task<IEnumerable<Bed>> GetAllAsync()
             => await _context.Beds
                 .Include(b => b.Plot)
+                .Include(b => b.Crop)
                 .Include(b => b.SeasonsDetails)
                 .AsNoTracking()
                 .ToListAsync();
@@ -25,6 +26,7 @@ namespace CMMS.DAL.Repositories
         public async Task<Bed?> GetByIdAsync(Guid id)
             => await _context.Beds
                 .Include(b => b.Plot)
+                .Include(b => b.Crop)
                 .Include(b => b.SeasonsDetails)
                 .FirstOrDefaultAsync(b => b.BedId == id);
 

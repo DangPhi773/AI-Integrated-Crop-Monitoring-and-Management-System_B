@@ -9,6 +9,10 @@ namespace CMMS.DAL.DTOs.Crops
         public string? CropScientificName { get; set; }
         public int? CropDefaultGrowthDays { get; set; }
         public double? PlantSpacing { get; set; }
+        public double? BedWidthDefault { get; set; }
+        public double? PathWidthDefault { get; set; }
+        public int? RowsPerBed { get; set; }
+        public double? RowSpacing { get; set; }
         public int? CropQuantities { get; set; }
         public string? CropStatus { get; set; }
     }
@@ -20,6 +24,10 @@ namespace CMMS.DAL.DTOs.Crops
         public string? CropScientificName { get; set; }
         public int? CropDefaultGrowthDays { get; set; }
         public double? PlantSpacing { get; set; }
+        public double? BedWidthDefault { get; set; }
+        public double? PathWidthDefault { get; set; }
+        public int? RowsPerBed { get; set; }
+        public double? RowSpacing { get; set; }
         public int? CropQuantities { get; set; }
         public string? CropStatus { get; set; }
         public List<SoilCompatibilityDto> CompatibleSoils { get; set; } = new List<SoilCompatibilityDto>();

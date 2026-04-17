@@ -8,7 +8,6 @@ using CMMS.DAL.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CMMS.BLL.Services
@@ -18,18 +17,15 @@ namespace CMMS.BLL.Services
         private readonly IBedRepository _bedRepo;
         private readonly IPlotRepository _plotRepo;
         private readonly ICropRepository _cropRepo;
-        private readonly ICropBedConfigRepository _configRepo;
 
         public BedService(
             IBedRepository bedRepo,
             IPlotRepository plotRepo,
-            ICropRepository cropRepo,
-            ICropBedConfigRepository configRepo)
+            ICropRepository cropRepo)
         {
             _bedRepo = bedRepo;
             _plotRepo = plotRepo;
             _cropRepo = cropRepo;
-            _configRepo = configRepo;
         }
 
         public async Task<ApiResponse<IEnumerable<BedResponse>>> GetAllBedsAsync()
@@ -72,6 +68,12 @@ namespace CMMS.BLL.Services
                     BedArea = request.BedArea,
                     BedStatus = request.BedStatus ?? "Active",
                     CropQuantities = request.CropQuantities,
+                    CropId = request.CropId,
+                    BedWidth = request.BedWidth,
+                    BedLength = request.BedLength,
+                    PathWidth = request.PathWidth,
+                    PlantCount = request.PlantCount,
+                    RowCount = request.RowCount,
                     BedCreatedAt = DateTimeHelper.VnNow()
                 };
 
@@ -99,6 +101,12 @@ namespace CMMS.BLL.Services
                 entity.BedArea = request.BedArea ?? entity.BedArea;
                 entity.BedStatus = request.BedStatus ?? entity.BedStatus;
                 entity.CropQuantities = request.CropQuantities ?? entity.CropQuantities;
+                entity.CropId = request.CropId ?? entity.CropId;
+                entity.BedWidth = request.BedWidth ?? entity.BedWidth;
+                entity.BedLength = request.BedLength ?? entity.BedLength;
+                entity.PathWidth = request.PathWidth ?? entity.PathWidth;
+                entity.PlantCount = request.PlantCount ?? entity.PlantCount;
+                entity.RowCount = request.RowCount ?? entity.RowCount;
 
                 _bedRepo.Update(entity);
                 await _bedRepo.SaveChangesAsync();
@@ -125,7 +133,7 @@ namespace CMMS.BLL.Services
                     return new ApiResponse<string>
                     {
                         Success = false,
-                        Message = "Luống này đang trong quá trình canh tác (Occupied). Sếp phải kết thúc mùa vụ hoặc giải phóng luống trước khi xóa!"
+                        Message = "Luống này đang trong quá trình canh tác (Occupied). Phải kết thúc mùa vụ hoặc giải phóng luống trước khi xóa!"
                     };
                 }
 
@@ -134,7 +142,7 @@ namespace CMMS.BLL.Services
                     return new ApiResponse<string>
                     {
                         Success = false,
-                        Message = "Luống này đã có dữ liệu lịch sử canh tác. Để bảo toàn dữ liệu, sếp nên đổi trạng thái sang 'Inactive' thay vì xóa vĩnh viễn."
+                        Message = "Luống này đã có dữ liệu lịch sử canh tác. Để bảo toàn dữ liệu, Nên đổi trạng thái sang 'Inactive' thay vì xóa vĩnh viễn."
                     };
                 }
 
@@ -154,210 +162,118 @@ namespace CMMS.BLL.Services
             }
         }
 
-        public async Task<ApiResponse<BedAutoAllocateResponse>> PreviewAutoAllocateAsync(BedAutoAllocateRequest request)
+        public async Task<ApiResponse<BedSplitPreview>> PreviewAutoAllocateAsync(BedSplitRequest request)
         {
             try
             {
-                var calc = await BuildAllocationAsync(request);
-                return calc;
+                var (preview, error) = await BuildSplitAsync(request);
+                if (error != null)
+                    return new ApiResponse<BedSplitPreview> { Success = false, Message = error };
+                return new ApiResponse<BedSplitPreview> { Success = true, Data = preview };
             }
             catch (Exception ex)
             {
-                return new ApiResponse<BedAutoAllocateResponse> { Success = false, Message = "Lỗi preview", Errors = new List<string> { ex.Message } };
+                return new ApiResponse<BedSplitPreview> { Success = false, Message = "Lỗi preview", Errors = new List<string> { ex.Message } };
             }
         }
 
-        public async Task<ApiResponse<BedAutoAllocateResponse>> ConfirmAutoAllocateAsync(BedAutoAllocateRequest request)
+        public async Task<ApiResponse<string>> ConfirmAutoAllocateAsync(BedSplitConfirmRequest request)
         {
             try
             {
-                var calc = await BuildAllocationAsync(request);
-                if (!calc.Success || calc.Data == null) return calc;
-
                 var plot = await _plotRepo.GetByIdAsync(request.PlotId);
                 if (plot == null)
-                    return new ApiResponse<BedAutoAllocateResponse> { Success = false, Message = "Plot không tồn tại" };
+                    return new ApiResponse<string> { Success = false, Message = "Plot không tồn tại" };
                 if (plot.Beds != null && plot.Beds.Any())
-                    return new ApiResponse<BedAutoAllocateResponse> { Success = false, Message = "Plot đã có beds, không thể auto-allocate" };
+                    return new ApiResponse<string> { Success = false, Message = "Plot đã có beds" };
+                if (request.Beds == null || request.Beds.Count == 0)
+                    return new ApiResponse<string> { Success = false, Message = "Danh sách beds rỗng" };
 
                 var now = DateTimeHelper.VnNow();
-                foreach (var b in calc.Data.Beds)
+                foreach (var b in request.Beds)
                 {
-                    var entity = new Bed
+                    await _bedRepo.AddAsync(new Bed
                     {
                         BedId = Guid.NewGuid(),
                         PlotId = request.PlotId,
+                        CropId = request.CropId,
                         BedName = b.BedName,
                         BedArea = (decimal)b.BedArea,
-                        BedStatus = "Active",
-                        CropQuantities = b.PlantCount,
-                        BedCreatedAt = now,
-                        PlantingPattern = calc.Data.PlantingPattern,
-                        RowCount = b.RowCount,
+                        BedLength = b.BedLength,
                         BedWidth = b.BedWidth,
-                        BedLength = b.BedLength
-                    };
-                    await _bedRepo.AddAsync(entity);
+                        PathWidth = b.PathWidth,
+                        RowCount = b.RowCount,
+                        PlantCount = b.PlantCount,
+                        CropQuantities = b.PlantCount,
+                        BedStatus = "Active",
+                        BedCreatedAt = now
+                    });
                 }
 
-                if (await _bedRepo.SaveChangesAsync())
-                    return calc;
-
-                return new ApiResponse<BedAutoAllocateResponse> { Success = false, Message = "Lưu thất bại" };
+                return await _bedRepo.SaveChangesAsync()
+                    ? new ApiResponse<string> { Success = true, Message = $"Đã tạo {request.Beds.Count} luống" }
+                    : new ApiResponse<string> { Success = false, Message = "Lưu thất bại" };
             }
             catch (Exception ex)
             {
-                return new ApiResponse<BedAutoAllocateResponse> { Success = false, Message = "Lỗi confirm", Errors = new List<string> { ex.Message } };
+                return new ApiResponse<string> { Success = false, Message = "Lỗi confirm", Errors = new List<string> { ex.Message } };
             }
         }
 
-        private async Task<ApiResponse<BedAutoAllocateResponse>> BuildAllocationAsync(BedAutoAllocateRequest request)
+        private async Task<(BedSplitPreview? preview, string? error)> BuildSplitAsync(BedSplitRequest request)
         {
             var plot = await _plotRepo.GetByIdAsync(request.PlotId);
-            if (plot == null)
-                return new ApiResponse<BedAutoAllocateResponse> { Success = false, Message = "Plot không tồn tại" };
-            if (plot.PlotArea == null || plot.PlotArea <= 0)
-                return new ApiResponse<BedAutoAllocateResponse> { Success = false, Message = "Plot chưa có diện tích hợp lệ" };
-            if (plot.Beds != null && plot.Beds.Any())
-                return new ApiResponse<BedAutoAllocateResponse> { Success = false, Message = "Plot đã có beds" };
+            if (plot == null) return (null, "Plot không tồn tại");
+            if (!plot.PlotLength.HasValue || plot.PlotLength <= 0) return (null, "Plot thiếu plot_length");
+            if (!plot.PlotWidth.HasValue || plot.PlotWidth <= 0) return (null, "Plot thiếu plot_width");
 
             var crop = await _cropRepo.GetByIdAsync(request.CropId);
-            if (crop == null)
-                return new ApiResponse<BedAutoAllocateResponse> { Success = false, Message = "Crop không tồn tại" };
+            if (crop == null) return (null, "Crop không tồn tại");
+            if (!crop.PlantSpacing.HasValue || crop.PlantSpacing <= 0) return (null, "Crop thiếu plant_spacing");
+            if (!crop.RowSpacing.HasValue || crop.RowSpacing <= 0) return (null, "Crop thiếu row_spacing");
 
-            var availableConfigs = (await _configRepo.GetByCropIdAsync(request.CropId)).ToList();
-            if (!availableConfigs.Any())
-                return new ApiResponse<BedAutoAllocateResponse> { Success = false, Message = "Chưa có cấu hình luống cho giống cây này" };
+            if (request.BedWidth <= 0 || request.PathWidth <= 0 || request.RowsPerBed <= 0)
+                return (null, "BedWidth/PathWidth/RowsPerBed phải > 0");
 
-            CropBedConfig? config;
-            var pattern = request.PlantingPattern?.ToLowerInvariant();
-            if (!string.IsNullOrWhiteSpace(pattern))
-                config = availableConfigs.FirstOrDefault(c => c.PlantingPattern == pattern);
-            else
-                config = availableConfigs.FirstOrDefault(c => c.IsDefault) ?? availableConfigs.First();
+            if (request.BedWidth < (request.RowsPerBed - 1) * crop.RowSpacing.Value)
+                return (null, "Chiều rộng luống không đủ chứa số hàng yêu cầu");
 
-            if (config == null)
-                return new ApiResponse<BedAutoAllocateResponse> { Success = false, Message = $"Không tìm thấy config với pattern '{request.PlantingPattern}'" };
+            double bedLength = plot.PlotLength.Value - 2 * plot.PlotMargin;
+            if (bedLength <= 0) return (null, "plot_margin quá lớn so với plot_length");
 
-            var warnings = new List<string>();
+            int bedCount = (int)Math.Floor(plot.PlotWidth.Value / (request.BedWidth + request.PathWidth));
+            if (bedCount <= 0) return (null, "Không thể chia luống với thông số hiện tại");
 
-            double plotAreaM2 = (double)plot.PlotArea!.Value;
-            double plotLength, plotWidth;
-            bool isEstimated = true;
-            if (plot.PlotLength.HasValue && plot.PlotWidth.HasValue && plot.PlotLength > 0 && plot.PlotWidth > 0)
-            {
-                plotLength = plot.PlotLength.Value;
-                plotWidth = plot.PlotWidth.Value;
-                isEstimated = false;
-            }
-            else
-            {
-                plotLength = Math.Sqrt(plotAreaM2);
-                plotWidth = plotLength;
-                warnings.Add("Plot không có length/width — ước lượng hình vuông từ plot_area");
-            }
-
-            const double margin = 0.15;
-            double bedWidth = (config.RowsPerBed - 1) * config.RowSpacing + 2 * margin;
-            if (config.BedWidthMin.HasValue && bedWidth < config.BedWidthMin.Value)
-                warnings.Add($"bed_width tính ra ({bedWidth:F2}m) nhỏ hơn min ({config.BedWidthMin}m)");
-            if (config.BedWidthMax.HasValue && bedWidth > config.BedWidthMax.Value)
-                warnings.Add($"bed_width tính ra ({bedWidth:F2}m) lớn hơn max ({config.BedWidthMax}m)");
-
-            double pathWidth = ((config.PathWidthMin ?? 0.2) + (config.PathWidthMax ?? 0.3)) / 2.0;
-
-            double slot = bedWidth + pathWidth;
-            int maxBedCount = (int)Math.Floor(plotWidth / slot);
-            if (maxBedCount <= 0)
-                return new ApiResponse<BedAutoAllocateResponse> { Success = false, Message = "Plot quá nhỏ để chứa 1 luống với cấu hình này" };
-
-            int bedCount = maxBedCount;
-            if (request.DesiredBedCount.HasValue && request.DesiredBedCount.Value > 0)
-            {
-                if (request.DesiredBedCount.Value > maxBedCount)
-                    warnings.Add($"desired_bed_count ({request.DesiredBedCount}) vượt tối đa ({maxBedCount}), dùng {maxBedCount}");
-                else
-                    bedCount = request.DesiredBedCount.Value;
-            }
-
-            double bedLength = plotLength;
-
-            int plantsPerBed = CalculatePlants(config, bedLength);
-
-            int totalPlants = plantsPerBed * bedCount;
-            double bedAreaSingle = bedWidth * bedLength;
-            double usedArea = bedCount * (bedWidth + pathWidth) * bedLength;
-            if (usedArea > plotAreaM2) usedArea = plotAreaM2;
-            double unusedArea = Math.Max(0, plotAreaM2 - usedArea);
-
-            double densityPerHa = (totalPlants / plotAreaM2) * 10000.0;
-            bool densityWarning = false;
-            string? densityMsg = null;
-            if (config.DensityPerHaMin.HasValue && densityPerHa < config.DensityPerHaMin.Value)
-            {
-                densityWarning = true;
-                densityMsg = $"Mật độ {densityPerHa:F0} cây/ha thấp hơn khuyến nghị ({config.DensityPerHaMin})";
-            }
-            else if (config.DensityPerHaMax.HasValue && densityPerHa > config.DensityPerHaMax.Value)
-            {
-                densityWarning = true;
-                densityMsg = $"Mật độ {densityPerHa:F0} cây/ha vượt khuyến nghị ({config.DensityPerHaMax})";
-            }
+            int plantsPerRow = (int)Math.Floor(bedLength / crop.PlantSpacing.Value);
+            int plantCount = plantsPerRow * request.RowsPerBed;
+            double bedArea = bedLength * request.BedWidth;
+            double widthRemain = plot.PlotWidth.Value - bedCount * (request.BedWidth + request.PathWidth);
 
             var prefix = string.IsNullOrWhiteSpace(request.BedNamePrefix) ? "Luống" : request.BedNamePrefix!.Trim();
-            var beds = Enumerable.Range(1, bedCount).Select(i => new BedAllocationItem
+            var beds = Enumerable.Range(1, bedCount).Select(i => new BedPreviewItem
             {
                 BedName = $"{prefix} {i}",
-                BedWidth = Math.Round(bedWidth, 2),
                 BedLength = Math.Round(bedLength, 2),
-                BedArea = Math.Round(bedAreaSingle, 2),
-                RowCount = config.RowsPerBed,
-                PlantCount = plantsPerBed
+                BedWidth = Math.Round(request.BedWidth, 2),
+                BedArea = Math.Round(bedArea, 2),
+                PathWidth = Math.Round(request.PathWidth, 2),
+                PlantCount = plantCount,
+                RowCount = request.RowsPerBed,
+                CropId = request.CropId
             }).ToList();
 
-            var response = new BedAutoAllocateResponse
+            return (new BedSplitPreview
             {
                 PlotId = request.PlotId,
                 CropId = request.CropId,
-                PlantingPattern = config.PlantingPattern,
-                AvailablePatterns = availableConfigs.Select(c => c.PlantingPattern).Distinct().ToList(),
-                PlotAreaM2 = Math.Round(plotAreaM2, 2),
-                EstimatedPlotSideM = Math.Round(Math.Sqrt(plotAreaM2), 2),
-                UsedAreaM2 = Math.Round(usedArea, 2),
-                UnusedAreaM2 = Math.Round(unusedArea, 2),
                 BedCount = bedCount,
-                TotalPlantCount = totalPlants,
-                DensityPerHa = Math.Round(densityPerHa, 0),
-                DensityWarning = densityWarning,
-                DensityWarningMessage = densityMsg,
-                Warnings = warnings,
-                Beds = beds,
-                IsEstimatedShape = isEstimated
-            };
-
-            return new ApiResponse<BedAutoAllocateResponse> { Success = true, Data = response };
+                BedLength = Math.Round(bedLength, 2),
+                BedWidth = Math.Round(request.BedWidth, 2),
+                BedArea = Math.Round(bedArea, 2),
+                PlantCount = plantCount,
+                WidthRemain = Math.Round(widthRemain, 2),
+                Beds = beds
+            }, null);
         }
-
-        private static int CalculatePlants(CropBedConfig config, double bedLength)
-        {
-            if (config.PlantSpacing <= 0) return 0;
-
-            if (config.PlantingPattern == "staggered")
-            {
-                int oddRowPlants = (int)Math.Floor(bedLength / config.PlantSpacing);
-                int evenRowPlants = (int)Math.Floor((bedLength - config.PlantSpacing / 2.0) / config.PlantSpacing);
-                if (evenRowPlants < 0) evenRowPlants = 0;
-
-                int oddRows = (config.RowsPerBed + 1) / 2;
-                int evenRows = config.RowsPerBed / 2;
-                return oddRows * oddRowPlants + evenRows * evenRowPlants;
-            }
-            else
-            {
-                int perRow = (int)Math.Floor(bedLength / config.PlantSpacing);
-                return config.RowsPerBed * perRow;
-            }
-        }
-
     }
 }

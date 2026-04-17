@@ -24,6 +24,14 @@ public partial class Crop
 
     public double? PlantSpacing { get; set; }
 
+    public double? BedWidthDefault { get; set; }
+
+    public double? PathWidthDefault { get; set; }
+
+    public int? RowsPerBed { get; set; }
+
+    public double? RowSpacing { get; set; }
+
     [MaxLength(50)]
     public string? CropStatus { get; set; }
 
