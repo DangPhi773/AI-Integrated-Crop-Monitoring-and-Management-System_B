@@ -12,6 +12,7 @@ namespace CMMS.DAL.DTOs.Plots
         public Guid? SoilId { get; set; }
         public string? PlotName { get; set; }
         public decimal? PlotArea { get; set; }
+        public double? PlotMargin { get; set; }
         public string? PlotStatus { get; set; }
     }
 
@@ -22,6 +23,7 @@ namespace CMMS.DAL.DTOs.Plots
         public Guid? SoilId { get; set; }
         public string? PlotName { get; set; }
         public decimal? PlotArea { get; set; }
+        public double PlotMargin { get; set; }
         public string? PlotStatus { get; set; }
         public DateTime? BedCreatedAt { get; set; }
 

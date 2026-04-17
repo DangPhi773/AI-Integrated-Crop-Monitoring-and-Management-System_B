@@ -44,7 +44,6 @@ builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>(
 builder.Services.AddScoped<ICropGrowthTaskRepository, CropGrowthTaskRepository>();
 builder.Services.AddScoped<ISubTaskRepository, SubTaskRepository>();
 builder.Services.AddScoped<IWorkerScheduleRepository, WorkerScheduleRepository>();
-builder.Services.AddScoped<ICropBedConfigRepository, CropBedConfigRepository>();
 builder.Services.AddScoped<ICropGrowthStageRepository, CropGrowthStageRepository>();
 builder.Services.AddScoped<IReportRepository, ReportRepository>();
 builder.Services.AddScoped<IAttachmentRepository, AttachmentRepository>();
@@ -75,7 +74,6 @@ builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddScoped<ICropGrowthTaskService, CropGrowthTaskService>();
 builder.Services.AddScoped<ISubTaskService, SubTaskService>();
 builder.Services.AddScoped<IWorkerScheduleService, WorkerScheduleService>();
-builder.Services.AddScoped<ICropBedConfigService, CropBedConfigService>();
 builder.Services.AddScoped<ICropGrowthStageService, CropGrowthStageService>();
 builder.Services.AddScoped<ISoilCropCompatibilityService, SoilCropCompatibilityService>();
 builder.Services.AddScoped<IRecommendationTaskService, RecommendationTaskService>();

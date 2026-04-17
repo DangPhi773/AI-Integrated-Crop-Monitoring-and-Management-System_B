@@ -58,6 +58,7 @@ namespace CMMS.BLL.Services
                     SoilId = request.SoilId,
                     PlotName = request.PlotName,
                     PlotArea = request.PlotArea,
+                    PlotMargin = request.PlotMargin ?? 0.3,
                     PlotStatus = request.PlotStatus ?? "Active",
                     BedCreatedAt = DateTimeHelper.VnNow()
                 };
@@ -85,6 +86,7 @@ namespace CMMS.BLL.Services
                 entity.SoilId = request.SoilId ?? entity.SoilId;
                 entity.PlotName = request.PlotName ?? entity.PlotName;
                 entity.PlotArea = request.PlotArea ?? entity.PlotArea;
+                entity.PlotMargin = request.PlotMargin ?? entity.PlotMargin;
                 entity.PlotStatus = request.PlotStatus ?? entity.PlotStatus;
 
                 _plotRepo.Update(entity);

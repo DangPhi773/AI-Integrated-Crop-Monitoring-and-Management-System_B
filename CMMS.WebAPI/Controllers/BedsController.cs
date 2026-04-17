@@ -59,7 +59,7 @@ namespace CMMS.WebAPI.Controllers
 
         [Authorize(Roles = "Owner")]
         [HttpPost("auto-allocate/preview")]
-        public async Task<IActionResult> PreviewAutoAllocate([FromBody] BedAutoAllocateRequest request)
+        public async Task<IActionResult> PreviewAutoAllocate([FromBody] BedSplitRequest request)
         {
             var result = await _bedService.PreviewAutoAllocateAsync(request);
             return result.Success ? Ok(result) : BadRequest(result);
@@ -67,7 +67,7 @@ namespace CMMS.WebAPI.Controllers
 
         [Authorize(Roles = "Owner")]
         [HttpPost("auto-allocate/confirm")]
-        public async Task<IActionResult> ConfirmAutoAllocate([FromBody] BedAutoAllocateRequest request)
+        public async Task<IActionResult> ConfirmAutoAllocate([FromBody] BedSplitConfirmRequest request)
         {
             var result = await _bedService.ConfirmAutoAllocateAsync(request);
             return result.Success ? Ok(result) : BadRequest(result);

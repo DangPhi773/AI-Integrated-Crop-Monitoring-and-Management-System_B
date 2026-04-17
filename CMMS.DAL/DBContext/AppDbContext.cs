@@ -60,7 +60,6 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<GrowthTracking> GrowthTrackings { get; set; }
     public virtual DbSet<SubTask> SubTasks { get; set; }
 
-    public virtual DbSet<CropBedConfig> CropBedConfigs { get; set; }
     public virtual DbSet<Attachment> Attachments { get; set; }
     public virtual DbSet<ReportAssignment> ReportAssignments { get; set; }
     public virtual DbSet<DiagnosisResult> DiagnosisResults { get; set; }
@@ -123,10 +122,17 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.RowCount).HasColumnName("row_count");
             entity.Property(e => e.BedWidth).HasColumnName("bed_width");
             entity.Property(e => e.BedLength).HasColumnName("bed_length");
+            entity.Property(e => e.PathWidth).HasColumnName("path_width");
+            entity.Property(e => e.PlantCount).HasColumnName("plant_count");
+            entity.Property(e => e.CropId).HasColumnName("crop_id");
 
             entity.HasOne(d => d.Plot).WithMany(p => p.Beds)
                 .HasForeignKey(d => d.PlotId)
                 .HasConstraintName("beds_plot_id_fkey");
+
+            entity.HasOne(d => d.Crop).WithMany()
+                .HasForeignKey(d => d.CropId)
+                .HasConstraintName("beds_crop_id_fkey");
         });
 
         modelBuilder.Entity<Crop>(entity =>
@@ -141,6 +147,10 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CropDefaultGrowthDays).HasColumnName("crop_default_growth_days");
             entity.Property(e => e.CropName).HasColumnName("crop_name");
             entity.Property(e => e.PlantSpacing).HasColumnName("plant_spacing");
+            entity.Property(e => e.BedWidthDefault).HasColumnName("bed_width_default");
+            entity.Property(e => e.PathWidthDefault).HasColumnName("path_width_default");
+            entity.Property(e => e.RowsPerBed).HasColumnName("rows_per_bed");
+            entity.Property(e => e.RowSpacing).HasColumnName("row_spacing");
             entity.Property(e => e.CropQuantities).HasColumnName("crop_quantities");
             entity.Property(e => e.CropScientificName).HasColumnName("crop_scientific_name");
             entity.Property(e => e.CropStatus).HasColumnName("crop_status");
@@ -213,6 +223,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.PlotArea).HasColumnName("plot_area");
             entity.Property(e => e.PlotLength).HasColumnName("plot_length");
             entity.Property(e => e.PlotWidth).HasColumnName("plot_width");
+            entity.Property(e => e.PlotMargin).HasColumnName("plot_margin").HasDefaultValue(0.3);
             entity.Property(e => e.PlotName).HasColumnName("plot_name");
             entity.Property(e => e.PlotStatus).HasColumnName("plot_status");
             entity.Property(e => e.SoilId).HasColumnName("soil_id");
@@ -733,54 +744,6 @@ public partial class AppDbContext : DbContext
                   .WithMany(p => p.SubTasks)
                   .HasForeignKey(d => d.TaskDetailId)
                   .OnDelete(DeleteBehavior.Cascade); 
-        });
-
-        modelBuilder.Entity<CropBedConfig>(entity =>
-        {
-            entity.ToTable("crop_bed_config");
-            entity.HasKey(e => e.ConfigId).HasName("crop_bed_config_pkey");
-
-            entity.Property(e => e.ConfigId)
-                  .HasDefaultValueSql("gen_random_uuid()")
-                  .HasColumnName("config_id");
-            entity.Property(e => e.CropId).HasColumnName("crop_id");
-            entity.Property(e => e.PlantingPattern)
-                  .IsRequired()
-                  .HasMaxLength(20)
-                  .HasColumnName("planting_pattern");
-            entity.Property(e => e.RowSpacing).HasColumnName("row_spacing");
-            entity.Property(e => e.PlantSpacing).HasColumnName("plant_spacing");
-            entity.Property(e => e.RowsPerBed).HasColumnName("rows_per_bed");
-            entity.Property(e => e.BedWidthMin).HasColumnName("bed_width_min");
-            entity.Property(e => e.BedWidthMax).HasColumnName("bed_width_max");
-            entity.Property(e => e.PathWidthMin).HasColumnName("path_width_min");
-            entity.Property(e => e.PathWidthMax).HasColumnName("path_width_max");
-            entity.Property(e => e.BedHeight).HasColumnName("bed_height");
-            entity.Property(e => e.DensityPerHaMin).HasColumnName("density_per_ha_min");
-            entity.Property(e => e.DensityPerHaMax).HasColumnName("density_per_ha_max");
-            entity.Property(e => e.IsDefault).HasColumnName("is_default").HasDefaultValue(false);
-            entity.Property(e => e.Notes).HasColumnName("notes");
-            entity.Property(e => e.CreatedAt)
-                  .HasDefaultValueSql("now()")
-                  .HasColumnName("created_at");
-            entity.Property(e => e.UpdatedAt)
-                  .HasDefaultValueSql("now()")
-                  .HasColumnName("updated_at");
-
-            entity.HasIndex(e => new { e.CropId, e.PlantingPattern })
-                  .IsUnique()
-                  .HasDatabaseName("ux_crop_bed_config_crop_pattern");
-
-            entity.HasIndex(e => e.CropId)
-                  .IsUnique()
-                  .HasFilter("is_default = true")
-                  .HasDatabaseName("ux_crop_bed_config_default_per_crop");
-
-            entity.HasOne(d => d.Crop)
-                  .WithMany()
-                  .HasForeignKey(d => d.CropId)
-                  .HasConstraintName("crop_bed_config_crop_id_fkey")
-                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Attachment>(entity =>

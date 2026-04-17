@@ -13,6 +13,13 @@ namespace CMMS.DAL.DTOs.Beds
         public decimal? BedArea { get; set; }
         public string? BedStatus { get; set; }
         public int? CropQuantities { get; set; }
+
+        public Guid? CropId { get; set; }
+        public double? BedWidth { get; set; }
+        public double? BedLength { get; set; }
+        public double? PathWidth { get; set; }
+        public int? PlantCount { get; set; }
+        public int? RowCount { get; set; }
     }
 
     public class BedResponse
@@ -25,7 +32,15 @@ namespace CMMS.DAL.DTOs.Beds
         public DateTime? BedCreatedAt { get; set; }
         public int? CropQuantities { get; set; }
 
+        public Guid? CropId { get; set; }
+        public double? BedWidth { get; set; }
+        public double? BedLength { get; set; }
+        public double? PathWidth { get; set; }
+        public int? PlantCount { get; set; }
+        public int? RowCount { get; set; }
+
         public string? PlotName { get; set; }
+        public string? CropName { get; set; }
         public int SeasonsDetailsCount { get; set; } = 0;
     }
 }

@@ -12,6 +12,10 @@ namespace CMMS.BLL.Mappings
             CropScientificName = c.CropScientificName,
             CropDefaultGrowthDays = c.CropDefaultGrowthDays,
             PlantSpacing = c.PlantSpacing,
+            BedWidthDefault = c.BedWidthDefault,
+            PathWidthDefault = c.PathWidthDefault,
+            RowsPerBed = c.RowsPerBed,
+            RowSpacing = c.RowSpacing,
             CropQuantities = c.CropQuantities,
             CropStatus = c.CropStatus,
             CompatibleSoils = c.SoilCropCompatibilities?.Select(sc => new SoilCompatibilityDto
