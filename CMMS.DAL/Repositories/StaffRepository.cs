@@ -53,7 +53,9 @@ namespace CMMS.DAL.Repositories
         public async Task<IEnumerable<User>> GetUsersWithoutRoleAsync()
         {
             return await _context.Users
+                .AsNoTracking()
                 .Where(u => u.RoleId == null && u.Status.ToUpper() == "ACTIVE")
+                .OrderByDescending(u => u.CreatedAt)
                 .ToListAsync();
         }
 

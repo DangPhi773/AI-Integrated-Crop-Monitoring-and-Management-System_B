@@ -13,7 +13,8 @@ namespace CMMS.BLL.Mappings
             PhoneNumber = u.PhoneNumber,
             Status = u.Status,
             CreatedAt = u.CreatedAt,
-            RoleName = u.Role?.RoleName
+            RoleName = u.Role?.RoleName,
+            RequestedRole = u.RequestedRole,
         };
 
         public static User ToEntity(StaffRequest request)
