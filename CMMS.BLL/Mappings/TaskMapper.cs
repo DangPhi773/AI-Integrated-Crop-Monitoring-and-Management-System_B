@@ -11,8 +11,21 @@ namespace CMMS.BLL.Mappings
             TaskTitle = t.TaskTitle,
             TaskStatus = t.TaskStatus,
             TaskNotes = t.TaskNotes,
+            TaskType = t.TaskType,
             TaskCreatedAt = t.TaskCreatedAt,
+            TaskScheduledAt = t.TaskScheduledAt,
             TaskDetailsCount = t.TaskDetails?.Count ?? 0
+        };
+
+        public static Task ToEntity(TaskRequest request) => new()
+        {
+            TaskId = Guid.NewGuid(), 
+            TaskTitle = request.TaskTitle,
+            TaskStatus = request.TaskStatus,
+            TaskNotes = request.TaskNotes,
+            TaskType = request.TaskType,
+            TaskScheduledAt = request.TaskScheduledAt ?? DateTime.UtcNow,
+            TaskCreatedAt = DateTime.UtcNow
         };
     }
 }

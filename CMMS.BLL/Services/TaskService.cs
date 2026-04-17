@@ -53,14 +53,7 @@ namespace CMMS.BLL.Services
         {
             try
             {
-                var entity = new DAL.Entities.Task
-                {
-                    TaskId = Guid.NewGuid(),
-                    TaskTitle = request.TaskTitle,
-                    TaskNotes = request.TaskNotes,
-                    TaskStatus = request.TaskStatus ?? "Active",
-                    TaskCreatedAt = DateTimeHelper.VnNow()
-                };
+                var entity = TaskMapper.ToEntity(request);
 
                 await _taskRepo.AddAsync(entity);
                 await _taskRepo.SaveChangesAsync();
@@ -82,6 +75,8 @@ namespace CMMS.BLL.Services
                 entity.TaskTitle = request.TaskTitle ?? entity.TaskTitle;
                 entity.TaskNotes = request.TaskNotes ?? entity.TaskNotes;
                 entity.TaskStatus = request.TaskStatus ?? entity.TaskStatus;
+                entity.TaskType = request.TaskType ?? entity.TaskType; 
+                entity.TaskScheduledAt = request.TaskScheduledAt ?? entity.TaskScheduledAt;
 
                 _taskRepo.Update(entity);
                 await _taskRepo.SaveChangesAsync();
