@@ -58,5 +58,13 @@ namespace CMMS.DAL.Repositories
         }
 
         public async Task<bool> SaveChangesAsync() => await _context.SaveChangesAsync() > 0;
+
+        public async Task<User?> GetProfileByIdAsync(Guid id)
+        {
+            return await _context.Users
+                .AsNoTracking()
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.UserId == id);
+        }
     }
 }
