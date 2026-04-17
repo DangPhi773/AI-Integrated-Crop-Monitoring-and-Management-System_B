@@ -165,5 +165,26 @@ namespace CMMS.BLL.Services
                 };
             }
         }
+
+        public async Task<ApiResponse<UserResponse>> GetMyProfileAsync(Guid userId)
+        {
+            try
+            {
+                var user = await _staffRepo.GetProfileByIdAsync(userId);
+
+                if (user == null)
+                    return new ApiResponse<UserResponse> { Success = false, Message = "Profile not found" };
+
+                return new ApiResponse<UserResponse>
+                {
+                    Success = true,
+                    Data = UserMapper.ToResponse(user)
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<UserResponse> { Success = false, Message = ex.Message };
+            }
+        }
     }
 }

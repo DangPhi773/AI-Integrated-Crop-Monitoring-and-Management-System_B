@@ -31,6 +31,12 @@ namespace CMMS.BLL.Services
                 var exist = await _userRepo.GetByEmailAsync(request.Email);
                 if (exist != null) return new ApiResponse<string> { Success = false, Message = "Email đã tồn tại!" };
 
+                var validRoles = new[] { "Worker", "Specialist" };
+                string target = string.IsNullOrEmpty(request.TargetRole) ? "Worker" : request.TargetRole;
+
+                if (!validRoles.Contains(target))
+                    return new ApiResponse<string> { Success = false, Message = "Vị trí mong muốn không hợp lệ!" };
+
                 var newUser = new User
                 {
                     UserId = Guid.NewGuid(),
@@ -39,13 +45,15 @@ namespace CMMS.BLL.Services
                     Fullname = request.Fullname,
                     PhoneNumber = request.PhoneNumber,
                     CreatedAt = DateTimeHelper.VnNow(),
-                    Status = "ACTIVE"
+                    Status = "ACTIVE",
+                    RequestedRole = target
                 };
 
                 await _userRepo.AddAsync(newUser);
                 if (await _userRepo.SaveChangesAsync())
                 {
-                    _ = _emailService.SendEmailAsync(newUser.Email, "Chào mừng", "Bạn đã đăng ký thành công hệ thống CMMS.");
+                    _ = _emailService.SendEmailAsync(newUser.Email, "Chào mừng",
+                $"Bạn đã đăng ký thành công với nguyện vọng vị trí: {target}. Vui lòng đợi hệ thống phê duyệt.");
 
                     return new ApiResponse<string> { Success = true, Message = "Đăng ký thành công!" };
                 }

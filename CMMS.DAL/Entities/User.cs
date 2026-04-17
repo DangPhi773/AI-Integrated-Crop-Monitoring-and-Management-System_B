@@ -43,6 +43,9 @@ public partial class User
     [Column(TypeName = "timestamp")]
     public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 
+    [MaxLength(50)]
+    public string? RequestedRole { get; set; }
+
     [ForeignKey("RoleId")]
     public virtual Role? Role { get; set; }
 

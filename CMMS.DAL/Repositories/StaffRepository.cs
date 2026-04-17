@@ -53,10 +53,20 @@ namespace CMMS.DAL.Repositories
         public async Task<IEnumerable<User>> GetUsersWithoutRoleAsync()
         {
             return await _context.Users
+                .AsNoTracking()
                 .Where(u => u.RoleId == null && u.Status.ToUpper() == "ACTIVE")
+                .OrderByDescending(u => u.CreatedAt)
                 .ToListAsync();
         }
 
         public async Task<bool> SaveChangesAsync() => await _context.SaveChangesAsync() > 0;
+
+        public async Task<User?> GetProfileByIdAsync(Guid id)
+        {
+            return await _context.Users
+                .AsNoTracking()
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.UserId == id);
+        }
     }
 }

@@ -24,6 +24,7 @@ namespace CMMS.DAL.DTOs.Users
         public string? PhoneNumber { get; set; }
         public string? Status { get; set; }
         public DateTime? CreatedAt { get; set; }
-        public string? RoleName { get; set; } 
+        public string? RoleName { get; set; }
+        public string? RequestedRole { get; set; }
     }
 }

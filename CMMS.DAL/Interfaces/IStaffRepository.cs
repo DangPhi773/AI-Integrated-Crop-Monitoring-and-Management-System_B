@@ -18,5 +18,6 @@ namespace CMMS.DAL.Interfaces
         void DeleteUser(User user);
         Task<IEnumerable<User>> GetUsersWithoutRoleAsync();
         Task<bool> SaveChangesAsync();
+        Task<User?> GetProfileByIdAsync(Guid id);
     }
 }

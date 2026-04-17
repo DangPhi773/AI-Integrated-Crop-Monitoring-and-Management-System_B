@@ -560,6 +560,10 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.RoleId).HasColumnName("role_id");
             entity.Property(e => e.Status).HasColumnName("status");
 
+            entity.Property(e => e.RequestedRole)
+                .HasMaxLength(50)
+                .HasColumnName("requested_role");
+
             entity.HasOne(d => d.Role).WithMany(p => p.Users)
                 .HasForeignKey(d => d.RoleId)
                 .HasConstraintName("users_role_id_fkey");
