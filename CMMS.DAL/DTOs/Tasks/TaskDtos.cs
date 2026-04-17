@@ -10,6 +10,8 @@ namespace CMMS.DAL.DTOs.Tasks
         public string? TaskTitle { get; set; }
         public string? TaskStatus { get; set; }
         public string? TaskNotes { get; set; }
+        public string? TaskType { get; set; }
+        public DateTime? TaskScheduledAt { get; set; }
     }
 
     public class TaskResponse
@@ -18,7 +20,9 @@ namespace CMMS.DAL.DTOs.Tasks
         public string? TaskTitle { get; set; }
         public string? TaskStatus { get; set; }
         public string? TaskNotes { get; set; }
+        public string? TaskType { get; set; }
         public DateTime? TaskCreatedAt { get; set; }
+        public DateTime? TaskScheduledAt { get; set; }
         public int TaskDetailsCount { get; set; }
     }
 

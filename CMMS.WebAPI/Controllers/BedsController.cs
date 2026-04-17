@@ -72,5 +72,13 @@ namespace CMMS.WebAPI.Controllers
             var result = await _bedService.ConfirmAutoAllocateAsync(request);
             return result.Success ? Ok(result) : BadRequest(result);
         }
+
+        [Authorize(Roles = "Owner")]
+        [HttpGet("plot/{plotId}")]
+        public async Task<IActionResult> GetBedsByPlot(Guid plotId)
+        {
+            var result = await _bedService.GetBedsByPlotIdAsync(plotId);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
     }
 }

@@ -275,5 +275,31 @@ namespace CMMS.BLL.Services
                 Beds = beds
             }, null);
         }
+
+        public async Task<ApiResponse<IEnumerable<BedResponse>>> GetBedsByPlotIdAsync(Guid plotId)
+        {
+            try
+            {
+                var beds = await _bedRepo.GetBedsByPlotIdAsync(plotId);
+
+                var data = beds.Select(BedMapper.ToResponse);
+
+                return new ApiResponse<IEnumerable<BedResponse>>
+                {
+                    Success = true,
+                    Data = data,
+                    Message = data.Any() ? "Lấy danh sách luống thành công" : "Khu vực này chưa có luống nào."
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<IEnumerable<BedResponse>>
+                {
+                    Success = false,
+                    Message = "Lỗi hệ thống khi lấy danh sách luống",
+                    Errors = new List<string> { ex.Message }
+                };
+            }
+        }
     }
 }
