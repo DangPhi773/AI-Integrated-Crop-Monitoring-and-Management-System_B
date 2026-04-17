@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
-    [Authorize(Roles = "Owner")] 
+    [Authorize(Roles = "Owner,Worker,Specialist")] 
     [Route("api/[controller]")]
     [ApiController]
     public class StaffsController : ControllerBase
