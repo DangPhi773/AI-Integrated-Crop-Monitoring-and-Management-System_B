@@ -11,7 +11,6 @@ namespace CMMS.DAL.DTOs.Tasks
         public string? TaskStatus { get; set; }
         public string? TaskNotes { get; set; }
         public string? TaskType { get; set; }
-        public DateTime? TaskScheduledAt { get; set; }
     }
 
     public class TaskResponse

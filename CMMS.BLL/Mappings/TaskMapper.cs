@@ -24,7 +24,6 @@ namespace CMMS.BLL.Mappings
             TaskStatus = request.TaskStatus,
             TaskNotes = request.TaskNotes,
             TaskType = request.TaskType,
-            TaskScheduledAt = request.TaskScheduledAt ?? DateTime.UtcNow,
             TaskCreatedAt = DateTime.UtcNow
         };
     }
