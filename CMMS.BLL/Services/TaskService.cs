@@ -76,7 +76,6 @@ namespace CMMS.BLL.Services
                 entity.TaskNotes = request.TaskNotes ?? entity.TaskNotes;
                 entity.TaskStatus = request.TaskStatus ?? entity.TaskStatus;
                 entity.TaskType = request.TaskType ?? entity.TaskType; 
-                entity.TaskScheduledAt = request.TaskScheduledAt ?? entity.TaskScheduledAt;
 
                 _taskRepo.Update(entity);
                 await _taskRepo.SaveChangesAsync();
