@@ -41,6 +41,12 @@ namespace CMMS.DAL.Entities
         [Column(TypeName = "timestamp with time zone")]
         public DateTime? LastActiveAt { get; set; }
 
+        [MaxLength(64)]
+        public string? ApiKeyHash { get; set; }
+
+        [Column(TypeName = "timestamp with time zone")]
+        public DateTime? ApiKeyRotatedAt { get; set; }
+
         [ForeignKey("BedId")]
         public virtual Bed? Bed { get; set; }
 

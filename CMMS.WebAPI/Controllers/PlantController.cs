@@ -1,10 +1,12 @@
 ﻿using CMMS.BLL.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMMS.WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Policy = "StaffOnly")]
     public class PlantController : ControllerBase
     {
         private readonly IPlantAnalysisService _service;
@@ -16,6 +18,7 @@ namespace CMMS.WebAPI.Controllers
 
         [HttpPost("analyze")]
         [Consumes("multipart/form-data")]
+        [RequestSizeLimit(10 * 1024 * 1024)]
         public async Task<IActionResult> Analyze([FromForm] PlantImageUploadRequestDto request)
         {
             try

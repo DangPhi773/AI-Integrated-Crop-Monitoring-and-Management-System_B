@@ -35,7 +35,7 @@ namespace CMMS.DAL.DTOs.IotDatas
         public double? SoilMoisture { get; set; }
         public double? Light { get; set; }
         public bool? IsRaining { get; set; }
-        public string DeviceId { get; set; } = null!;
+        public string? DeviceId { get; set; }
         public DateTime Timestamp { get; set; }
     }
 

@@ -46,10 +46,14 @@ namespace CMMS.BLL.Services
             }
         }
 
-        public async Task<ApiResponse<string>> CreateDeviceAsync(IotDeviceRequest request)
+        public async Task<ApiResponse<IotDeviceCreatedResponse>> CreateDeviceAsync(IotDeviceRequest request)
         {
             try
             {
+                var plainKey = DeviceApiKeyHelper.GenerateKey();
+                var keyHash = DeviceApiKeyHelper.HashKey(plainKey);
+                var now = DateTimeHelper.VnNow();
+
                 var entity = new IotDevice
                 {
                     DeviceId = Guid.NewGuid(),
@@ -61,18 +65,67 @@ namespace CMMS.BLL.Services
                     InstallationDate = request.InstallationDate,
                     Latitude = request.Latitude,
                     Longitude = request.Longitude,
-                    CreatedAt = DateTimeHelper.VnNow()
+                    CreatedAt = now,
+                    ApiKeyHash = keyHash,
+                    ApiKeyRotatedAt = now
                 };
 
                 await _repo.AddAsync(entity);
-                if (await _repo.SaveChangesAsync())
-                    return new ApiResponse<string> { Success = true, Message = "Device created" };
+                if (!await _repo.SaveChangesAsync())
+                    return new ApiResponse<IotDeviceCreatedResponse> { Success = false, Message = "Failed to save device" };
 
-                return new ApiResponse<string> { Success = false, Message = "Failed to save device" };
+                return new ApiResponse<IotDeviceCreatedResponse>
+                {
+                    Success = true,
+                    Message = "Device created",
+                    Data = new IotDeviceCreatedResponse
+                    {
+                        DeviceId = entity.DeviceId,
+                        DeviceCode = entity.DeviceCode,
+                        Name = entity.Name,
+                        ApiKey = plainKey
+                    }
+                };
             }
             catch (Exception ex)
             {
-                return new ApiResponse<string> { Success = false, Message = "Error creating device", Errors = new List<string> { ex.Message } };
+                return new ApiResponse<IotDeviceCreatedResponse> { Success = false, Message = "Error creating device", Errors = new List<string> { ex.Message } };
+            }
+        }
+
+        public async Task<ApiResponse<IotDeviceCreatedResponse>> RegenerateApiKeyAsync(Guid id)
+        {
+            try
+            {
+                var entity = await _repo.GetByIdAsync(id);
+                if (entity == null)
+                    return new ApiResponse<IotDeviceCreatedResponse> { Success = false, Message = "Device not found" };
+
+                var plainKey = DeviceApiKeyHelper.GenerateKey();
+                entity.ApiKeyHash = DeviceApiKeyHelper.HashKey(plainKey);
+                entity.ApiKeyRotatedAt = DateTimeHelper.VnNow();
+                entity.UpdatedAt = entity.ApiKeyRotatedAt;
+
+                _repo.Update(entity);
+                if (!await _repo.SaveChangesAsync())
+                    return new ApiResponse<IotDeviceCreatedResponse> { Success = false, Message = "Failed to rotate key" };
+
+                return new ApiResponse<IotDeviceCreatedResponse>
+                {
+                    Success = true,
+                    Message = "Device key regenerated",
+                    Data = new IotDeviceCreatedResponse
+                    {
+                        DeviceId = entity.DeviceId,
+                        DeviceCode = entity.DeviceCode,
+                        Name = entity.Name,
+                        ApiKey = plainKey
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<IotDeviceCreatedResponse> { Success = false, Message = "Error rotating key", Errors = new List<string> { ex.Message } };
             }
         }
 

@@ -54,5 +54,13 @@ namespace CMMS.WebAPI.Controllers
             var result = await _service.DeleteDeviceAsync(id);
             return result.Success ? Ok(result) : BadRequest(result);
         }
+
+        [Authorize(Roles = "Owner")]
+        [HttpPost("{id:guid}/rotate-key")]
+        public async Task<IActionResult> RotateKey(Guid id)
+        {
+            var result = await _service.RegenerateApiKeyAsync(id);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
     }
 }

@@ -10,7 +10,8 @@ namespace CMMS.BLL.Interfaces
     {
         Task<ApiResponse<IEnumerable<IotDeviceResponse>>> GetAllDevicesAsync();
         Task<ApiResponse<IotDeviceResponse>> GetDeviceByIdAsync(Guid id);
-        Task<ApiResponse<string>> CreateDeviceAsync(IotDeviceRequest request);
+        Task<ApiResponse<IotDeviceCreatedResponse>> CreateDeviceAsync(IotDeviceRequest request);
+        Task<ApiResponse<IotDeviceCreatedResponse>> RegenerateApiKeyAsync(Guid id);
         Task<ApiResponse<string>> UpdateDeviceAsync(Guid id, IotDeviceRequest request);
         Task<ApiResponse<string>> DeleteDeviceAsync(Guid id);
     }

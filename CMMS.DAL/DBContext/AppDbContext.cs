@@ -609,6 +609,10 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasColumnType("timestamp with time zone");
             entity.Property(e => e.DeviceCode).HasColumnName("device_code");
             entity.Property(e => e.LastActiveAt).HasColumnName("last_active_at").HasColumnType("timestamp with time zone");
+            entity.Property(e => e.ApiKeyHash).HasColumnName("api_key_hash").HasMaxLength(64);
+            entity.Property(e => e.ApiKeyRotatedAt).HasColumnName("api_key_rotated_at").HasColumnType("timestamp with time zone");
+
+            entity.HasIndex(e => e.ApiKeyHash).IsUnique();
 
             entity.HasOne(d => d.Bed)
                   .WithMany(p => p.IotDevices)

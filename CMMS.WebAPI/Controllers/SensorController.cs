@@ -1,5 +1,7 @@
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.IotDatas;
+using CMMS.DAL.Entities;
+using CMMS.WebAPI.Middlewares;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,17 +16,15 @@ namespace CMMS.WebAPI.Controllers
         public SensorController(ISensorDataService service) => _service = service;
 
         [HttpPost]
+        [DeviceApiKey]
         public async Task<IActionResult> ReceiveSensorData([FromBody] SensorDataRequest request)
         {
-            try
-            {
-                var result = await _service.ProcessSensorDataAsync(request);
-                return StatusCode(201, result);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
+            var device = HttpContext.Items[DeviceApiKeyAttribute.ContextKey] as IotDevice;
+            if (device == null)
+                return Unauthorized(new { message = "Device chưa xác thực." });
+
+            var result = await _service.ProcessSensorDataAsync(device, request);
+            return StatusCode(201, result);
         }
 
         [Authorize(Roles = "Owner,Worker")]
