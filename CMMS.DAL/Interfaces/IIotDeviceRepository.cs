@@ -9,6 +9,7 @@ namespace CMMS.DAL.Interfaces
         System.Threading.Tasks.Task<IEnumerable<IotDevice>> GetAllAsync();
         System.Threading.Tasks.Task<IotDevice?> GetByIdAsync(Guid id);
         System.Threading.Tasks.Task<IotDevice?> GetByDeviceCodeAsync(string deviceCode);
+        System.Threading.Tasks.Task<IotDevice?> GetByApiKeyHashAsync(string apiKeyHash);
         System.Threading.Tasks.Task AddAsync(IotDevice entity);
         void Update(IotDevice entity);
         void Delete(IotDevice entity);

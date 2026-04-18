@@ -18,7 +18,9 @@ namespace CMMS.BLL.Mappings
             Longitude = d.Longitude,
             CreatedAt = d.CreatedAt,
             UpdatedAt = d.UpdatedAt,
-            LastActiveAt = d.LastActiveAt
+            LastActiveAt = d.LastActiveAt,
+            HasApiKey = !string.IsNullOrEmpty(d.ApiKeyHash),
+            ApiKeyRotatedAt = d.ApiKeyRotatedAt
         };
     }
 }

@@ -35,6 +35,14 @@ namespace CMMS.DAL.Repositories
                 .FirstOrDefaultAsync(d => d.DeviceCode == deviceCode);
         }
 
+        public async System.Threading.Tasks.Task<IotDevice?> GetByApiKeyHashAsync(string apiKeyHash)
+        {
+            return await _context.IotDevices
+                .Include(d => d.Bed)
+                    .ThenInclude(b => b!.Plot)
+                .FirstOrDefaultAsync(d => d.ApiKeyHash == apiKeyHash);
+        }
+
         public async System.Threading.Tasks.Task AddAsync(IotDevice entity) => await _context.IotDevices.AddAsync(entity);
 
         public void Update(IotDevice entity) => _context.IotDevices.Update(entity);

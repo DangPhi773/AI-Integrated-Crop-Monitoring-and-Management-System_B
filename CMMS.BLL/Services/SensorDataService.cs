@@ -25,21 +25,22 @@ namespace CMMS.BLL.Services
             _seasonRepo = seasonRepo;
         }
 
-        public async Task<SensorDataResponse> ProcessSensorDataAsync(SensorDataRequest request)
+        public async Task<SensorDataResponse> ProcessSensorDataAsync(IotDevice device, SensorDataRequest request)
         {
-            var device = await _deviceRepo.GetByDeviceCodeAsync(request.DeviceId)
-                ?? throw new KeyNotFoundException($"Device with code '{request.DeviceId}' not found");
-
             device.LastActiveAt = DateTimeHelper.VnNow();
 
             Guid? seasonId = await FindActiveSeasonIdAsync(device);
+
+            var recordedAt = request.Timestamp == default
+                ? DateTime.UtcNow
+                : DateTime.SpecifyKind(request.Timestamp, DateTimeKind.Utc);
 
             var iotData = new IotData
             {
                 SensorDataId = Guid.NewGuid(),
                 DeviceId = device.DeviceId,
                 SeasonId = seasonId,
-                RecordedAt = DateTime.SpecifyKind(request.Timestamp, DateTimeKind.Utc),
+                RecordedAt = recordedAt,
                 Temperature = request.Temperature,
                 Humidity = request.Humidity,
                 SoilMoisture = request.SoilMoisture,

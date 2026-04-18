@@ -19,13 +19,20 @@ namespace CMMS.BLL.Services
             _httpClient = httpClient;
         }
 
+        private static readonly string[] AllowedMimeTypes = { "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif" };
+        private const long MaxImageBytes = 10 * 1024 * 1024;
+
         public async Task<PlantAnalysisResultDto> AnalyzePlantImageAsync(IFormFile image)
         {
             if (image == null || image.Length == 0)
                 throw new Exception("Thiếu ảnh.");
 
-            if (!image.ContentType.StartsWith("image/"))
-                throw new Exception("File phải là ảnh.");
+            if (image.Length > MaxImageBytes)
+                throw new Exception("Ảnh vượt quá 10MB.");
+
+            if (string.IsNullOrWhiteSpace(image.ContentType) ||
+                !AllowedMimeTypes.Contains(image.ContentType.ToLowerInvariant()))
+                throw new Exception("Định dạng ảnh không hỗ trợ. Chỉ chấp nhận JPEG, PNG, WEBP, HEIC/HEIF.");
 
             using var memoryStream = new MemoryStream();
             await image.CopyToAsync(memoryStream);
@@ -45,7 +52,7 @@ namespace CMMS.BLL.Services
             if (string.IsNullOrWhiteSpace(baseUrl))
                 throw new Exception("Thiếu Gemini base url.");
 
-            var endpoint = $"{baseUrl}/models/{model}:generateContent?key={apiKey}";
+            var endpoint = $"{baseUrl}/models/{model}:generateContent";
 
             var requestBody = new
             {
@@ -74,9 +81,13 @@ namespace CMMS.BLL.Services
             };
 
             var json = JsonConvert.SerializeObject(requestBody);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+            using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+            request.Headers.Add("x-goog-api-key", apiKey);
 
-            var response = await _httpClient.PostAsync(endpoint, content);
+            var response = await _httpClient.SendAsync(request);
             var responseText = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
