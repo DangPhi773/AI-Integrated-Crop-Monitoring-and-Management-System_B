@@ -128,12 +128,12 @@ namespace CMMS.BLL.Services
                 if (entity == null)
                     return new ApiResponse<string> { Success = false, Message = "Không tìm thấy Luống (Bed) này." };
 
-                if (entity.BedStatus != null && entity.BedStatus.Equals("Occupied", StringComparison.OrdinalIgnoreCase))
+                if (entity.BedStatus != null && entity.BedStatus.Equals("Active", StringComparison.OrdinalIgnoreCase))
                 {
                     return new ApiResponse<string>
                     {
                         Success = false,
-                        Message = "Luống này đang trong quá trình canh tác (Occupied). Phải kết thúc mùa vụ hoặc giải phóng luống trước khi xóa!"
+                        Message = "Luống này đang trong quá trình canh tác (Active). Phải kết thúc mùa vụ hoặc giải phóng luống trước khi xóa!"
                     };
                 }
 
@@ -142,7 +142,7 @@ namespace CMMS.BLL.Services
                     return new ApiResponse<string>
                     {
                         Success = false,
-                        Message = "Luống này đã có dữ liệu lịch sử canh tác. Để bảo toàn dữ liệu, Nên đổi trạng thái sang 'Inactive' thay vì xóa vĩnh viễn."
+                        Message = "Luống này đã có dữ liệu lịch sử canh tác. Để bảo toàn dữ liệu, Nên đổi trạng thái sang 'Empty' thay vì xóa vĩnh viễn."
                     };
                 }
 
