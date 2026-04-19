@@ -96,7 +96,25 @@ builder.Services.AddHttpClient<PayOSService>();
 builder.Services.AddScoped<IDiagnosisBillingService, DiagnosisBillingService>();
 
 builder.Services.AddEndpointsApiExplorer();
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+var allowVercelPreviews = builder.Configuration.GetValue<bool>("Cors:AllowVercelPreviews");
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.SetIsOriginAllowed(origin =>
+            {
+                if (allowedOrigins.Contains(origin)) return true;
+                if (!allowVercelPreviews) return false;
+                return Uri.TryCreate(origin, UriKind.Absolute, out var uri)
+                    && uri.Host.EndsWith(".vercel.app");
+            })
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"] ?? throw new Exception("JWT Secret Key is missing!");
@@ -162,6 +180,8 @@ app.UseSwaggerUI();
 app.UseMiddleware<ResponseTimeMiddleware>();
 
 app.UseRouting();
+
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
