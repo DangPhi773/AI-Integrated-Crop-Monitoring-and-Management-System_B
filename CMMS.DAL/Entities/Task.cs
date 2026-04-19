@@ -1,29 +1,37 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CMMS.DAL.Entities;
 
+[Table("tasks")] 
 public partial class Task
 {
+    [Key]
+    [Column("task_id")]
     public Guid TaskId { get; set; }
 
-    public Guid? AssignedToWorkerId { get; set; }
-
-    public Guid? SeasonId { get; set; }
-
+    [Column("task_title")]
+    [MaxLength(255)]
     public string? TaskTitle { get; set; }
 
+    [Column("task_scheduled_at", TypeName = "timestamp")]
     public DateTime? TaskScheduledAt { get; set; }
 
+    [Column("task_status")]
+    [MaxLength(50)]
     public string? TaskStatus { get; set; }
 
+    [Column("task_notes")]
     public string? TaskNotes { get; set; }
 
-    public DateTime? TaskCreatedAt { get; set; }
+    [Column("task_type")]
+    [MaxLength(50)]
+    public string? TaskType { get; set; }
 
-    public virtual User? AssignedToWorker { get; set; }
-
-    public virtual Season? Season { get; set; }
+    [Column("task_created_at", TypeName = "timestamp")]
+    public DateTime? TaskCreatedAt { get; set; } = DateTime.UtcNow;
 
     public virtual ICollection<TaskDetail> TaskDetails { get; set; } = new List<TaskDetail>();
 }

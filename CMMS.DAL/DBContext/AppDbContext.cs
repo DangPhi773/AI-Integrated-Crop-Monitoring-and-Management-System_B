@@ -25,15 +25,7 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Farm> Farms { get; set; }
 
-    public virtual DbSet<ImageAnalysis> ImageAnalyses { get; set; }
-
-    public virtual DbSet<ImageAnalysisResult> ImageAnalysisResults { get; set; }
-
     public virtual DbSet<Notification> Notifications { get; set; }
-
-    public virtual DbSet<PestDetection> PestDetections { get; set; }
-
-    public virtual DbSet<Photo> Photos { get; set; }
 
     public virtual DbSet<Plot> Plots { get; set; }
 
@@ -60,6 +52,20 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<WorkerSchedule> WorkerSchedules { get; set; }
+    public virtual DbSet<IotDevice> IotDevices { get; set; } = null!;
+    public virtual DbSet<IotData> IotDatas { get; set; } = null!;
+    public virtual DbSet<SoilCropCompatibility> SoilCropCompatibilities { get; set; }
+    public virtual DbSet<CropGrowthStage> CropGrowthStages { get; set; }
+    public virtual DbSet<CropGrowthTask> CropGrowthTasks { get; set; }
+    public virtual DbSet<GrowthTracking> GrowthTrackings { get; set; }
+    public virtual DbSet<SubTask> SubTasks { get; set; }
+
+    public virtual DbSet<Attachment> Attachments { get; set; }
+    public virtual DbSet<ReportAssignment> ReportAssignments { get; set; }
+    public virtual DbSet<DiagnosisResult> DiagnosisResults { get; set; }
+    public virtual DbSet<ReportEnvironmentSnapshot> ReportEnvironmentSnapshots { get; set; }
+    public virtual DbSet<DiagnosisPriceSetting> DiagnosisPriceSettings { get; set; }
+    public virtual DbSet<DiagnosisPayment> DiagnosisPayments { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -75,24 +81,25 @@ public partial class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder
-            .HasPostgresEnum("auth", "aal_level", new[] { "aal1", "aal2", "aal3" })
-            .HasPostgresEnum("auth", "code_challenge_method", new[] { "s256", "plain" })
-            .HasPostgresEnum("auth", "factor_status", new[] { "unverified", "verified" })
-            .HasPostgresEnum("auth", "factor_type", new[] { "totp", "webauthn", "phone" })
-            .HasPostgresEnum("auth", "oauth_authorization_status", new[] { "pending", "approved", "denied", "expired" })
-            .HasPostgresEnum("auth", "oauth_client_type", new[] { "public", "confidential" })
-            .HasPostgresEnum("auth", "oauth_registration_type", new[] { "dynamic", "manual" })
-            .HasPostgresEnum("auth", "oauth_response_type", new[] { "code" })
-            .HasPostgresEnum("auth", "one_time_token_type", new[] { "confirmation_token", "reauthentication_token", "recovery_token", "email_change_token_new", "email_change_token_current", "phone_change_token" })
-            .HasPostgresEnum("realtime", "action", new[] { "INSERT", "UPDATE", "DELETE", "TRUNCATE", "ERROR" })
-            .HasPostgresEnum("realtime", "equality_op", new[] { "eq", "neq", "lt", "lte", "gt", "gte", "in" })
-            .HasPostgresEnum("storage", "buckettype", new[] { "STANDARD", "ANALYTICS", "VECTOR" })
-            .HasPostgresExtension("extensions", "pg_stat_statements")
-            .HasPostgresExtension("extensions", "pgcrypto")
-            .HasPostgresExtension("extensions", "uuid-ossp")
-            .HasPostgresExtension("graphql", "pg_graphql")
-            .HasPostgresExtension("vault", "supabase_vault");
+        modelBuilder.HasDefaultSchema("public");
+        //modelBuilder
+        //    .HasPostgresEnum("auth", "aal_level", new[] { "aal1", "aal2", "aal3" })
+        //    .HasPostgresEnum("auth", "code_challenge_method", new[] { "s256", "plain" })
+        //    .HasPostgresEnum("auth", "factor_status", new[] { "unverified", "verified" })
+        //    .HasPostgresEnum("auth", "factor_type", new[] { "totp", "webauthn", "phone" })
+        //    .HasPostgresEnum("auth", "oauth_authorization_status", new[] { "pending", "approved", "denied", "expired" })
+        //    .HasPostgresEnum("auth", "oauth_client_type", new[] { "public", "confidential" })
+        //    .HasPostgresEnum("auth", "oauth_registration_type", new[] { "dynamic", "manual" })
+        //    .HasPostgresEnum("auth", "oauth_response_type", new[] { "code" })
+        //    .HasPostgresEnum("auth", "one_time_token_type", new[] { "confirmation_token", "reauthentication_token", "recovery_token", "email_change_token_new", "email_change_token_current", "phone_change_token" })
+        //    .HasPostgresEnum("realtime", "action", new[] { "INSERT", "UPDATE", "DELETE", "TRUNCATE", "ERROR" })
+        //    .HasPostgresEnum("realtime", "equality_op", new[] { "eq", "neq", "lt", "lte", "gt", "gte", "in" })
+        //    .HasPostgresEnum("storage", "buckettype", new[] { "STANDARD", "ANALYTICS", "VECTOR" })
+        //    .HasPostgresExtension("extensions", "pg_stat_statements")
+        //    .HasPostgresExtension("extensions", "pgcrypto")
+        //    .HasPostgresExtension("extensions", "uuid-ossp")
+        //    .HasPostgresExtension("graphql", "pg_graphql")
+        //    .HasPostgresExtension("vault", "supabase_vault");
 
         modelBuilder.Entity<Bed>(entity =>
         {
@@ -111,10 +118,21 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.BedStatus).HasColumnName("bed_status");
             entity.Property(e => e.CropQuantities).HasColumnName("crop_quantities");
             entity.Property(e => e.PlotId).HasColumnName("plot_id");
+            entity.Property(e => e.PlantingPattern).HasColumnName("planting_pattern");
+            entity.Property(e => e.RowCount).HasColumnName("row_count");
+            entity.Property(e => e.BedWidth).HasColumnName("bed_width");
+            entity.Property(e => e.BedLength).HasColumnName("bed_length");
+            entity.Property(e => e.PathWidth).HasColumnName("path_width");
+            entity.Property(e => e.PlantCount).HasColumnName("plant_count");
+            entity.Property(e => e.CropId).HasColumnName("crop_id");
 
             entity.HasOne(d => d.Plot).WithMany(p => p.Beds)
                 .HasForeignKey(d => d.PlotId)
                 .HasConstraintName("beds_plot_id_fkey");
+
+            entity.HasOne(d => d.Crop).WithMany()
+                .HasForeignKey(d => d.CropId)
+                .HasConstraintName("beds_crop_id_fkey");
         });
 
         modelBuilder.Entity<Crop>(entity =>
@@ -128,14 +146,14 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("crop_id");
             entity.Property(e => e.CropDefaultGrowthDays).HasColumnName("crop_default_growth_days");
             entity.Property(e => e.CropName).HasColumnName("crop_name");
+            entity.Property(e => e.PlantSpacing).HasColumnName("plant_spacing");
+            entity.Property(e => e.BedWidthDefault).HasColumnName("bed_width_default");
+            entity.Property(e => e.PathWidthDefault).HasColumnName("path_width_default");
+            entity.Property(e => e.RowsPerBed).HasColumnName("rows_per_bed");
+            entity.Property(e => e.RowSpacing).HasColumnName("row_spacing");
             entity.Property(e => e.CropQuantities).HasColumnName("crop_quantities");
             entity.Property(e => e.CropScientificName).HasColumnName("crop_scientific_name");
             entity.Property(e => e.CropStatus).HasColumnName("crop_status");
-            entity.Property(e => e.SoilId).HasColumnName("soil_id");
-
-            entity.HasOne(d => d.Soil).WithMany(p => p.Crops)
-                .HasForeignKey(d => d.SoilId)
-                .HasConstraintName("crops_soil_id_fkey");
         });
 
         modelBuilder.Entity<Farm>(entity =>
@@ -156,62 +174,6 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.FarmStatus).HasColumnName("farm_status");
         });
 
-        modelBuilder.Entity<ImageAnalysis>(entity =>
-        {
-            entity.HasKey(e => e.ImageAnalysisId).HasName("image_analyses_pkey");
-
-            entity.ToTable("image_analyses");
-
-            entity.Property(e => e.ImageAnalysisId)
-                .HasDefaultValueSql("gen_random_uuid()")
-                .HasColumnName("image_analysis_id");
-            entity.Property(e => e.AiLatencyMs).HasColumnName("ai_latency_ms");
-            entity.Property(e => e.AiModel).HasColumnName("ai_model");
-            entity.Property(e => e.AiModelVersion).HasColumnName("ai_model_version");
-            entity.Property(e => e.AiPrompt).HasColumnName("ai_prompt");
-            entity.Property(e => e.AiProvider).HasColumnName("ai_provider");
-            entity.Property(e => e.AiRawResponseJson)
-                .HasColumnType("jsonb")
-                .HasColumnName("ai_raw_response_json");
-            entity.Property(e => e.AiRequestId).HasColumnName("ai_request_id");
-            entity.Property(e => e.AiTokens).HasColumnName("ai_tokens");
-            entity.Property(e => e.AnalysisStatus).HasColumnName("analysis_status");
-            entity.Property(e => e.AnalysisType).HasColumnName("analysis_type");
-            entity.Property(e => e.PhotoId).HasColumnName("photo_id");
-
-            entity.HasOne(d => d.Photo).WithMany(p => p.ImageAnalyses)
-                .HasForeignKey(d => d.PhotoId)
-                .HasConstraintName("image_analyses_photo_id_fkey");
-        });
-
-        modelBuilder.Entity<ImageAnalysisResult>(entity =>
-        {
-            entity.HasKey(e => e.ImageAnalysisResultId).HasName("image_analysis_result_pkey");
-
-            entity.ToTable("image_analysis_result");
-
-            entity.Property(e => e.ImageAnalysisResultId)
-                .HasDefaultValueSql("gen_random_uuid()")
-                .HasColumnName("image_analysis_result_id");
-            entity.Property(e => e.AiConfidence).HasColumnName("ai_confidence");
-            entity.Property(e => e.AiLabel).HasColumnName("ai_label");
-            entity.Property(e => e.AiSeverity).HasColumnName("ai_severity");
-            entity.Property(e => e.BoundingBoxJson)
-                .HasColumnType("jsonb")
-                .HasColumnName("bounding_box_json");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("now()")
-                .HasColumnName("created_at");
-            entity.Property(e => e.ExtraDataJson)
-                .HasColumnType("jsonb")
-                .HasColumnName("extra_data_json");
-            entity.Property(e => e.ImageAnalysisId).HasColumnName("image_analysis_id");
-
-            entity.HasOne(d => d.ImageAnalysis).WithMany(p => p.ImageAnalysisResults)
-                .HasForeignKey(d => d.ImageAnalysisId)
-                .HasConstraintName("image_analysis_result_image_analysis_id_fkey");
-        });
-
         modelBuilder.Entity<Notification>(entity =>
         {
             entity.HasKey(e => e.NoteId).HasName("notification_pkey");
@@ -228,77 +190,21 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.NoteStatus).HasColumnName("note_status");
             entity.Property(e => e.NoteTitle).HasColumnName("note_title");
             entity.Property(e => e.NoteType).HasColumnName("note_type");
-            entity.Property(e => e.PestDetectionId).HasColumnName("pest_detection_id");
             entity.Property(e => e.UserId).HasColumnName("user_id");
-
-            entity.HasOne(d => d.PestDetection).WithMany(p => p.Notifications)
-                .HasForeignKey(d => d.PestDetectionId)
-                .HasConstraintName("notification_pest_detection_id_fkey");
+            entity.Property(e => e.ReportId).HasColumnName("report_id");
+            entity.Property(e => e.DiagnosisId).HasColumnName("diagnosis_id");
 
             entity.HasOne(d => d.User).WithMany(p => p.Notifications)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("notification_user_id_fkey");
-        });
 
-        modelBuilder.Entity<PestDetection>(entity =>
-        {
-            entity.HasKey(e => e.PestDetectionId).HasName("pest_detections_pkey");
+            entity.HasOne(d => d.Report).WithMany()
+                .HasForeignKey(d => d.ReportId)
+                .HasConstraintName("notification_report_id_fkey");
 
-            entity.ToTable("pest_detections");
-
-            entity.Property(e => e.PestDetectionId)
-                .HasDefaultValueSql("gen_random_uuid()")
-                .HasColumnName("pest_detection_id");
-            entity.Property(e => e.ConfidenceSource).HasColumnName("confidence_source");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("now()")
-                .HasColumnName("created_at");
-            entity.Property(e => e.DetectedAt).HasColumnName("detected_at");
-            entity.Property(e => e.DetectionStatus).HasColumnName("detection_status");
-            entity.Property(e => e.GeneralLabel).HasColumnName("general_label");
-            entity.Property(e => e.GeneralSeverity).HasColumnName("general_severity");
-            entity.Property(e => e.ImageAnalysisResultId).HasColumnName("image_analysis_result_id");
-            entity.Property(e => e.ReviewNotes).HasColumnName("review_notes");
-            entity.Property(e => e.SeasonId).HasColumnName("season_id");
-            entity.Property(e => e.SpecialistId).HasColumnName("specialist_id");
-
-            entity.HasOne(d => d.ImageAnalysisResult).WithMany(p => p.PestDetections)
-                .HasForeignKey(d => d.ImageAnalysisResultId)
-                .HasConstraintName("pest_detections_image_analysis_result_id_fkey");
-
-            entity.HasOne(d => d.Season).WithMany(p => p.PestDetections)
-                .HasForeignKey(d => d.SeasonId)
-                .HasConstraintName("pest_detections_season_id_fkey");
-
-            entity.HasOne(d => d.Specialist).WithMany(p => p.PestDetections)
-                .HasForeignKey(d => d.SpecialistId)
-                .HasConstraintName("pest_detections_specialist_id_fkey");
-        });
-
-        modelBuilder.Entity<Photo>(entity =>
-        {
-            entity.HasKey(e => e.PhotoId).HasName("photo_pkey");
-
-            entity.ToTable("photo");
-
-            entity.Property(e => e.PhotoId)
-                .HasDefaultValueSql("gen_random_uuid()")
-                .HasColumnName("photo_id");
-            entity.Property(e => e.HumidityAtTheMomentTakePhoto).HasColumnName("humidity_at_the_moment_take_photo");
-            entity.Property(e => e.PhotoDate).HasColumnName("photo_date");
-            entity.Property(e => e.PhotoSource).HasColumnName("photo_source");
-            entity.Property(e => e.PhotoTime).HasColumnName("photo_time");
-            entity.Property(e => e.RainfallAtTheMomentTakePhoto).HasColumnName("rainfall_at_the_moment_take_photo");
-            entity.Property(e => e.SeasonDetailId).HasColumnName("season_detail_id");
-            entity.Property(e => e.SoilMoistureAtTheMomentTakePhoto).HasColumnName("soil_moisture_at_the_moment_take_photo");
-            entity.Property(e => e.TemperatureAtTheMomentTakePhoto).HasColumnName("temperature_at_the_moment_take_photo");
-            entity.Property(e => e.UploadedAt)
-                .HasDefaultValueSql("now()")
-                .HasColumnName("uploaded_at");
-
-            entity.HasOne(d => d.SeasonDetail).WithMany(p => p.Photos)
-                .HasForeignKey(d => d.SeasonDetailId)
-                .HasConstraintName("photo_season_detail_id_fkey");
+            entity.HasOne(d => d.Diagnosis).WithMany()
+                .HasForeignKey(d => d.DiagnosisId)
+                .HasConstraintName("notification_diagnosis_id_fkey");
         });
 
         modelBuilder.Entity<Plot>(entity =>
@@ -315,6 +221,9 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("bed_created_at");
             entity.Property(e => e.FarmId).HasColumnName("farm_id");
             entity.Property(e => e.PlotArea).HasColumnName("plot_area");
+            entity.Property(e => e.PlotLength).HasColumnName("plot_length");
+            entity.Property(e => e.PlotWidth).HasColumnName("plot_width");
+            entity.Property(e => e.PlotMargin).HasColumnName("plot_margin").HasDefaultValue(0.3);
             entity.Property(e => e.PlotName).HasColumnName("plot_name");
             entity.Property(e => e.PlotStatus).HasColumnName("plot_status");
             entity.Property(e => e.SoilId).HasColumnName("soil_id");
@@ -341,16 +250,16 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
-            entity.Property(e => e.PestDetectionId).HasColumnName("pest_detection_id");
+            entity.Property(e => e.DiagnosisId).HasColumnName("diagnosis_id");
             entity.Property(e => e.SeasonId).HasColumnName("season_id");
             entity.Property(e => e.Title).HasColumnName("title");
             entity.Property(e => e.UpdatedAt)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("updated_at");
 
-            entity.HasOne(d => d.PestDetection).WithMany(p => p.Recommendations)
-                .HasForeignKey(d => d.PestDetectionId)
-                .HasConstraintName("recommendation_pest_detection_id_fkey");
+            entity.HasOne(d => d.Diagnosis).WithMany(p => p.Recommendations)
+                .HasForeignKey(d => d.DiagnosisId)
+                .HasConstraintName("recommendation_diagnosis_id_fkey");
 
             entity.HasOne(d => d.Season).WithMany(p => p.Recommendations)
                 .HasForeignKey(d => d.SeasonId)
@@ -387,29 +296,53 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<RecommendationTaskDetail>(entity =>
         {
             entity.HasKey(e => e.TaskDetailId).HasName("recommendation_task_detail_pkey");
-
             entity.ToTable("recommendation_task_detail");
 
             entity.Property(e => e.TaskDetailId)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("task_detail_id");
-            entity.Property(e => e.EndDate).HasColumnName("end_date");
-            entity.Property(e => e.Notes).HasColumnName("notes");
-            entity.Property(e => e.Quantity).HasColumnName("quantity");
-            entity.Property(e => e.StartDate).HasColumnName("start_date");
-            entity.Property(e => e.Status).HasColumnName("status");
+
             entity.Property(e => e.TaskId).HasColumnName("task_id");
+            entity.Property(e => e.SeasonId).HasColumnName("season_id");
+            entity.Property(e => e.FarmId).HasColumnName("farm_id"); 
             entity.Property(e => e.Title).HasColumnName("title");
-            entity.Property(e => e.Unit).HasColumnName("unit");
-            entity.Property(e => e.WorkerId).HasColumnName("worker_id");
+            entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property(e => e.Status).HasColumnName("status").HasMaxLength(50);
+            entity.Property(e => e.Unit).HasColumnName("unit").HasMaxLength(50);
+            entity.Property(e => e.Notes).HasColumnName("notes");
+            entity.Property(e => e.StartDate).HasColumnName("start_date");
+            entity.Property(e => e.EndDate).HasColumnName("end_date");
+
+            entity.Property(e => e.AssignedToWorkerIds)
+             .HasColumnName("assigned_to_worker_ids")
+             .HasColumnType("jsonb") 
+             .HasConversion(
+                 v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions)null),
+                 v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions)null));
+
+            entity.Property(e => e.PlotIds)
+                .HasColumnName("plot_ids")
+                .HasColumnType("jsonb")
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions)null));
+
+            entity.Property(e => e.BedIds)
+                .HasColumnName("bed_ids")
+                .HasColumnType("jsonb")
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions)null));
 
             entity.HasOne(d => d.Task).WithMany(p => p.RecommendationTaskDetails)
                 .HasForeignKey(d => d.TaskId)
                 .HasConstraintName("recommendation_task_detail_task_id_fkey");
 
-            entity.HasOne(d => d.Worker).WithMany(p => p.RecommendationTaskDetails)
-                .HasForeignKey(d => d.WorkerId)
-                .HasConstraintName("recommendation_task_detail_worker_id_fkey");
+            entity.HasOne(d => d.Season).WithMany()
+                .HasForeignKey(d => d.SeasonId);
+
+            entity.HasOne(d => d.Farm).WithMany()
+                .HasForeignKey(d => d.FarmId);
         });
 
         modelBuilder.Entity<Report>(entity =>
@@ -421,18 +354,42 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.ReportId)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("report_id");
+            entity.Property(e => e.ReportNo).HasColumnName("report_no");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.OwnerId).HasColumnName("owner_id");
+            entity.Property(e => e.Title).HasColumnName("title");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.ReportType).HasColumnName("report_type");
+            entity.Property(e => e.PlotId).HasColumnName("plot_id");
+            entity.Property(e => e.BedId).HasColumnName("bed_id");
+            entity.Property(e => e.SeasonId).HasColumnName("season_id");
+            entity.Property(e => e.AiResultsJson).HasColumnName("ai_results_json");
+            entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
-            entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.SubmitDate).HasColumnName("submit_date");
-            entity.Property(e => e.Title).HasColumnName("title");
-            entity.Property(e => e.WorkerId).HasColumnName("worker_id");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
 
-            entity.HasOne(d => d.Worker).WithMany(p => p.Reports)
-                .HasForeignKey(d => d.WorkerId)
-                .HasConstraintName("report_worker_id_fkey");
+            entity.HasOne(d => d.Creator).WithMany(p => p.CreatedReports)
+                .HasForeignKey(d => d.CreatedBy)
+                .HasConstraintName("report_created_by_fkey");
+
+            entity.HasOne(d => d.Owner).WithMany(p => p.OwnedReports)
+                .HasForeignKey(d => d.OwnerId)
+                .HasConstraintName("report_owner_id_fkey");
+
+            entity.HasOne(d => d.Plot).WithMany()
+                .HasForeignKey(d => d.PlotId)
+                .HasConstraintName("report_plot_id_fkey");
+
+            entity.HasOne(d => d.Bed).WithMany()
+                .HasForeignKey(d => d.BedId)
+                .HasConstraintName("report_bed_id_fkey");
+
+            entity.HasOne(d => d.Season).WithMany()
+                .HasForeignKey(d => d.SeasonId)
+                .HasConstraintName("report_season_id_fkey");
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -525,23 +482,20 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.TaskId)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("task_id");
-            entity.Property(e => e.AssignedToWorkerId).HasColumnName("assigned_to_worker_id");
-            entity.Property(e => e.SeasonId).HasColumnName("season_id");
+
+            entity.Property(e => e.TaskTitle).HasColumnName("task_title");
+            entity.Property(e => e.TaskScheduledAt).HasColumnName("task_scheduled_at");
+            entity.Property(e => e.TaskStatus).HasColumnName("task_status");
+            entity.Property(e => e.TaskNotes).HasColumnName("task_notes");
+
+            entity.Property(e => e.TaskType)
+                .HasColumnName("task_type")
+                .HasMaxLength(50);
+
             entity.Property(e => e.TaskCreatedAt)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("task_created_at");
-            entity.Property(e => e.TaskNotes).HasColumnName("task_notes");
-            entity.Property(e => e.TaskScheduledAt).HasColumnName("task_scheduled_at");
-            entity.Property(e => e.TaskStatus).HasColumnName("task_status");
-            entity.Property(e => e.TaskTitle).HasColumnName("task_title");
 
-            entity.HasOne(d => d.AssignedToWorker).WithMany(p => p.Tasks)
-                .HasForeignKey(d => d.AssignedToWorkerId)
-                .HasConstraintName("tasks_assigned_to_worker_id_fkey");
-
-            entity.HasOne(d => d.Season).WithMany(p => p.Tasks)
-                .HasForeignKey(d => d.SeasonId)
-                .HasConstraintName("tasks_season_id_fkey");
         });
 
         modelBuilder.Entity<TaskDetail>(entity =>
@@ -553,19 +507,36 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.TaskDetailId)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("task_detail_id");
+
+            entity.Property(e => e.TaskId).HasColumnName("task_id");
+            entity.Property(e => e.SeasonId).HasColumnName("season_id");
+
+            entity.Property(e => e.AssignedToWorkerIds)
+                .HasColumnName("assigned_to_worker_ids")
+                .HasColumnType("uuid[]");
+
+            entity.Property(e => e.PlotIds)
+                .HasColumnName("plot_ids")
+                .HasColumnType("uuid[]");
+
+            entity.Property(e => e.BedIds)
+                .HasColumnName("bed_ids")
+                .HasColumnType("uuid[]");
+
+            entity.Property(e => e.StartDate).HasColumnName("start_date");
             entity.Property(e => e.EndDate).HasColumnName("end_date");
             entity.Property(e => e.Notes).HasColumnName("notes");
-            entity.Property(e => e.SeasonId).HasColumnName("season_id");
-            entity.Property(e => e.StartDate).HasColumnName("start_date");
-            entity.Property(e => e.TaskId).HasColumnName("task_id");
 
-            entity.HasOne(d => d.Season).WithMany(p => p.TaskDetails)
+            entity.HasOne(d => d.Task)
+                .WithMany(p => p.TaskDetails)
+                .HasForeignKey(d => d.TaskId)
+                .HasConstraintName("task_detail_task_id_fkey");
+
+            entity.HasOne(d => d.Season)
+                .WithMany(p => p.TaskDetails)
                 .HasForeignKey(d => d.SeasonId)
                 .HasConstraintName("task_detail_season_id_fkey");
 
-            entity.HasOne(d => d.Task).WithMany(p => p.TaskDetails)
-                .HasForeignKey(d => d.TaskId)
-                .HasConstraintName("task_detail_task_id_fkey");
         });
 
         modelBuilder.Entity<User>(entity =>
@@ -588,6 +559,10 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.PhoneNumber).HasColumnName("phone_number");
             entity.Property(e => e.RoleId).HasColumnName("role_id");
             entity.Property(e => e.Status).HasColumnName("status");
+
+            entity.Property(e => e.RequestedRole)
+                .HasMaxLength(50)
+                .HasColumnName("requested_role");
 
             entity.HasOne(d => d.Role).WithMany(p => p.Users)
                 .HasForeignKey(d => d.RoleId)
@@ -615,6 +590,357 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.Worker).WithMany(p => p.WorkerSchedules)
                 .HasForeignKey(d => d.WorkerId)
                 .HasConstraintName("worker_schedule_worker_id_fkey");
+        });
+
+        modelBuilder.Entity<IotDevice>(entity =>
+        {
+            entity.ToTable("iot_devices");
+
+            entity.HasKey(e => e.DeviceId);
+            entity.Property(e => e.DeviceId).HasColumnName("device_id");
+            entity.Property(e => e.BedId).HasColumnName("bed_id");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Type).HasColumnName("type");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.InstallationDate).HasColumnName("installation_date").HasColumnType("date");
+            entity.Property(e => e.Latitude).HasColumnName("latitude");
+            entity.Property(e => e.Longitude).HasColumnName("longitude");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasColumnType("timestamp with time zone");
+            entity.Property(e => e.DeviceCode).HasColumnName("device_code");
+            entity.Property(e => e.LastActiveAt).HasColumnName("last_active_at").HasColumnType("timestamp with time zone");
+            entity.Property(e => e.ApiKeyHash).HasColumnName("api_key_hash").HasMaxLength(64);
+            entity.Property(e => e.ApiKeyRotatedAt).HasColumnName("api_key_rotated_at").HasColumnType("timestamp with time zone");
+
+            entity.HasIndex(e => e.ApiKeyHash).IsUnique();
+
+            entity.HasOne(d => d.Bed)
+                  .WithMany(p => p.IotDevices)
+                  .HasForeignKey(d => d.BedId)
+                  .HasConstraintName("fk_iot_devices_beds");
+        });
+
+        modelBuilder.Entity<IotData>(entity =>
+        {
+            entity.ToTable("iot_data");
+
+            entity.HasKey(e => e.SensorDataId);
+            entity.Property(e => e.SensorDataId).HasColumnName("sensor_data_id");
+
+            entity.Property(e => e.DeviceId).HasColumnName("device_id");
+            entity.Property(e => e.SeasonId).HasColumnName("season_id");
+
+            entity.Property(e => e.RecordedAt).HasColumnName("recorded_at").HasColumnType("timestamp with time zone");
+            entity.Property(e => e.Temperature).HasColumnName("temperature");
+            entity.Property(e => e.Humidity).HasColumnName("humidity");
+            entity.Property(e => e.SoilMoisture).HasColumnName("soil_moisture");
+            entity.Property(e => e.Light).HasColumnName("light");
+            entity.Property(e => e.IsRaining).HasColumnName("is_raining");
+            entity.Property(e => e.IsAlert).HasColumnName("is_alert").HasDefaultValue(false);
+            entity.Property(e => e.RawData).HasColumnName("raw_data");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone");
+
+            entity.HasOne(d => d.Device)
+                  .WithMany(p => p.IotDatas)
+                  .HasForeignKey(d => d.DeviceId)
+                  .HasConstraintName("fk_iot_data_iot_devices");
+
+            entity.HasOne(d => d.Season)
+                  .WithMany()
+                  .HasForeignKey(d => d.SeasonId)
+                  .HasConstraintName("fk_iot_data_seasons");
+        });
+
+        modelBuilder.Entity<SoilCropCompatibility>(entity =>
+        {
+            entity.ToTable("soil_crop_compatibility"); 
+            entity.HasKey(e => e.ComptId);
+
+            entity.HasOne(d => d.Soil)
+                .WithMany(p => p.SoilCropCompatibilities)
+                .HasForeignKey(d => d.SoilId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Crop)
+                .WithMany(p => p.SoilCropCompatibilities)
+                .HasForeignKey(d => d.CropId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CropGrowthStage>(entity => {
+            entity.ToTable("crop_growth_stages");
+            entity.HasKey(e => e.StageId);
+            entity.Property(e => e.StageId).HasColumnName("stage_id");
+
+            entity.HasOne(d => d.Crop)
+                  .WithMany(p => p.CropGrowthStages)
+                  .HasForeignKey(d => d.CropId);
+        });
+
+        modelBuilder.Entity<CropGrowthTask>(entity =>
+        {
+            entity.ToTable("crop_growth_tasks");
+            entity.HasKey(e => e.GrowthTaskId);
+            entity.Property(e => e.GrowthTaskId)
+                  .HasColumnName("GrowthTaskId") 
+                  .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(e => e.StageId)
+                  .HasColumnName("StageId"); 
+
+            entity.Property(e => e.TaskName)
+                  .HasColumnName("TaskName")
+                  .IsRequired();
+
+            entity.Property(e => e.CreatedAt)
+                  .HasColumnName("CreatedAt") 
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(e => e.TaskDescription).HasColumnName("TaskDescription");
+            entity.Property(e => e.Frequency).HasColumnName("Frequency");
+            entity.Property(e => e.DurationMinutes).HasColumnName("DurationMinutes");
+            entity.Property(e => e.RequiredTools).HasColumnName("RequiredTools");
+            entity.Property(e => e.RequiredMaterials).HasColumnName("RequiredMaterials");
+            entity.Property(e => e.QuantityPerUnit).HasColumnName("QuantityPerUnit");
+            entity.Property(e => e.QuantityUnit).HasColumnName("QuantityUnit");
+            entity.Property(e => e.Priority).HasColumnName("Priority");
+            entity.Property(e => e.IsMandatory).HasColumnName("IsMandatory");
+            entity.Property(e => e.Notes).HasColumnName("Notes");
+
+            entity.HasOne(d => d.CropGrowthStage)
+                  .WithMany(p => p.CropGrowthTasks)
+                  .HasForeignKey(d => d.StageId)
+                  .OnDelete(DeleteBehavior.Cascade)
+                  .HasConstraintName("FK_CropGrowthTasks_CropGrowthStages");
+        });
+
+        modelBuilder.Entity<GrowthTracking>(entity =>
+        {
+            entity.ToTable("growth_tracking");
+            entity.HasKey(e => e.TrackingId);
+            entity.Property(e => e.TrackingId).HasColumnName("tracking_id");
+
+            entity.HasOne(d => d.SeasonDetail)
+                  .WithMany(p => p.GrowthTrackings)
+                  .HasForeignKey(d => d.SeasonDetailId)
+                  .OnDelete(DeleteBehavior.Cascade); 
+
+            entity.HasOne(d => d.CropGrowthStage)
+                  .WithMany(p => p.GrowthTrackings)
+                  .HasForeignKey(d => d.StageId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<SubTask>(entity =>
+        {
+            entity.ToTable("sub_tasks");
+            entity.HasKey(e => e.SubTaskId);
+            entity.Property(e => e.SubTaskId)
+                  .HasColumnName("sub_task_id");
+
+            entity.Property(e => e.Title)
+                  .IsRequired()
+                  .HasMaxLength(200)
+                  .HasColumnName("title");
+
+            entity.Property(e => e.Description)
+                  .HasColumnName("description");
+
+            entity.Property(e => e.TaskDetailId)
+                  .HasColumnName("task_detail_id");
+            entity.HasOne(d => d.TaskDetail)
+                  .WithMany(p => p.SubTasks)
+                  .HasForeignKey(d => d.TaskDetailId)
+                  .OnDelete(DeleteBehavior.Cascade); 
+        });
+
+        modelBuilder.Entity<Attachment>(entity =>
+        {
+            entity.ToTable("attachment");
+            entity.HasKey(e => e.Id).HasName("attachment_pkey");
+
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("id");
+            entity.Property(e => e.ObjectType).HasColumnName("object_type");
+            entity.Property(e => e.ObjectId).HasColumnName("object_id");
+            entity.Property(e => e.AttachmentType).HasColumnName("attachment_type");
+            entity.Property(e => e.FileName).HasColumnName("file_name");
+            entity.Property(e => e.FileUrl).HasColumnName("file_url");
+            entity.Property(e => e.CloudinaryPublicId).HasColumnName("cloudinary_public_id");
+            entity.Property(e => e.CloudinarySecureUrl).HasColumnName("cloudinary_secure_url");
+            entity.Property(e => e.FileExtension).HasColumnName("file_extension");
+            entity.Property(e => e.MimeType).HasColumnName("mime_type");
+            entity.Property(e => e.FileSize).HasColumnName("file_size");
+            entity.Property(e => e.UploadedBy).HasColumnName("uploaded_by");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false).HasColumnName("is_deleted");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+
+            entity.HasIndex(e => new { e.ObjectType, e.ObjectId })
+                  .HasDatabaseName("idx_attachment_object");
+
+            entity.HasOne(d => d.Uploader).WithMany()
+                .HasForeignKey(d => d.UploadedBy)
+                .HasConstraintName("attachment_uploaded_by_fkey");
+        });
+
+        modelBuilder.Entity<ReportAssignment>(entity =>
+        {
+            entity.ToTable("report_assignment");
+            entity.HasKey(e => e.Id).HasName("report_assignment_pkey");
+
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("id");
+            entity.Property(e => e.ReportId).HasColumnName("report_id");
+            entity.Property(e => e.AssignedBy).HasColumnName("assigned_by");
+            entity.Property(e => e.AssignedTo).HasColumnName("assigned_to");
+            entity.Property(e => e.AssignedAt).HasColumnName("assigned_at");
+            entity.Property(e => e.Note).HasColumnName("note");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+            entity.HasOne(d => d.Report).WithMany(p => p.ReportAssignments)
+                .HasForeignKey(d => d.ReportId)
+                .HasConstraintName("report_assignment_report_id_fkey");
+
+            entity.HasOne(d => d.Assigner).WithMany()
+                .HasForeignKey(d => d.AssignedBy)
+                .HasConstraintName("report_assignment_assigned_by_fkey");
+
+            entity.HasOne(d => d.Assignee).WithMany()
+                .HasForeignKey(d => d.AssignedTo)
+                .HasConstraintName("report_assignment_assigned_to_fkey");
+        });
+
+        modelBuilder.Entity<DiagnosisResult>(entity =>
+        {
+            entity.ToTable("diagnosis_result");
+            entity.HasKey(e => e.Id).HasName("diagnosis_result_pkey");
+
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("id");
+            entity.Property(e => e.ReportId).HasColumnName("report_id");
+            entity.Property(e => e.DiagnosedBy).HasColumnName("diagnosed_by");
+            entity.Property(e => e.DiseaseName).HasColumnName("disease_name");
+            entity.Property(e => e.Conclusion).HasColumnName("conclusion");
+            entity.Property(e => e.RecommendedAction).HasColumnName("recommended_action");
+            entity.Property(e => e.SeverityLevel).HasColumnName("severity_level");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+            entity.HasOne(d => d.Report).WithMany(p => p.DiagnosisResults)
+                .HasForeignKey(d => d.ReportId)
+                .HasConstraintName("diagnosis_result_report_id_fkey");
+
+            entity.HasOne(d => d.Diagnoser).WithMany()
+                .HasForeignKey(d => d.DiagnosedBy)
+                .HasConstraintName("diagnosis_result_diagnosed_by_fkey");
+        });
+
+
+        modelBuilder.Entity<ReportEnvironmentSnapshot>(entity =>
+        {
+            entity.ToTable("report_environment_snapshot");
+            entity.HasKey(e => e.Id).HasName("report_environment_snapshot_pkey");
+
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("id");
+            entity.Property(e => e.ReportId).HasColumnName("report_id");
+            entity.Property(e => e.Temperature).HasColumnName("temperature");
+            entity.Property(e => e.Humidity).HasColumnName("humidity");
+            entity.Property(e => e.SoilMoisture).HasColumnName("soil_moisture");
+            entity.Property(e => e.Rainfall).HasColumnName("rainfall");
+            entity.Property(e => e.LightIntensity).HasColumnName("light_intensity");
+            entity.Property(e => e.RecordedAt).HasColumnName("recorded_at");
+            entity.Property(e => e.SourceDeviceId).HasColumnName("source_device_id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+
+            entity.HasOne(d => d.Report).WithMany(p => p.EnvironmentSnapshots)
+                .HasForeignKey(d => d.ReportId)
+                .HasConstraintName("report_env_snapshot_report_id_fkey");
+
+            entity.HasOne(d => d.SourceDevice).WithMany()
+                .HasForeignKey(d => d.SourceDeviceId)
+                .HasConstraintName("report_env_snapshot_device_id_fkey");
+        });
+
+        modelBuilder.Entity<DiagnosisPriceSetting>(entity =>
+        {
+            entity.ToTable("diagnosis_price_setting");
+            entity.HasKey(e => e.Id).HasName("diagnosis_price_setting_pkey");
+
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("id");
+            entity.Property(e => e.FarmId).HasColumnName("farm_id");
+            entity.Property(e => e.ExpertId).HasColumnName("expert_id");
+            entity.Property(e => e.Month).HasColumnName("month").HasColumnType("date");
+            entity.Property(e => e.PricePerDiagnosis).HasColumnName("price_per_diagnosis");
+            entity.Property(e => e.Notes).HasColumnName("notes");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+
+            entity.HasIndex(e => new { e.FarmId, e.ExpertId, e.Month })
+                .IsUnique()
+                .HasDatabaseName("diagnosis_price_setting_unique");
+
+            entity.HasIndex(e => new { e.FarmId, e.Month })
+                .HasDatabaseName("idx_price_setting_farm_month");
+
+            entity.HasOne(d => d.Farm).WithMany()
+                .HasForeignKey(d => d.FarmId)
+                .HasConstraintName("diagnosis_price_setting_farm_fkey");
+
+            entity.HasOne(d => d.Expert).WithMany()
+                .HasForeignKey(d => d.ExpertId)
+                .HasConstraintName("diagnosis_price_setting_expert_fkey");
+
+            entity.HasOne(d => d.Creator).WithMany()
+                .HasForeignKey(d => d.CreatedBy)
+                .HasConstraintName("diagnosis_price_setting_created_by_fkey");
+        });
+
+        modelBuilder.Entity<DiagnosisPayment>(entity =>
+        {
+            entity.ToTable("diagnosis_payment");
+            entity.HasKey(e => e.Id).HasName("diagnosis_payment_pkey");
+
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("id");
+            entity.Property(e => e.PriceSettingId).HasColumnName("price_setting_id");
+            entity.Property(e => e.TotalDiagnoses).HasColumnName("total_diagnoses");
+            entity.Property(e => e.Amount).HasColumnName("amount");
+            entity.Property(e => e.Status).HasColumnName("status").HasDefaultValue("pending");
+            entity.Property(e => e.PaymentProvider).HasColumnName("payment_provider");
+            entity.Property(e => e.ProviderData).HasColumnName("provider_data");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+            entity.Property(e => e.PaidAt).HasColumnName("paid_at");
+
+            entity.HasIndex(e => e.Status).HasDatabaseName("idx_payment_status");
+            entity.HasIndex(e => e.PaymentProvider).HasDatabaseName("idx_payment_provider");
+
+            entity.HasOne(d => d.PriceSetting).WithMany(p => p.Payments)
+                .HasForeignKey(d => d.PriceSettingId)
+                .HasConstraintName("diagnosis_payment_price_setting_fkey");
         });
 
         OnModelCreatingPartial(modelBuilder);

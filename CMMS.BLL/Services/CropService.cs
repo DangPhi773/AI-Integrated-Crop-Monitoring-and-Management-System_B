@@ -1,4 +1,5 @@
-﻿using CMMS.BLL.Interfaces;
+using CMMS.BLL.Interfaces;
+using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Crops;
 using CMMS.DAL.Entities;
@@ -6,7 +7,6 @@ using CMMS.DAL.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CMMS.BLL.Services
@@ -22,18 +22,7 @@ namespace CMMS.BLL.Services
             {
                 var crops = await _cropRepo.GetAllAsync();
 
-                var response = crops.Select(c => new CropResponse
-                {
-                    CropId = c.CropId,
-                    SoilId = c.SoilId,
-                    CropName = c.CropName,
-                    CropScientificName = c.CropScientificName,
-                    CropDefaultGrowthDays = c.CropDefaultGrowthDays,
-                    CropQuantities = c.CropQuantities,
-                    CropStatus = c.CropStatus,
-                    SoilName = c.Soil?.Name, 
-                    SoilScienceName = c.Soil?.ScienceName
-                }).ToList();
+                var response = crops.Select(CropMapper.ToResponse).ToList();
 
                 return new ApiResponse<IEnumerable<CropResponse>> { Success = true, Data = response };
             }
@@ -52,18 +41,7 @@ namespace CMMS.BLL.Services
                 if (crop == null)
                     return new ApiResponse<CropResponse> { Success = false, Message = "Không tìm thấy cây trồng" };
 
-                var response = new CropResponse
-                {
-                    CropId = crop.CropId,
-                    SoilId = crop.SoilId,
-                    CropName = crop.CropName,
-                    CropScientificName = crop.CropScientificName,
-                    CropDefaultGrowthDays = crop.CropDefaultGrowthDays,
-                    CropQuantities = crop.CropQuantities,
-                    CropStatus = crop.CropStatus,
-                    SoilName = crop.Soil?.Name,          
-                    SoilScienceName = crop.Soil?.ScienceName
-                };
+                var response = CropMapper.ToResponse(crop);
 
                 return new ApiResponse<CropResponse> { Success = true, Data = response };
             }
@@ -80,10 +58,14 @@ namespace CMMS.BLL.Services
                 var crop = new Crop
                 {
                     CropId = Guid.NewGuid(),
-                    SoilId = request.SoilId,
                     CropName = request.CropName,
                     CropScientificName = request.CropScientificName,
                     CropDefaultGrowthDays = request.CropDefaultGrowthDays,
+                    PlantSpacing = request.PlantSpacing,
+                    BedWidthDefault = request.BedWidthDefault,
+                    PathWidthDefault = request.PathWidthDefault,
+                    RowsPerBed = request.RowsPerBed,
+                    RowSpacing = request.RowSpacing,
                     CropQuantities = request.CropQuantities,
                     CropStatus = request.CropStatus ?? "Active"
                 };
@@ -104,12 +86,16 @@ namespace CMMS.BLL.Services
                 var crop = await _cropRepo.GetByIdAsync(id);
                 if (crop == null) return new ApiResponse<string> { Success = false, Message = "Không tồn tại" };
 
-                crop.CropName = request.CropName;
-                crop.SoilId = request.SoilId;
-                crop.CropScientificName = request.CropScientificName;
-                crop.CropDefaultGrowthDays = request.CropDefaultGrowthDays;
-                crop.CropQuantities = request.CropQuantities;
-                crop.CropStatus = request.CropStatus;
+                crop.CropName = !string.IsNullOrWhiteSpace(request.CropName) ? request.CropName : crop.CropName;
+                crop.CropScientificName = request.CropScientificName ?? crop.CropScientificName;
+                crop.CropDefaultGrowthDays = request.CropDefaultGrowthDays ?? crop.CropDefaultGrowthDays;
+                crop.PlantSpacing = request.PlantSpacing ?? crop.PlantSpacing;
+                crop.BedWidthDefault = request.BedWidthDefault ?? crop.BedWidthDefault;
+                crop.PathWidthDefault = request.PathWidthDefault ?? crop.PathWidthDefault;
+                crop.RowsPerBed = request.RowsPerBed ?? crop.RowsPerBed;
+                crop.RowSpacing = request.RowSpacing ?? crop.RowSpacing;
+                crop.CropQuantities = request.CropQuantities ?? crop.CropQuantities;
+                crop.CropStatus = request.CropStatus ?? crop.CropStatus;
 
                 _cropRepo.Update(crop);
                 await _cropRepo.SaveChangesAsync();
@@ -117,7 +103,7 @@ namespace CMMS.BLL.Services
             }
             catch (Exception ex)
             {
-                return new ApiResponse<string> { Success = false, Errors = new List<string> { ex.Message } };
+                return new ApiResponse<string> { Success = false, Message = "Lỗi cập nhật cây trồng", Errors = new List<string> { ex.Message } };
             }
         }
 
@@ -133,7 +119,7 @@ namespace CMMS.BLL.Services
             }
             catch (Exception ex)
             {
-                return new ApiResponse<string> { Success = false, Errors = new List<string> { ex.Message } };
+                return new ApiResponse<string> { Success = false, Message = "Lỗi xóa cây trồng", Errors = new List<string> { ex.Message } };
             }
         }
     }

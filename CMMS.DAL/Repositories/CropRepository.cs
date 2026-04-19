@@ -16,10 +16,17 @@ namespace CMMS.DAL.Repositories
         public CropRepository(AppDbContext context) => _context = context;
 
         public async System.Threading.Tasks.Task<IEnumerable<Crop>> GetAllAsync()
-            => await _context.Crops.Include(c => c.Soil).ToListAsync();
+            => await _context.Crops
+                .Include(c => c.SoilCropCompatibilities)
+                    .ThenInclude(sc => sc.Soil)
+                .AsNoTracking()
+                .ToListAsync();
 
         public async System.Threading.Tasks.Task<Crop?> GetByIdAsync(Guid id)
-            => await _context.Crops.Include(c => c.Soil).FirstOrDefaultAsync(c => c.CropId == id);
+            => await _context.Crops
+                .Include(c => c.SoilCropCompatibilities)
+                    .ThenInclude(sc => sc.Soil)
+                .FirstOrDefaultAsync(c => c.CropId == id);
 
         public async System.Threading.Tasks.Task AddAsync(Crop crop) => await _context.Crops.AddAsync(crop);
 

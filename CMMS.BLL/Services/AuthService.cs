@@ -1,49 +1,60 @@
-﻿using CMMS.BLL.Interfaces;
+using CMMS.BLL.Helpers;
+using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.Entities;
-using CMMS.DAL.Repositories;
 using CMMS.DAL.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Mail;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace CMMS.BLL.Services
 {
     public class AuthService : IAuthService
     {
         private readonly IUserRepository _userRepo;
+        private readonly IEmailService _emailService;
+        private readonly IConfiguration _config;
 
-        public AuthService(IUserRepository userRepo)
+        public AuthService(IUserRepository userRepo, IEmailService emailService, IConfiguration config)
         {
             _userRepo = userRepo;
+            _emailService = emailService;
+            _config = config;
         }
 
-        public async System.Threading.Tasks.Task<ApiResponse<string>> RegisterAsync(RegisterRequest request)
+        public async Task<ApiResponse<string>> RegisterAsync(RegisterRequest request)
         {
             try
             {
                 var exist = await _userRepo.GetByEmailAsync(request.Email);
                 if (exist != null) return new ApiResponse<string> { Success = false, Message = "Email đã tồn tại!" };
 
+                var validRoles = new[] { "Worker", "Specialist" };
+                string target = string.IsNullOrEmpty(request.TargetRole) ? "Worker" : request.TargetRole;
+
+                if (!validRoles.Contains(target))
+                    return new ApiResponse<string> { Success = false, Message = "Vị trí mong muốn không hợp lệ!" };
+
                 var newUser = new User
                 {
                     UserId = Guid.NewGuid(),
                     Email = request.Email,
-                    Password = request.Password, // Nhắc sếp: Thực tế phải Hash mật khẩu nhé!
+                    HashPassword = PasswordHelper.HashPassword(request.Password),
                     Fullname = request.Fullname,
                     PhoneNumber = request.PhoneNumber,
-                    CreatedAt = DateTime.UtcNow,
-                    Status = "Active"
+                    CreatedAt = DateTimeHelper.VnNow(),
+                    Status = "ACTIVE",
+                    RequestedRole = target
                 };
 
                 await _userRepo.AddAsync(newUser);
                 if (await _userRepo.SaveChangesAsync())
                 {
-                    await SendEmailAsync(newUser.Email, "Chào mừng", "Bạn đã đăng ký thành công hệ thống CMMS.");
+                    _ = _emailService.SendEmailAsync(newUser.Email, "Chào mừng",
+                $"Bạn đã đăng ký thành công với nguyện vọng vị trí: {target}. Vui lòng đợi hệ thống phê duyệt.");
+
                     return new ApiResponse<string> { Success = true, Message = "Đăng ký thành công!" };
                 }
                 return new ApiResponse<string> { Success = false, Message = "Lỗi lưu dữ liệu." };
@@ -54,15 +65,45 @@ namespace CMMS.BLL.Services
             }
         }
 
-        public async System.Threading.Tasks.Task<ApiResponse<object>> LoginAsync(LoginRequest request)
+        public async Task<ApiResponse<object>> LoginAsync(LoginRequest request)
         {
             try
             {
                 var user = await _userRepo.GetByEmailAsync(request.Email);
-                if (user == null || user.Password != request.Password)
-                    return new ApiResponse<object> { Success = false, Message = "Thông tin không đúng." };
 
-                return new ApiResponse<object> { Success = true, Data = new { user.UserId, user.Email, Role = user.Role?.RoleName } };
+                if (user == null || !PasswordHelper.VerifyPassword(request.Password, user.HashPassword))
+                {
+                    return new ApiResponse<object> { Success = false, Message = "Thông tin đăng nhập không chính xác." };
+                }
+
+                var jwtSettings = _config.GetSection("JwtSettings");
+                var secretKey = jwtSettings["SecretKey"];
+                var key = Encoding.UTF8.GetBytes(secretKey);
+
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(new[]
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                        new Claim(ClaimTypes.Email, user.Email),
+                        new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "User")
+                    }),
+                    Expires = DateTime.UtcNow.AddDays(7),
+                    Issuer = jwtSettings["Issuer"],
+                    Audience = jwtSettings["Audience"],
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                };
+
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+                var tokenString = tokenHandler.WriteToken(token);
+
+                return new ApiResponse<object>
+                {
+                    Success = true,
+                    Message = "Đăng nhập thành công",
+                    Data = new { Token = tokenString }
+                };
             }
             catch (Exception ex)
             {
@@ -70,16 +111,21 @@ namespace CMMS.BLL.Services
             }
         }
 
-        private async System.Threading.Tasks.Task SendEmailAsync(string toEmail, string subject, string body)
+        public async Task<ApiResponse<object>> GetRolesAsync()
         {
-            var fromMail = "your-email@gmail.com";
-            var pw = "your-app-password";
-            var client = new SmtpClient("smtp.gmail.com", 587)
+            var roles = await _userRepo.GetAllRolesAsync();
+
+            var result = roles.Select(r => new
             {
-                EnableSsl = true,
-                Credentials = new NetworkCredential(fromMail, pw)
+                r.RoleId,
+                r.RoleName
+            });
+
+            return new ApiResponse<object>
+            {
+                Success = true,
+                Data = result
             };
-            //await client.SendMailAsync(new MailMessage(fromMail, toEmail, subject, body));
         }
     }
 }
