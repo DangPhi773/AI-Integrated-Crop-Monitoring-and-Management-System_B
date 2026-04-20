@@ -12,4 +12,5 @@ public interface IDiagnosisBillingService
     Task<ApiResponse<PaymentUrlResponse>> CreatePaymentAsync(CreatePaymentRequest request);
     Task<ApiResponse<string>> ProcessPaymentCallbackAsync(string provider, IQueryCollection query);
     Task<ApiResponse<IEnumerable<BillInfoResponse>>> GetAllPriceSettingsAsync();
+    Task<ApiResponse<IEnumerable<BillInfoResponse>>> GetMyBillsAsync(Guid expertId);
 }

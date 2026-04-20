@@ -89,8 +89,17 @@ public class PaymentController : ControllerBase
         return Redirect($"{frontendUrl}/payment/cancelled");
     }
 
+    [HttpGet("my-bills")]
+    [Authorize(Policy = "SpecialistOnly")]
+    public async Task<IActionResult> GetMyBills()
+    {
+        var expertId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await _billingService.GetMyBillsAsync(expertId);
+        return Ok(result);
+    }
+
     [HttpGet("price-settings")]
-    [Authorize(Policy = "OwnerOnly")] 
+    [Authorize(Policy = "OwnerOnly")]
     public async Task<IActionResult> GetAllPriceSettings()
     {
         var result = await _billingService.GetAllPriceSettingsAsync();
