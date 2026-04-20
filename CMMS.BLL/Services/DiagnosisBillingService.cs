@@ -194,6 +194,30 @@ public class DiagnosisBillingService : IDiagnosisBillingService
         };
     }
 
+    public async Task<ApiResponse<IEnumerable<BillInfoResponse>>> GetMyBillsAsync(Guid expertId)
+    {
+        var settingIds = await _db.DiagnosisPriceSettings
+            .AsNoTracking()
+            .Where(x => x.ExpertId == expertId)
+            .OrderByDescending(x => x.Month)
+            .Select(x => x.Id)
+            .ToListAsync();
+
+        var resultList = new List<BillInfoResponse>();
+
+        foreach (var id in settingIds)
+        {
+            var bill = await BuildBillInfo(id);
+            if (bill != null) resultList.Add(bill);
+        }
+
+        return new ApiResponse<IEnumerable<BillInfoResponse>>
+        {
+            Success = true,
+            Data = resultList
+        };
+    }
+
     private async Task<BillInfoResponse?> BuildBillInfo(Guid priceSettingId)
     {
         var setting = await _db.DiagnosisPriceSettings
