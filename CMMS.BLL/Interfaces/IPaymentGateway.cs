@@ -5,8 +5,14 @@ namespace CMMS.BLL.Interfaces;
 public interface IPaymentGateway
 {
     string ProviderName { get; }
-    string CreatePaymentUrl(Guid paymentId, decimal amount, string orderInfo);
-    PaymentCallbackResult ProcessCallback(IQueryCollection query);
+    Task<CreatePaymentResult> CreatePaymentUrlAsync(Guid paymentId, decimal amount, string orderInfo);
+    Task<PaymentCallbackResult> ProcessCallbackAsync(IQueryCollection query);
+}
+
+public class CreatePaymentResult
+{
+    public string Url { get; set; } = null!;
+    public long? OrderCode { get; set; }
 }
 
 public class PaymentCallbackResult

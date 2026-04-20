@@ -21,7 +21,7 @@ public class PayOSService : IPaymentGateway
         _httpClient = httpClient;
     }
 
-    public string CreatePaymentUrl(Guid paymentId, decimal amount, string orderInfo)
+    public async Task<CreatePaymentResult> CreatePaymentUrlAsync(Guid paymentId, decimal amount, string orderInfo)
     {
         var orderCode = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         var description = orderInfo.Length > 25 ? orderInfo[..25] : orderInfo;
@@ -48,30 +48,49 @@ public class PayOSService : IPaymentGateway
             "application/json"
         );
 
-        var response = _httpClient.Send(request);
-        var responseContent = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        var response = await _httpClient.SendAsync(request);
+        var responseContent = await response.Content.ReadAsStringAsync();
 
         using var doc = JsonDocument.Parse(responseContent);
         var checkoutUrl = doc.RootElement
             .GetProperty("data")
             .GetProperty("checkoutUrl")
-            .GetString();
+            .GetString() ?? throw new Exception("PayOS không trả về checkoutUrl");
 
-        return checkoutUrl ?? throw new Exception("PayOS không trả về checkoutUrl");
+        return new CreatePaymentResult { Url = checkoutUrl, OrderCode = orderCode };
     }
 
-    public PaymentCallbackResult ProcessCallback(IQueryCollection query)
+    public async Task<PaymentCallbackResult> ProcessCallbackAsync(IQueryCollection query)
     {
         var result = new PaymentCallbackResult
         {
             PaymentId = query["orderCode"].ToString(),
             ResponseCode = query["status"].ToString(),
-            Success = query["status"].ToString() == "PAID"
+            Success = false
         };
 
         foreach (var key in query.Keys)
             result.RawData[key] = query[key].ToString();
 
+        if (!long.TryParse(query["orderCode"].ToString(), out var orderCode))
+            return result;
+
+        var request = new HttpRequestMessage(HttpMethod.Get, $"{_settings.BaseUrl}/v2/payment-requests/{orderCode}");
+        request.Headers.Add("x-client-id", _settings.ClientId);
+        request.Headers.Add("x-api-key", _settings.ApiKey);
+
+        var response = await _httpClient.SendAsync(request);
+        if (!response.IsSuccessStatusCode) return result;
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(responseContent);
+
+        if (!doc.RootElement.TryGetProperty("data", out var data)) return result;
+        var status = data.TryGetProperty("status", out var s) ? s.GetString() : null;
+
+        result.ResponseCode = status;
+        result.Success = status == "PAID";
+        result.RawData["server_verified_status"] = status ?? "";
         return result;
     }
 
