@@ -25,6 +25,8 @@ public class DiagnosisPayment
     [Column(TypeName = "jsonb")]
     public string? ProviderData { get; set; }
 
+    public long? PayOSOrderCode { get; set; }
+
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 

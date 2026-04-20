@@ -19,7 +19,7 @@ public class VNPayService : IPaymentGateway
         _settings = settings.Value;
     }
 
-    public string CreatePaymentUrl(Guid paymentId, decimal amount, string orderInfo)
+    public Task<CreatePaymentResult> CreatePaymentUrlAsync(Guid paymentId, decimal amount, string orderInfo)
     {
         var vnp = new SortedDictionary<string, string>
         {
@@ -41,10 +41,13 @@ public class VNPayService : IPaymentGateway
             $"{x.Key}={WebUtility.UrlEncode(x.Value)}"));
         var secureHash = HmacSHA512(_settings.HashSecret, signData);
 
-        return $"{_settings.BaseUrl}?{signData}&vnp_SecureHash={secureHash}";
+        return Task.FromResult(new CreatePaymentResult
+        {
+            Url = $"{_settings.BaseUrl}?{signData}&vnp_SecureHash={secureHash}"
+        });
     }
 
-    public PaymentCallbackResult ProcessCallback(IQueryCollection query)
+    public Task<PaymentCallbackResult> ProcessCallbackAsync(IQueryCollection query)
     {
         var vnpParams = new SortedDictionary<string, string>();
         foreach (var key in query.Keys.Where(k => k.StartsWith("vnp_")))
@@ -69,7 +72,7 @@ public class VNPayService : IPaymentGateway
         foreach (var key in query.Keys)
             result.RawData[key] = query[key].ToString();
 
-        return result;
+        return Task.FromResult(result);
     }
 
     private static string HmacSHA512(string key, string data)

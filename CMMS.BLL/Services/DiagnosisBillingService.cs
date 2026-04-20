@@ -103,50 +103,89 @@ public class DiagnosisBillingService : IDiagnosisBillingService
             return new ApiResponse<PaymentUrlResponse> { Success = false, Message = "Không có chẩn đoán nào trong tháng" };
 
         var totalAmount = totalDiagnoses * setting.PricePerDiagnosis;
+        var paymentId = Guid.NewGuid();
+        var orderInfo = $"Thanh toan chan doan {setting.Month:MM/yyyy} - {setting.Expert?.Fullname}";
+
+        var gateway = GetGateway(request.Provider);
+        var gatewayResult = await gateway.CreatePaymentUrlAsync(paymentId, totalAmount, orderInfo);
 
         var payment = new DiagnosisPayment
         {
-            Id = Guid.NewGuid(),
+            Id = paymentId,
             PriceSettingId = request.PriceSettingId,
             TotalDiagnoses = totalDiagnoses,
             Amount = totalAmount,
             Status = "pending",
             PaymentProvider = request.Provider.ToLower(),
-            CreatedAt = DateTimeHelper.VnNow()
+            CreatedAt = DateTimeHelper.VnNow(),
+            PayOSOrderCode = gatewayResult.OrderCode
         };
         _db.DiagnosisPayments.Add(payment);
         await _db.SaveChangesAsync();
 
-        var orderInfo = $"Thanh toan chan doan {setting.Month:MM/yyyy} - {setting.Expert?.Fullname}";
-        var gateway = GetGateway(request.Provider);
-        var paymentUrl = gateway.CreatePaymentUrl(payment.Id, totalAmount, orderInfo);
-
         return new ApiResponse<PaymentUrlResponse>
         {
             Success = true,
-            Data = new PaymentUrlResponse { PaymentId = payment.Id, PaymentUrl = paymentUrl }
+            Data = new PaymentUrlResponse { PaymentId = paymentId, PaymentUrl = gatewayResult.Url }
         };
     }
 
     public async Task<ApiResponse<string>> ProcessPaymentCallbackAsync(string provider, IQueryCollection query)
     {
         var gateway = GetGateway(provider);
-        var result = gateway.ProcessCallback(query);
+        var result = await gateway.ProcessCallbackAsync(query);
 
-        if (!Guid.TryParse(result.PaymentId, out var paymentId))
-            return new ApiResponse<string> { Success = false, Message = "PaymentId không hợp lệ" };
+        DiagnosisPayment? payment = null;
+        var providerLower = provider.ToLower();
 
-        var payment = await _db.DiagnosisPayments.FirstOrDefaultAsync(p => p.Id == paymentId);
+        if (providerLower == "vnpay")
+        {
+            if (Guid.TryParse(result.PaymentId, out var pid))
+                payment = await _db.DiagnosisPayments.AsNoTracking().FirstOrDefaultAsync(p => p.Id == pid);
+        }
+        else if (providerLower == "payos")
+        {
+            if (long.TryParse(result.PaymentId, out var orderCode))
+                payment = await _db.DiagnosisPayments.AsNoTracking().FirstOrDefaultAsync(p => p.PayOSOrderCode == orderCode);
+        }
+
         if (payment == null)
             return new ApiResponse<string> { Success = false, Message = "Không tìm thấy giao dịch" };
 
-        payment.Status = result.Success ? "success" : "failed";
-        payment.ProviderData = JsonSerializer.Serialize(result.RawData);
+        if (payment.Status != "pending")
+        {
+            return new ApiResponse<string>
+            {
+                Success = payment.Status == "success",
+                Message = payment.Status == "success"
+                    ? "Thanh toán đã được xử lý trước đó"
+                    : "Thanh toán trước đó đã thất bại"
+            };
+        }
 
-        if (result.Success)
-            payment.PaidAt = DateTimeHelper.VnNow();
+        var newStatus = result.Success ? "success" : "failed";
+        var paidAt = result.Success ? (DateTime?)DateTimeHelper.VnNow() : null;
+        var providerData = JsonSerializer.Serialize(result.RawData);
 
-        await _db.SaveChangesAsync();
+        var rowsUpdated = await _db.DiagnosisPayments
+            .Where(p => p.Id == payment.Id && p.Status == "pending")
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(p => p.Status, newStatus)
+                .SetProperty(p => p.ProviderData, providerData)
+                .SetProperty(p => p.PaidAt, paidAt));
+
+        if (rowsUpdated == 0)
+        {
+            var latest = await _db.DiagnosisPayments.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == payment.Id);
+            return new ApiResponse<string>
+            {
+                Success = latest?.Status == "success",
+                Message = latest?.Status == "success"
+                    ? "Thanh toán đã được xử lý trước đó"
+                    : "Thanh toán trước đó đã thất bại"
+            };
+        }
 
         return new ApiResponse<string>
         {
@@ -189,7 +228,7 @@ public class DiagnosisBillingService : IDiagnosisBillingService
 
         return await _db.DiagnosisResults
             .Where(dr => dr.DiagnosedBy == setting.ExpertId
-                && dr.Status == "confirmed"
+                && dr.Status == "FINAL"
                 && dr.CreatedAt >= monthStart
                 && dr.CreatedAt < monthEnd)
             .Join(_db.Reports,
