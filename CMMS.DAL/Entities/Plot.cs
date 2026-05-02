@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -31,9 +31,11 @@ public partial class Plot
     public string? PlotStatus { get; set; }
 
     [Column(TypeName = "timestamp")]
-    public DateTime? BedCreatedAt { get; set; }
+    public DateTime? PlotCreatedAt { get; set; }
 
     public virtual ICollection<Bed> Beds { get; set; } = new List<Bed>();
+
+    public virtual ICollection<Harvest> Harvests { get; set; } = new List<Harvest>();
 
     [ForeignKey("FarmId")]
     public virtual Farm? Farm { get; set; }

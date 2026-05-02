@@ -28,7 +28,7 @@ namespace CMMS.DAL.Repositories
         {
             return await _context.Reports
                 .AsNoTracking()
-                .Include(r => r.Creator)
+                .Include(r => r.Worker)
                 .Include(r => r.Owner)
                 .Include(r => r.EnvironmentSnapshots)
                 .OrderByDescending(r => r.CreatedAt)
@@ -39,7 +39,7 @@ namespace CMMS.DAL.Repositories
         {
             return await _context.Reports
                 .AsNoTracking()
-                .Include(r => r.Creator)
+                .Include(r => r.Worker)
                 .Include(r => r.Owner)
                 .Include(r => r.EnvironmentSnapshots)
                 .FirstOrDefaultAsync(r => r.ReportId == id);

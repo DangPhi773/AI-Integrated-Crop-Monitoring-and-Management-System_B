@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -37,7 +37,7 @@ public partial class Crop
 
     public virtual ICollection<SoilCropCompatibility> SoilCropCompatibilities { get; set; } = new List<SoilCropCompatibility>();
 
-    public virtual ICollection<SeasonsDetail> SeasonsDetails { get; set; } = new List<SeasonsDetail>();
+    public virtual ICollection<Harvest> Harvests { get; set; } = new List<Harvest>();
 
     public virtual ICollection<CropGrowthStage> CropGrowthStages { get; set; } = new List<CropGrowthStage>();
 }

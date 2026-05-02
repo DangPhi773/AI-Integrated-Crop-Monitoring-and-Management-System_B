@@ -62,7 +62,7 @@ namespace CMMS.BLL.Services
                     PlotWidth = request.PlotWidth,
                     PlotMargin = request.PlotMargin ?? 0.3,
                     PlotStatus = request.PlotStatus ?? "Active",
-                    BedCreatedAt = DateTimeHelper.VnNow()
+                    PlotCreatedAt = DateTimeHelper.VnNow()
                 };
 
                 await _plotRepo.AddAsync(entity);

@@ -1,24 +1,20 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CMMS.DAL.Entities;
 
-[Table("SeasonsDetail")]
-public partial class SeasonsDetail
+[Table("HarvestDetail")]
+public partial class HarvestDetail
 {
     [Key]
-    public Guid SeasonDetailId { get; set; }
+    public Guid HarvestDetailId { get; set; }
 
-    public Guid? SeasonId { get; set; }
+    [Required]
+    public Guid HarvestId { get; set; }
 
     public Guid? BedId { get; set; }
-
-    public Guid? CropId { get; set; }
-
-    [Column(TypeName = "date")]
-    public DateOnly? SeasonExpectedHarvestDate { get; set; }
 
     public int? CropQuantity { get; set; }
 
@@ -28,17 +24,11 @@ public partial class SeasonsDetail
     [Column(TypeName = "date")]
     public DateOnly? EndDate { get; set; }
 
-    [Column(TypeName = "decimal(18,2)")]
-    public decimal? TotalHarvestYield { get; set; }
+    [ForeignKey("HarvestId")]
+    public virtual Harvest Harvest { get; set; } = null!;
 
     [ForeignKey("BedId")]
     public virtual Bed? Bed { get; set; }
-
-    [ForeignKey("CropId")]
-    public virtual Crop? Crop { get; set; }
-
-    [ForeignKey("SeasonId")]
-    public virtual Season? Season { get; set; }
 
     public virtual ICollection<GrowthTracking> GrowthTrackings { get; set; } = new List<GrowthTracking>();
 }

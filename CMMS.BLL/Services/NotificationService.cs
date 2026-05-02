@@ -54,9 +54,9 @@ namespace CMMS.BLL.Services
             if (report == null) return;
 
             string workerName = "Worker";
-            if (report.CreatedBy.HasValue)
+            if (report.WorkerId.HasValue)
             {
-                var worker = await _userRepo.GetByIdAsync(report.CreatedBy.Value);
+                var worker = await _userRepo.GetByIdAsync(report.WorkerId.Value);
                 if (worker != null) workerName = worker.Fullname ?? worker.Email ?? "Worker";
             }
 

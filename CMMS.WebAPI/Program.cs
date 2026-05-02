@@ -37,7 +37,9 @@ builder.Services.AddScoped<IFarmRepository, FarmRepository>();
 builder.Services.AddScoped<ISoilRepository, SoilRepository>();
 builder.Services.AddScoped<IPlotRepository, PlotRepository>();
 builder.Services.AddScoped<IBedRepository, BedRepository>();
-builder.Services.AddScoped<ISeasonsDetailRepository, SeasonsDetailRepository>();
+builder.Services.AddScoped<IHarvestRepository, HarvestRepository>();
+builder.Services.AddScoped<IHarvestDetailRepository, HarvestDetailRepository>();
+builder.Services.AddScoped<IHarvestRecordRepository, HarvestRecordRepository>();
 builder.Services.AddScoped<IIotDeviceRepository, IotDeviceRepository>();
 builder.Services.AddScoped<IIotDataRepository, IotDataRepository>();
 builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>();
@@ -54,6 +56,7 @@ builder.Services.AddScoped<IReportEnvironmentSnapshotRepository, ReportEnvironme
 builder.Services.AddScoped<ISoilCropCompatibilityRepository, SoilCropCompatibilityRepository>();
 builder.Services.AddScoped<IRecommendationTaskRepository, RecommendationTaskRepository>();
 builder.Services.AddScoped<IRecommendationTaskDetailRepository, RecommendationTaskDetailRepository>();
+builder.Services.AddScoped<IGrowthTrackingRepository, GrowthTrackingRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICropService, CropService>();
@@ -65,7 +68,9 @@ builder.Services.AddScoped<IFarmService, FarmService>();
 builder.Services.AddScoped<ISoilService, SoilService>();
 builder.Services.AddScoped<IPlotService, PlotService>();
 builder.Services.AddScoped<IBedService, BedService>();
-builder.Services.AddScoped<ISeasonsDetailService, SeasonsDetailService>();
+builder.Services.AddScoped<IHarvestService, HarvestService>();
+builder.Services.AddScoped<IHarvestDetailService, HarvestDetailService>();
+builder.Services.AddScoped<IHarvestRecordService, HarvestRecordService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IIotDeviceService, IotDeviceService>();
 builder.Services.AddScoped<IIotDataService, IotDataService>();
@@ -78,6 +83,7 @@ builder.Services.AddScoped<ICropGrowthStageService, CropGrowthStageService>();
 builder.Services.AddScoped<ISoilCropCompatibilityService, SoilCropCompatibilityService>();
 builder.Services.AddScoped<IRecommendationTaskService, RecommendationTaskService>();
 builder.Services.AddScoped<IRecommendationTaskDetailService, RecommendationTaskDetailService>();
+builder.Services.AddScoped<IGrowthTrackingService, GrowthTrackingService>();
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("Cloudinary"));

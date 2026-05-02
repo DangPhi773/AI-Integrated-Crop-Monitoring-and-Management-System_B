@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -27,9 +27,6 @@ public partial class Bed
 
     public int? CropQuantities { get; set; }
 
-    [MaxLength(100)]
-    public string? PlantingPattern { get; set; }
-
     public int? RowCount { get; set; }
 
     public double? BedWidth { get; set; }
@@ -40,15 +37,10 @@ public partial class Bed
 
     public int? PlantCount { get; set; }
 
-    public Guid? CropId { get; set; }
-
     [ForeignKey("PlotId")]
     public virtual Plot? Plot { get; set; }
 
-    [ForeignKey("CropId")]
-    public virtual Crop? Crop { get; set; }
-
-    public virtual ICollection<SeasonsDetail> SeasonsDetails { get; set; } = new List<SeasonsDetail>();
+    public virtual ICollection<HarvestDetail> HarvestDetails { get; set; } = new List<HarvestDetail>();
 
     public virtual ICollection<IotDevice> IotDevices { get; set; } = new List<IotDevice>();
 }

@@ -1,8 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CMMS.DAL.DTOs.Beds
 {
@@ -14,7 +10,6 @@ namespace CMMS.DAL.DTOs.Beds
         public string? BedStatus { get; set; }
         public int? CropQuantities { get; set; }
 
-        public Guid? CropId { get; set; }
         public double? BedWidth { get; set; }
         public double? BedLength { get; set; }
         public double? PathWidth { get; set; }
@@ -32,7 +27,6 @@ namespace CMMS.DAL.DTOs.Beds
         public DateTime? BedCreatedAt { get; set; }
         public int? CropQuantities { get; set; }
 
-        public Guid? CropId { get; set; }
         public double? BedWidth { get; set; }
         public double? BedLength { get; set; }
         public double? PathWidth { get; set; }
@@ -40,7 +34,6 @@ namespace CMMS.DAL.DTOs.Beds
         public int? RowCount { get; set; }
 
         public string? PlotName { get; set; }
-        public string? CropName { get; set; }
-        public int SeasonsDetailsCount { get; set; } = 0;
+        public int HarvestDetailsCount { get; set; } = 0;
     }
 }

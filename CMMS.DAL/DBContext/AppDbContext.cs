@@ -41,7 +41,11 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Season> Seasons { get; set; }
 
-    public virtual DbSet<SeasonsDetail> SeasonsDetails { get; set; }
+    public virtual DbSet<Harvest> Harvests { get; set; }
+
+    public virtual DbSet<HarvestDetail> HarvestDetails { get; set; }
+
+    public virtual DbSet<HarvestRecord> HarvestRecords { get; set; }
 
     public virtual DbSet<Soil> Soils { get; set; }
 
@@ -118,21 +122,15 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.BedStatus).HasColumnName("bed_status");
             entity.Property(e => e.CropQuantities).HasColumnName("crop_quantities");
             entity.Property(e => e.PlotId).HasColumnName("plot_id");
-            entity.Property(e => e.PlantingPattern).HasColumnName("planting_pattern");
             entity.Property(e => e.RowCount).HasColumnName("row_count");
             entity.Property(e => e.BedWidth).HasColumnName("bed_width");
             entity.Property(e => e.BedLength).HasColumnName("bed_length");
             entity.Property(e => e.PathWidth).HasColumnName("path_width");
             entity.Property(e => e.PlantCount).HasColumnName("plant_count");
-            entity.Property(e => e.CropId).HasColumnName("crop_id");
 
             entity.HasOne(d => d.Plot).WithMany(p => p.Beds)
                 .HasForeignKey(d => d.PlotId)
                 .HasConstraintName("beds_plot_id_fkey");
-
-            entity.HasOne(d => d.Crop).WithMany()
-                .HasForeignKey(d => d.CropId)
-                .HasConstraintName("beds_crop_id_fkey");
         });
 
         modelBuilder.Entity<Crop>(entity =>
@@ -216,9 +214,9 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.PlotId)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("plot_id");
-            entity.Property(e => e.BedCreatedAt)
+            entity.Property(e => e.PlotCreatedAt)
                 .HasDefaultValueSql("now()")
-                .HasColumnName("bed_created_at");
+                .HasColumnName("plot_created_at");
             entity.Property(e => e.FarmId).HasColumnName("farm_id");
             entity.Property(e => e.PlotArea).HasColumnName("plot_area");
             entity.Property(e => e.PlotLength).HasColumnName("plot_length");
@@ -355,7 +353,7 @@ public partial class AppDbContext : DbContext
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("report_id");
             entity.Property(e => e.ReportNo).HasColumnName("report_no");
-            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.WorkerId).HasColumnName("worker_id");
             entity.Property(e => e.OwnerId).HasColumnName("owner_id");
             entity.Property(e => e.Title).HasColumnName("title");
             entity.Property(e => e.Description).HasColumnName("description");
@@ -371,9 +369,9 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.SubmitDate).HasColumnName("submit_date");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
 
-            entity.HasOne(d => d.Creator).WithMany(p => p.CreatedReports)
-                .HasForeignKey(d => d.CreatedBy)
-                .HasConstraintName("report_created_by_fkey");
+            entity.HasOne(d => d.Worker).WithMany(p => p.WorkerReports)
+                .HasForeignKey(d => d.WorkerId)
+                .HasConstraintName("report_worker_id_fkey");
 
             entity.HasOne(d => d.Owner).WithMany(p => p.OwnedReports)
                 .HasForeignKey(d => d.OwnerId)
@@ -429,35 +427,92 @@ public partial class AppDbContext : DbContext
                 .HasConstraintName("seasons_farm_id_fkey");
         });
 
-        modelBuilder.Entity<SeasonsDetail>(entity =>
+        modelBuilder.Entity<Harvest>(entity =>
         {
-            entity.HasKey(e => e.SeasonDetailId).HasName("seasons_detail_pkey");
+            entity.HasKey(e => e.HarvestId).HasName("harvest_pkey");
 
-            entity.ToTable("seasons_detail");
+            entity.ToTable("harvest");
 
-            entity.Property(e => e.SeasonDetailId)
+            entity.Property(e => e.HarvestId)
                 .HasDefaultValueSql("gen_random_uuid()")
-                .HasColumnName("season_detail_id");
-            entity.Property(e => e.BedId).HasColumnName("bed_id");
-            entity.Property(e => e.CropId).HasColumnName("crop_id");
-            entity.Property(e => e.CropQuantity).HasColumnName("crop_quantity");
-            entity.Property(e => e.EndDate).HasColumnName("end_date");
-            entity.Property(e => e.SeasonExpectedHarvestDate).HasColumnName("season_expected_harvest_date");
+                .HasColumnName("harvest_id");
+            entity.Property(e => e.PlotId).HasColumnName("plot_id");
             entity.Property(e => e.SeasonId).HasColumnName("season_id");
-            entity.Property(e => e.StartDate).HasColumnName("start_date");
-            entity.Property(e => e.TotalHarvestYield).HasColumnName("total_harvest_yield");
+            entity.Property(e => e.CropId).HasColumnName("crop_id");
+            entity.Property(e => e.ExpectedDate).HasColumnName("expected_date");
+            entity.Property(e => e.ExpectedQuantity).HasColumnName("expected_quantity");
+            entity.Property(e => e.Unit).HasColumnName("unit").HasMaxLength(20);
+            entity.Property(e => e.Status).HasColumnName("status").HasMaxLength(20).HasDefaultValue("planned");
+            entity.Property(e => e.Notes).HasColumnName("notes");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
 
-            entity.HasOne(d => d.Bed).WithMany(p => p.SeasonsDetails)
-                .HasForeignKey(d => d.BedId)
-                .HasConstraintName("seasons_detail_bed_id_fkey");
+            entity.HasOne(d => d.Plot).WithMany(p => p.Harvests)
+                .HasForeignKey(d => d.PlotId)
+                .HasConstraintName("harvest_plot_id_fkey");
 
-            entity.HasOne(d => d.Crop).WithMany(p => p.SeasonsDetails)
-                .HasForeignKey(d => d.CropId)
-                .HasConstraintName("seasons_detail_crop_id_fkey");
-
-            entity.HasOne(d => d.Season).WithMany(p => p.SeasonsDetails)
+            entity.HasOne(d => d.Season).WithMany(p => p.Harvests)
                 .HasForeignKey(d => d.SeasonId)
-                .HasConstraintName("seasons_detail_season_id_fkey");
+                .HasConstraintName("harvest_season_id_fkey");
+
+            entity.HasOne(d => d.Crop).WithMany(p => p.Harvests)
+                .HasForeignKey(d => d.CropId)
+                .HasConstraintName("harvest_crop_id_fkey");
+        });
+
+        modelBuilder.Entity<HarvestDetail>(entity =>
+        {
+            entity.HasKey(e => e.HarvestDetailId).HasName("harvest_detail_pkey");
+
+            entity.ToTable("harvest_detail");
+
+            entity.Property(e => e.HarvestDetailId)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("harvest_detail_id");
+            entity.Property(e => e.HarvestId).HasColumnName("harvest_id");
+            entity.Property(e => e.BedId).HasColumnName("bed_id");
+            entity.Property(e => e.CropQuantity).HasColumnName("crop_quantity");
+            entity.Property(e => e.StartDate).HasColumnName("start_date");
+            entity.Property(e => e.EndDate).HasColumnName("end_date");
+
+            entity.HasOne(d => d.Harvest).WithMany(p => p.HarvestDetails)
+                .HasForeignKey(d => d.HarvestId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("harvest_detail_harvest_id_fkey");
+
+            entity.HasOne(d => d.Bed).WithMany(p => p.HarvestDetails)
+                .HasForeignKey(d => d.BedId)
+                .HasConstraintName("harvest_detail_bed_id_fkey");
+        });
+
+        modelBuilder.Entity<HarvestRecord>(entity =>
+        {
+            entity.HasKey(e => e.HarvestRecordId).HasName("harvest_record_pkey");
+
+            entity.ToTable("harvest_record");
+
+            entity.Property(e => e.HarvestRecordId)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("harvest_record_id");
+            entity.Property(e => e.HarvestId).HasColumnName("harvest_id");
+            entity.Property(e => e.HarvestDate).HasColumnName("harvest_date");
+            entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property(e => e.SaleDate).HasColumnName("sale_date");
+            entity.Property(e => e.SoldQuantity).HasColumnName("sold_quantity");
+            entity.Property(e => e.UnitPrice).HasColumnName("unit_price");
+            entity.Property(e => e.TotalAmount).HasColumnName("total_amount");
+            entity.Property(e => e.BuyerName).HasColumnName("buyer_name").HasMaxLength(200);
+            entity.Property(e => e.SaleChannel).HasColumnName("sale_channel").HasMaxLength(50);
+            entity.Property(e => e.Notes).HasColumnName("notes");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.Harvest).WithMany(p => p.HarvestRecords)
+                .HasForeignKey(d => d.HarvestId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("harvest_record_harvest_id_fkey");
+
+            entity.HasIndex(e => e.HarvestDate).HasDatabaseName("idx_harvest_record_harvest_date");
+            entity.HasIndex(e => e.SaleDate).HasDatabaseName("idx_harvest_record_sale_date");
         });
 
         modelBuilder.Entity<Soil>(entity =>
@@ -653,82 +708,124 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<SoilCropCompatibility>(entity =>
         {
-            entity.ToTable("soil_crop_compatibility"); 
+            entity.ToTable("soil_crop_compatibility");
             entity.HasKey(e => e.ComptId);
+
+            entity.Property(e => e.ComptId).HasColumnName("compt_id");
+            entity.Property(e => e.SoilId).HasColumnName("soil_id");
+            entity.Property(e => e.CropId).HasColumnName("crop_id");
+            entity.Property(e => e.Compatibility).HasColumnName("compatibility");
+            entity.Property(e => e.Note).HasColumnName("note");
 
             entity.HasOne(d => d.Soil)
                 .WithMany(p => p.SoilCropCompatibilities)
                 .HasForeignKey(d => d.SoilId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("soil_crop_compatibility_soil_id_fkey");
 
             entity.HasOne(d => d.Crop)
                 .WithMany(p => p.SoilCropCompatibilities)
                 .HasForeignKey(d => d.CropId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("soil_crop_compatibility_crop_id_fkey");
         });
 
-        modelBuilder.Entity<CropGrowthStage>(entity => {
+        modelBuilder.Entity<CropGrowthStage>(entity =>
+        {
             entity.ToTable("crop_growth_stages");
             entity.HasKey(e => e.StageId);
+
             entity.Property(e => e.StageId).HasColumnName("stage_id");
+            entity.Property(e => e.CropId).HasColumnName("crop_id");
+            entity.Property(e => e.StageName).HasColumnName("stage_name");
+            entity.Property(e => e.StageDescription).HasColumnName("stage_description");
+            entity.Property(e => e.TemperatureMin).HasColumnName("temperature_min");
+            entity.Property(e => e.HumidityMin).HasColumnName("humidity_min");
+            entity.Property(e => e.SoilMoistureMin).HasColumnName("soil_moisture_min");
+            entity.Property(e => e.GrowthIndicators).HasColumnName("growth_indicators");
+            entity.Property(e => e.CommonDiseases).HasColumnName("common_diseases");
+            entity.Property(e => e.Notes).HasColumnName("notes");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
 
             entity.HasOne(d => d.Crop)
                   .WithMany(p => p.CropGrowthStages)
-                  .HasForeignKey(d => d.CropId);
+                  .HasForeignKey(d => d.CropId)
+                  .HasConstraintName("crop_growth_stages_crop_id_fkey");
         });
 
         modelBuilder.Entity<CropGrowthTask>(entity =>
         {
             entity.ToTable("crop_growth_tasks");
             entity.HasKey(e => e.GrowthTaskId);
+
             entity.Property(e => e.GrowthTaskId)
-                  .HasColumnName("GrowthTaskId") 
+                  .HasColumnName("growth_task_id")
                   .HasDefaultValueSql("gen_random_uuid()");
 
-            entity.Property(e => e.StageId)
-                  .HasColumnName("StageId"); 
-
-            entity.Property(e => e.TaskName)
-                  .HasColumnName("TaskName")
-                  .IsRequired();
+            entity.Property(e => e.StageId).HasColumnName("stage_id");
+            entity.Property(e => e.TaskId).HasColumnName("task_id");
 
             entity.Property(e => e.CreatedAt)
-                  .HasColumnName("CreatedAt") 
+                  .HasColumnName("created_at")
                   .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-            entity.Property(e => e.TaskDescription).HasColumnName("TaskDescription");
-            entity.Property(e => e.Frequency).HasColumnName("Frequency");
-            entity.Property(e => e.DurationMinutes).HasColumnName("DurationMinutes");
-            entity.Property(e => e.RequiredTools).HasColumnName("RequiredTools");
-            entity.Property(e => e.RequiredMaterials).HasColumnName("RequiredMaterials");
-            entity.Property(e => e.QuantityPerUnit).HasColumnName("QuantityPerUnit");
-            entity.Property(e => e.QuantityUnit).HasColumnName("QuantityUnit");
-            entity.Property(e => e.Priority).HasColumnName("Priority");
-            entity.Property(e => e.IsMandatory).HasColumnName("IsMandatory");
-            entity.Property(e => e.Notes).HasColumnName("Notes");
+            entity.Property(e => e.TaskDescription).HasColumnName("task_description");
+            entity.Property(e => e.Frequency).HasColumnName("frequency");
+            entity.Property(e => e.DurationMinutes).HasColumnName("duration_minutes");
+            entity.Property(e => e.RequiredTools).HasColumnName("required_tools");
+            entity.Property(e => e.RequiredMaterials).HasColumnName("required_materials");
+            entity.Property(e => e.QuantityPerUnit).HasColumnName("quantity_per_unit");
+            entity.Property(e => e.QuantityUnit).HasColumnName("quantity_unit");
+            entity.Property(e => e.Priority).HasColumnName("priority");
+            entity.Property(e => e.IsMandatory).HasColumnName("is_mandatory");
+            entity.Property(e => e.Notes).HasColumnName("notes");
 
             entity.HasOne(d => d.CropGrowthStage)
                   .WithMany(p => p.CropGrowthTasks)
                   .HasForeignKey(d => d.StageId)
                   .OnDelete(DeleteBehavior.Cascade)
-                  .HasConstraintName("FK_CropGrowthTasks_CropGrowthStages");
+                  .HasConstraintName("crop_growth_tasks_stage_id_fkey");
+
+            entity.HasOne(d => d.Task)
+                  .WithMany()
+                  .HasForeignKey(d => d.TaskId)
+                  .HasConstraintName("crop_growth_tasks_task_id_fkey");
         });
 
         modelBuilder.Entity<GrowthTracking>(entity =>
         {
             entity.ToTable("growth_tracking");
             entity.HasKey(e => e.TrackingId);
-            entity.Property(e => e.TrackingId).HasColumnName("tracking_id");
 
-            entity.HasOne(d => d.SeasonDetail)
+            entity.Property(e => e.TrackingId).HasColumnName("tracking_id");
+            entity.Property(e => e.HarvestDetailId).HasColumnName("harvest_detail_id");
+            entity.Property(e => e.StageId).HasColumnName("stage_id");
+            entity.Property(e => e.StartDate).HasColumnName("start_date");
+            entity.Property(e => e.EndDate).HasColumnName("end_date");
+            entity.Property(e => e.TrackingStatus).HasColumnName("tracking_status");
+            entity.Property(e => e.HealthStatus).HasColumnName("health_status");
+            entity.Property(e => e.ActualHeight).HasColumnName("actual_height");
+            entity.Property(e => e.ActualYield).HasColumnName("actual_yield");
+            entity.Property(e => e.DelayDays).HasColumnName("delay_days");
+            entity.Property(e => e.DelayReason).HasColumnName("delay_reason");
+            entity.Property(e => e.LastUpdatedBy).HasColumnName("last_updated_by");
+            entity.Property(e => e.LastObservedAt).HasColumnName("last_observed_at");
+            entity.Property(e => e.Notes).HasColumnName("notes");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+            entity.HasOne(d => d.HarvestDetail)
                   .WithMany(p => p.GrowthTrackings)
-                  .HasForeignKey(d => d.SeasonDetailId)
-                  .OnDelete(DeleteBehavior.Cascade); 
+                  .HasForeignKey(d => d.HarvestDetailId)
+                  .OnDelete(DeleteBehavior.Cascade)
+                  .HasConstraintName("growth_tracking_harvest_detail_id_fkey");
 
             entity.HasOne(d => d.CropGrowthStage)
                   .WithMany(p => p.GrowthTrackings)
                   .HasForeignKey(d => d.StageId)
-                  .OnDelete(DeleteBehavior.Restrict);
+                  .OnDelete(DeleteBehavior.Restrict)
+                  .HasConstraintName("growth_tracking_stage_id_fkey");
         });
 
         modelBuilder.Entity<SubTask>(entity =>

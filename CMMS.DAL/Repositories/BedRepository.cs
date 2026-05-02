@@ -2,11 +2,6 @@ using CMMS.DAL.DBContext;
 using CMMS.DAL.Entities;
 using CMMS.DAL.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CMMS.DAL.Repositories
 {
@@ -18,16 +13,14 @@ namespace CMMS.DAL.Repositories
         public async Task<IEnumerable<Bed>> GetAllAsync()
             => await _context.Beds
                 .Include(b => b.Plot)
-                .Include(b => b.Crop)
-                .Include(b => b.SeasonsDetails)
+                .Include(b => b.HarvestDetails)
                 .AsNoTracking()
                 .ToListAsync();
 
         public async Task<Bed?> GetByIdAsync(Guid id)
             => await _context.Beds
                 .Include(b => b.Plot)
-                .Include(b => b.Crop)
-                .Include(b => b.SeasonsDetails)
+                .Include(b => b.HarvestDetails)
                 .FirstOrDefaultAsync(b => b.BedId == id);
 
         public async System.Threading.Tasks.Task AddAsync(Bed bed) => await _context.Beds.AddAsync(bed);
@@ -43,8 +36,7 @@ namespace CMMS.DAL.Repositories
         {
             return await _context.Beds
                 .Include(b => b.Plot)
-                .Include(b => b.Crop)
-                .Include(b => b.SeasonsDetails)
+                .Include(b => b.HarvestDetails)
                 .Where(b => b.PlotId == plotId)
                 .ToListAsync();
         }
