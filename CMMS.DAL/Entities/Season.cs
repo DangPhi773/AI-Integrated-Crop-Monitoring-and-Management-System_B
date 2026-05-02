@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -36,6 +36,6 @@ public partial class Season
     public virtual Farm? Farm { get; set; }
 
     public virtual ICollection<Recommendation> Recommendations { get; set; } = new List<Recommendation>();
-    public virtual ICollection<SeasonsDetail> SeasonsDetails { get; set; } = new List<SeasonsDetail>();
+    public virtual ICollection<Harvest> Harvests { get; set; } = new List<Harvest>();
     public virtual ICollection<TaskDetail> TaskDetails { get; set; } = new List<TaskDetail>();
 }

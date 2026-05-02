@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System;
 
 namespace CMMS.DAL.DTOs.Tasks
 {
     public class CropGrowthTaskRequest
     {
         public Guid StageId { get; set; }
-        public string TaskName { get; set; } = null!;
+        public Guid? TaskId { get; set; }
         public string? TaskDescription { get; set; }
         public string? Frequency { get; set; }
         public int? DurationMinutes { get; set; }
@@ -27,7 +23,8 @@ namespace CMMS.DAL.DTOs.Tasks
         public Guid GrowthTaskId { get; set; }
         public Guid StageId { get; set; }
         public string? StageName { get; set; }
-        public string TaskName { get; set; } = null!;
+        public Guid? TaskId { get; set; }
+        public string? TaskTitle { get; set; }
         public string? TaskDescription { get; set; }
         public string? Frequency { get; set; }
         public int? DurationMinutes { get; set; }

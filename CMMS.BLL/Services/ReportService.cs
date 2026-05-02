@@ -81,7 +81,7 @@ namespace CMMS.BLL.Services
             {
                 ReportId = Guid.NewGuid(),
                 ReportNo = reportNo,
-                CreatedBy = createdByUserId,
+                WorkerId = createdByUserId,
                 OwnerId = request.OwnerId,
                 Title = request.Title,
                 Description = request.Description,

@@ -16,7 +16,7 @@ namespace CMMS.BLL.Mappings
             PlotWidth = p.PlotWidth,
             PlotMargin = p.PlotMargin,
             PlotStatus = p.PlotStatus,
-            BedCreatedAt = p.BedCreatedAt,
+            PlotCreatedAt = p.PlotCreatedAt,
             FarmName = p.Farm?.FarmName,
             SoilName = p.Soil?.Name,
             BedsCount = p.Beds?.Count ?? 0

@@ -9,8 +9,8 @@ namespace CMMS.BLL.Mappings
         {
             ReportId = r.ReportId,
             ReportNo = r.ReportNo,
-            CreatedBy = r.CreatedBy,
-            CreatorName = r.Creator?.Fullname,
+            WorkerId = r.WorkerId,
+            WorkerName = r.Worker?.Fullname,
             OwnerId = r.OwnerId,
             OwnerName = r.Owner?.Fullname,
             Title = r.Title,

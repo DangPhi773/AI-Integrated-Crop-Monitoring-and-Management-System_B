@@ -5,10 +5,6 @@ using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Beds;
 using CMMS.DAL.Entities;
 using CMMS.DAL.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CMMS.BLL.Services
 {
@@ -68,7 +64,6 @@ namespace CMMS.BLL.Services
                     BedArea = request.BedArea,
                     BedStatus = request.BedStatus ?? "Active",
                     CropQuantities = request.CropQuantities,
-                    CropId = request.CropId,
                     BedWidth = request.BedWidth,
                     BedLength = request.BedLength,
                     PathWidth = request.PathWidth,
@@ -101,7 +96,6 @@ namespace CMMS.BLL.Services
                 entity.BedArea = request.BedArea ?? entity.BedArea;
                 entity.BedStatus = request.BedStatus ?? entity.BedStatus;
                 entity.CropQuantities = request.CropQuantities ?? entity.CropQuantities;
-                entity.CropId = request.CropId ?? entity.CropId;
                 entity.BedWidth = request.BedWidth ?? entity.BedWidth;
                 entity.BedLength = request.BedLength ?? entity.BedLength;
                 entity.PathWidth = request.PathWidth ?? entity.PathWidth;
@@ -137,7 +131,7 @@ namespace CMMS.BLL.Services
                     };
                 }
 
-                if (entity.SeasonsDetails != null && entity.SeasonsDetails.Any())
+                if (entity.HarvestDetails != null && entity.HarvestDetails.Any())
                 {
                     return new ApiResponse<string>
                     {
@@ -196,7 +190,6 @@ namespace CMMS.BLL.Services
                     {
                         BedId = Guid.NewGuid(),
                         PlotId = request.PlotId,
-                        CropId = request.CropId,
                         BedName = b.BedName,
                         BedArea = (decimal)b.BedArea,
                         BedLength = b.BedLength,

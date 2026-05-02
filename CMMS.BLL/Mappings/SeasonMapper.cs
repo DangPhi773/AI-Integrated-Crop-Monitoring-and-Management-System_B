@@ -1,5 +1,4 @@
 using CMMS.DAL.DTOs.Seasons;
-using CMMS.DAL.DTOs.SeasonsDetails;
 using CMMS.DAL.Entities;
 
 namespace CMMS.BLL.Mappings
@@ -17,19 +16,8 @@ namespace CMMS.BLL.Mappings
             SeasonNotes = s.SeasonNotes,
             SeasonCreatedAt = s.SeasonCreatedAt,
             Status = s.Status,
-            SeasonsDetailsCount = s.SeasonsDetails?.Count ?? 0,
-            TasksCount = s.TaskDetails?.Count ?? 0,
-            SeasonsDetails = s.SeasonsDetails?.Select(d => new SeasonsDetailDto
-            {
-                SeasonDetailId = d.SeasonDetailId,
-                BedId = d.BedId,
-                CropId = d.CropId,
-                CropQuantity = d.CropQuantity,
-                StartDate = d.StartDate,
-                EndDate = d.EndDate,
-                SeasonExpectedHarvestDate = d.SeasonExpectedHarvestDate,
-                TotalHarvestYield = d.TotalHarvestYield
-            }).ToList() ?? new List<SeasonsDetailDto>()
+            HarvestsCount = s.Harvests?.Count ?? 0,
+            TasksCount = s.TaskDetails?.Count ?? 0
         };
     }
 }

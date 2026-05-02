@@ -56,7 +56,7 @@ namespace CMMS.BLL.Services
                 {
                     GrowthTaskId = Guid.NewGuid(),
                     StageId = request.StageId,
-                    TaskName = request.TaskName,
+                    TaskId = request.TaskId,
                     TaskDescription = request.TaskDescription,
                     Frequency = request.Frequency,
                     DurationMinutes = request.DurationMinutes,
@@ -98,7 +98,7 @@ namespace CMMS.BLL.Services
                 if (entity == null) return new ApiResponse<string> { Success = false, Message = "Không tìm thấy dữ liệu." };
 
                 entity.StageId = request.StageId;
-                entity.TaskName = request.TaskName;
+                entity.TaskId = request.TaskId;
                 entity.TaskDescription = request.TaskDescription;
                 entity.Frequency = request.Frequency;
                 entity.DurationMinutes = request.DurationMinutes;
