@@ -2,6 +2,7 @@ using System.Text.Json;
 using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
 using CMMS.BLL.Mappings;
+using CMMS.BLL.Realtime;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.IotDatas;
 using CMMS.DAL.Entities;
@@ -14,15 +15,18 @@ namespace CMMS.BLL.Services
         private readonly IIotDataRepository _dataRepo;
         private readonly IIotDeviceRepository _deviceRepo;
         private readonly ISeasonRepository _seasonRepo;
+        private readonly IIotRealtime _realtime;
 
         public SensorDataService(
             IIotDataRepository dataRepo,
             IIotDeviceRepository deviceRepo,
-            ISeasonRepository seasonRepo)
+            ISeasonRepository seasonRepo,
+            IIotRealtime realtime)
         {
             _dataRepo = dataRepo;
             _deviceRepo = deviceRepo;
             _seasonRepo = seasonRepo;
+            _realtime = realtime;
         }
 
         public async Task<SensorDataResponse> ProcessSensorDataAsync(IotDevice device, SensorDataRequest request)
@@ -53,6 +57,25 @@ namespace CMMS.BLL.Services
 
             await _dataRepo.AddAsync(iotData);
             await _deviceRepo.SaveChangesAsync();
+
+            var farmId = device.Bed?.Plot?.FarmId;
+            if (farmId.HasValue)
+            {
+                await _realtime.PushSensorDataAsync(farmId.Value, device.DeviceId, new
+                {
+                    sensorDataId = iotData.SensorDataId,
+                    deviceId = device.DeviceId,
+                    deviceCode = device.DeviceCode,
+                    seasonId = iotData.SeasonId,
+                    recordedAt = iotData.RecordedAt,
+                    temperature = iotData.Temperature,
+                    humidity = iotData.Humidity,
+                    soilMoisture = iotData.SoilMoisture,
+                    light = iotData.Light,
+                    isRaining = iotData.IsRaining,
+                    isAlert = iotData.IsAlert
+                });
+            }
 
             return new SensorDataResponse
             {

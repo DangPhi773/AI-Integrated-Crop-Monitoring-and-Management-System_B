@@ -1,5 +1,6 @@
 using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
+using CMMS.BLL.Realtime;
 using CMMS.DAL.Entities;
 using CMMS.DAL.Interfaces;
 
@@ -12,19 +13,22 @@ namespace CMMS.BLL.Services
         private readonly INotificationRepository _notificationRepo;
         private readonly IEmailService _emailService;
         private readonly IEmailTemplateService _templateService;
+        private readonly INotificationRealtime _realtime;
 
         public NotificationService(
             IUserRepository userRepo,
             IReportRepository reportRepo,
             INotificationRepository notificationRepo,
             IEmailService emailService,
-            IEmailTemplateService templateService)
+            IEmailTemplateService templateService,
+            INotificationRealtime realtime)
         {
             _userRepo = userRepo;
             _reportRepo = reportRepo;
             _notificationRepo = notificationRepo;
             _emailService = emailService;
             _templateService = templateService;
+            _realtime = realtime;
         }
 
         public async System.Threading.Tasks.Task NotifyNewWorkerAsync(Guid workerId)
@@ -35,7 +39,7 @@ namespace CMMS.BLL.Services
             var (subject, htmlBody) = _templateService.BuildWelcomeWorkerEmail(worker.Fullname ?? "Worker", worker.Email);
             await _emailService.SendEmailAsync(worker.Email, subject, htmlBody);
 
-            await _notificationRepo.AddAsync(new Notification
+            var notification = new Notification
             {
                 NoteId = Guid.NewGuid(),
                 UserId = workerId,
@@ -44,8 +48,18 @@ namespace CMMS.BLL.Services
                 NoteMessage = $"Welcome email sent to {worker.Email}",
                 NoteStatus = "sent",
                 NoteCreatedAt = DateTimeHelper.VnNow()
-            });
+            };
+            await _notificationRepo.AddAsync(notification);
             await _notificationRepo.SaveChangesAsync();
+
+            await _realtime.PushToUserAsync(workerId, new
+            {
+                noteId = notification.NoteId,
+                noteType = notification.NoteType,
+                noteTitle = notification.NoteTitle,
+                noteMessage = notification.NoteMessage,
+                createdAt = notification.NoteCreatedAt
+            });
         }
 
         public async System.Threading.Tasks.Task NotifyNewReportAsync(Guid reportId)
@@ -79,10 +93,23 @@ namespace CMMS.BLL.Services
                 NoteMessage = $"New report notification sent to {r.Email}",
                 NoteStatus = "sent",
                 NoteCreatedAt = now
-            });
+            }).ToList();
 
             await _notificationRepo.AddRangeAsync(notifications);
             await _notificationRepo.SaveChangesAsync();
+
+            foreach (var n in notifications)
+            {
+                await _realtime.PushToUserAsync(n.UserId!.Value, new
+                {
+                    noteId = n.NoteId,
+                    noteType = n.NoteType,
+                    noteTitle = n.NoteTitle,
+                    noteMessage = n.NoteMessage,
+                    reportId = reportId,
+                    createdAt = n.NoteCreatedAt
+                });
+            }
         }
     }
 }
