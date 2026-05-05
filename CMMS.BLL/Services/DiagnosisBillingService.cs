@@ -1,5 +1,6 @@
 using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
+using CMMS.BLL.Realtime;
 using CMMS.DAL.DBContext;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Payment;
@@ -15,12 +16,14 @@ public class DiagnosisBillingService : IDiagnosisBillingService
     private readonly AppDbContext _db;
     private readonly VNPayService _vnpay;
     private readonly PayOSService _payos;
+    private readonly IPaymentRealtime _realtime;
 
-    public DiagnosisBillingService(AppDbContext db, VNPayService vnpay, PayOSService payos)
+    public DiagnosisBillingService(AppDbContext db, VNPayService vnpay, PayOSService payos, IPaymentRealtime realtime)
     {
         _db = db;
         _vnpay = vnpay;
         _payos = payos;
+        _realtime = realtime;
     }
 
     public async Task<ApiResponse<BillInfoResponse>> CreatePriceSettingAsync(CreatePriceSettingRequest request, Guid userId)
@@ -185,6 +188,23 @@ public class DiagnosisBillingService : IDiagnosisBillingService
                     ? "Thanh toán đã được xử lý trước đó"
                     : "Thanh toán trước đó đã thất bại"
             };
+        }
+
+        var ownerId = await _db.DiagnosisPriceSettings.AsNoTracking()
+            .Where(x => x.Id == payment.PriceSettingId)
+            .Select(x => x.CreatedBy)
+            .FirstOrDefaultAsync();
+
+        if (ownerId.HasValue && ownerId.Value != Guid.Empty)
+        {
+            await _realtime.PushPaymentStatusAsync(ownerId.Value, new
+            {
+                paymentId = payment.Id,
+                status = newStatus,
+                amount = payment.Amount,
+                provider = providerLower,
+                paidAt
+            });
         }
 
         return new ApiResponse<string>

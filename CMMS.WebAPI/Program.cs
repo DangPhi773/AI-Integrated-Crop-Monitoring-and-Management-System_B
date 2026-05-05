@@ -1,9 +1,12 @@
 ﻿using CMMS.BLL.Configuration;
 using CMMS.BLL.Interfaces;
+using CMMS.BLL.Realtime;
 using CMMS.BLL.Services;
 using CMMS.DAL.DBContext;
 using CMMS.DAL.Interfaces;
 using CMMS.DAL.Repositories;
+using CMMS.WebAPI.Hubs;
+using CMMS.WebAPI.Hubs.Publishers;
 using CMMS.WebAPI.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +15,7 @@ using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -101,6 +105,18 @@ builder.Services.AddScoped<VNPayService>();
 builder.Services.AddHttpClient<PayOSService>();
 builder.Services.AddScoped<IDiagnosisBillingService, DiagnosisBillingService>();
 
+builder.Services.AddSignalR()
+    .AddMessagePackProtocol()
+    .AddJsonProtocol(opts =>
+    {
+        opts.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
+
+builder.Services.AddScoped<INotificationRealtime, NotificationRealtimePublisher>();
+builder.Services.AddScoped<IIotRealtime, IotRealtimePublisher>();
+builder.Services.AddScoped<ITaskRealtime, TaskRealtimePublisher>();
+builder.Services.AddScoped<IPaymentRealtime, PaymentRealtimePublisher>();
+
 builder.Services.AddEndpointsApiExplorer();
 var allowedOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
@@ -118,7 +134,8 @@ builder.Services.AddCors(options =>
                     && uri.Host.EndsWith(".vercel.app");
             })
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -130,7 +147,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true, 
+            ValidateIssuer = true,
             ValidateAudience = true,
             ValidIssuer = jwtSettings["Issuer"],
             ValidAudience = jwtSettings["Audience"],
@@ -139,7 +156,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(key),
             RoleClaimType = ClaimTypes.Role,
             NameClaimType = ClaimTypes.NameIdentifier,
-            ClockSkew = TimeSpan.Zero 
+            ClockSkew = TimeSpan.Zero
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = ctx =>
+            {
+                var accessToken = ctx.Request.Query["access_token"];
+                var path = ctx.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                    ctx.Token = accessToken;
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -193,5 +221,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<NotificationHub>("/hubs/notifications");
+app.MapHub<IotHub>("/hubs/iot");
+app.MapHub<TaskHub>("/hubs/tasks");
+app.MapHub<PaymentHub>("/hubs/payments");
 
 app.Run();
