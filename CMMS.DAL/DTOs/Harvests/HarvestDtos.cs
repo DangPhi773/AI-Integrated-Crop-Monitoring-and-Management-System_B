@@ -34,6 +34,10 @@ namespace CMMS.DAL.DTOs.Harvests
         public int? CropQuantity { get; set; }
         public DateOnly? StartDate { get; set; }
         public DateOnly? EndDate { get; set; }
+        public DateOnly? ActualHarvestDate { get; set; }
+        public int? ActualQuantity { get; set; }
+        public decimal? ActualWeightKg { get; set; }
+        public string? HarvestNotes { get; set; }
     }
 
     public class HarvestResponse
@@ -54,10 +58,9 @@ namespace CMMS.DAL.DTOs.Harvests
         public DateTime? UpdatedAt { get; set; }
 
         public List<HarvestDetailDto> HarvestDetails { get; set; } = new();
-        public int RecordsCount { get; set; }
-        public decimal? TotalHarvestedQuantity { get; set; }
-        public decimal? TotalSoldQuantity { get; set; }
-        public decimal? TotalRevenue { get; set; }
+        public int HarvestedBedsCount { get; set; }
+        public int? TotalHarvestedQuantity { get; set; }
+        public decimal? TotalHarvestedWeightKg { get; set; }
     }
 
     public class HarvestSummary
@@ -74,6 +77,6 @@ namespace CMMS.DAL.DTOs.Harvests
         public string? Unit { get; set; }
         public string Status { get; set; } = "planned";
         public int DetailsCount { get; set; }
-        public int RecordsCount { get; set; }
+        public int HarvestedBedsCount { get; set; }
     }
 }

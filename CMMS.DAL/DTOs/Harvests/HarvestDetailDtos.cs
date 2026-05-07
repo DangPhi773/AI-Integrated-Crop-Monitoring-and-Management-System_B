@@ -9,6 +9,14 @@ namespace CMMS.DAL.DTOs.Harvests
         public DateOnly? EndDate { get; set; }
     }
 
+    public class RecordHarvestRequest
+    {
+        public DateOnly ActualHarvestDate { get; set; }
+        public int? ActualQuantity { get; set; }
+        public decimal? ActualWeightKg { get; set; }
+        public string? HarvestNotes { get; set; }
+    }
+
     public class HarvestDetailResponse
     {
         public Guid HarvestDetailId { get; set; }
@@ -24,5 +32,10 @@ namespace CMMS.DAL.DTOs.Harvests
         public int? CropQuantity { get; set; }
         public DateOnly? StartDate { get; set; }
         public DateOnly? EndDate { get; set; }
+        public DateOnly? ActualHarvestDate { get; set; }
+        public int? ActualQuantity { get; set; }
+        public decimal? ActualWeightKg { get; set; }
+        public string? HarvestNotes { get; set; }
+        public bool IsHarvested => ActualHarvestDate.HasValue;
     }
 }

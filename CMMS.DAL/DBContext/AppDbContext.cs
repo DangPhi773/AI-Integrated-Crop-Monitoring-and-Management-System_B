@@ -45,8 +45,6 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<HarvestDetail> HarvestDetails { get; set; }
 
-    public virtual DbSet<HarvestRecord> HarvestRecords { get; set; }
-
     public virtual DbSet<Soil> Soils { get; set; }
 
     public virtual DbSet<Task> Tasks { get; set; }
@@ -474,6 +472,10 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CropQuantity).HasColumnName("crop_quantity");
             entity.Property(e => e.StartDate).HasColumnName("start_date");
             entity.Property(e => e.EndDate).HasColumnName("end_date");
+            entity.Property(e => e.ActualHarvestDate).HasColumnName("actual_harvest_date");
+            entity.Property(e => e.ActualQuantity).HasColumnName("actual_quantity");
+            entity.Property(e => e.ActualWeightKg).HasColumnName("actual_weight_kg");
+            entity.Property(e => e.HarvestNotes).HasColumnName("harvest_notes");
 
             entity.HasOne(d => d.Harvest).WithMany(p => p.HarvestDetails)
                 .HasForeignKey(d => d.HarvestId)
@@ -483,36 +485,6 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.Bed).WithMany(p => p.HarvestDetails)
                 .HasForeignKey(d => d.BedId)
                 .HasConstraintName("harvest_detail_bed_id_fkey");
-        });
-
-        modelBuilder.Entity<HarvestRecord>(entity =>
-        {
-            entity.HasKey(e => e.HarvestRecordId).HasName("harvest_record_pkey");
-
-            entity.ToTable("harvest_record");
-
-            entity.Property(e => e.HarvestRecordId)
-                .HasDefaultValueSql("gen_random_uuid()")
-                .HasColumnName("harvest_record_id");
-            entity.Property(e => e.HarvestId).HasColumnName("harvest_id");
-            entity.Property(e => e.HarvestDate).HasColumnName("harvest_date");
-            entity.Property(e => e.Quantity).HasColumnName("quantity");
-            entity.Property(e => e.SaleDate).HasColumnName("sale_date");
-            entity.Property(e => e.SoldQuantity).HasColumnName("sold_quantity");
-            entity.Property(e => e.UnitPrice).HasColumnName("unit_price");
-            entity.Property(e => e.TotalAmount).HasColumnName("total_amount");
-            entity.Property(e => e.BuyerName).HasColumnName("buyer_name").HasMaxLength(200);
-            entity.Property(e => e.SaleChannel).HasColumnName("sale_channel").HasMaxLength(50);
-            entity.Property(e => e.Notes).HasColumnName("notes");
-            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("now()");
-
-            entity.HasOne(d => d.Harvest).WithMany(p => p.HarvestRecords)
-                .HasForeignKey(d => d.HarvestId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("harvest_record_harvest_id_fkey");
-
-            entity.HasIndex(e => e.HarvestDate).HasDatabaseName("idx_harvest_record_harvest_date");
-            entity.HasIndex(e => e.SaleDate).HasDatabaseName("idx_harvest_record_sale_date");
         });
 
         modelBuilder.Entity<Soil>(entity =>

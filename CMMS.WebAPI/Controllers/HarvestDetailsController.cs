@@ -38,6 +38,14 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize(Roles = "Owner,Worker")]
+        [HttpPost("{id:guid}/record-harvest")]
+        public async Task<IActionResult> RecordHarvest(Guid id, [FromBody] RecordHarvestRequest request)
+        {
+            var result = await _service.RecordHarvestAsync(id, request);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
         [Authorize(Roles = "Owner")]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)

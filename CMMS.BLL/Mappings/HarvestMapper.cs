@@ -7,9 +7,10 @@ namespace CMMS.BLL.Mappings
     {
         public static HarvestResponse ToResponse(Harvest h)
         {
-            var totalHarvested = h.HarvestRecords?.Sum(r => r.Quantity) ?? 0m;
-            var totalSold = h.HarvestRecords?.Where(r => r.SoldQuantity.HasValue).Sum(r => r.SoldQuantity!.Value) ?? 0m;
-            var totalRevenue = h.HarvestRecords?.Where(r => r.TotalAmount.HasValue).Sum(r => r.TotalAmount!.Value) ?? 0m;
+            var details = h.HarvestDetails ?? new List<HarvestDetail>();
+            var totalQuantity = details.Where(d => d.ActualQuantity.HasValue).Sum(d => d.ActualQuantity!.Value);
+            var totalWeightKg = details.Where(d => d.ActualWeightKg.HasValue).Sum(d => d.ActualWeightKg!.Value);
+            var harvestedBedsCount = details.Count(d => d.ActualHarvestDate.HasValue);
 
             return new HarvestResponse
             {
@@ -27,19 +28,22 @@ namespace CMMS.BLL.Mappings
                 Notes = h.Notes,
                 CreatedAt = h.CreatedAt,
                 UpdatedAt = h.UpdatedAt,
-                HarvestDetails = h.HarvestDetails?.Select(d => new HarvestDetailDto
+                HarvestDetails = details.Select(d => new HarvestDetailDto
                 {
                     HarvestDetailId = d.HarvestDetailId,
                     BedId = d.BedId,
                     BedName = d.Bed?.BedName,
                     CropQuantity = d.CropQuantity,
                     StartDate = d.StartDate,
-                    EndDate = d.EndDate
-                }).ToList() ?? new List<HarvestDetailDto>(),
-                RecordsCount = h.HarvestRecords?.Count ?? 0,
-                TotalHarvestedQuantity = totalHarvested,
-                TotalSoldQuantity = totalSold,
-                TotalRevenue = totalRevenue
+                    EndDate = d.EndDate,
+                    ActualHarvestDate = d.ActualHarvestDate,
+                    ActualQuantity = d.ActualQuantity,
+                    ActualWeightKg = d.ActualWeightKg,
+                    HarvestNotes = d.HarvestNotes
+                }).ToList(),
+                HarvestedBedsCount = harvestedBedsCount,
+                TotalHarvestedQuantity = totalQuantity > 0 ? totalQuantity : null,
+                TotalHarvestedWeightKg = totalWeightKg > 0 ? totalWeightKg : null
             };
         }
 
@@ -57,7 +61,7 @@ namespace CMMS.BLL.Mappings
             Unit = h.Unit,
             Status = h.Status,
             DetailsCount = h.HarvestDetails?.Count ?? 0,
-            RecordsCount = h.HarvestRecords?.Count ?? 0
+            HarvestedBedsCount = h.HarvestDetails?.Count(d => d.ActualHarvestDate.HasValue) ?? 0
         };
     }
 }
