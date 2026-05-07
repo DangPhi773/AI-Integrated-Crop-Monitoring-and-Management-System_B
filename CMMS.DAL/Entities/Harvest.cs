@@ -51,6 +51,4 @@ public partial class Harvest
     public virtual Crop Crop { get; set; } = null!;
 
     public virtual ICollection<HarvestDetail> HarvestDetails { get; set; } = new List<HarvestDetail>();
-
-    public virtual ICollection<HarvestRecord> HarvestRecords { get; set; } = new List<HarvestRecord>();
 }

@@ -24,6 +24,16 @@ public partial class HarvestDetail
     [Column(TypeName = "date")]
     public DateOnly? EndDate { get; set; }
 
+    [Column(TypeName = "date")]
+    public DateOnly? ActualHarvestDate { get; set; }
+
+    public int? ActualQuantity { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal? ActualWeightKg { get; set; }
+
+    public string? HarvestNotes { get; set; }
+
     [ForeignKey("HarvestId")]
     public virtual Harvest Harvest { get; set; } = null!;
 

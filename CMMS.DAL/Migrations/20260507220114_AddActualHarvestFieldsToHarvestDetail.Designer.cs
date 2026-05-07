@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using CMMS.DAL.DBContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CMMS.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260507220114_AddActualHarvestFieldsToHarvestDetail")]
+    partial class AddActualHarvestFieldsToHarvestDetail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -787,6 +790,76 @@ namespace CMMS.DAL.Migrations
                     b.HasIndex("HarvestId");
 
                     b.ToTable("harvest_detail", "public");
+                });
+
+            modelBuilder.Entity("CMMS.DAL.Entities.HarvestRecord", b =>
+                {
+                    b.Property<Guid>("HarvestRecordId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("harvest_record_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("BuyerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("buyer_name");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<DateOnly>("HarvestDate")
+                        .HasColumnType("date")
+                        .HasColumnName("harvest_date");
+
+                    b.Property<Guid>("HarvestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("harvest_id");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("SaleChannel")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("sale_channel");
+
+                    b.Property<DateOnly?>("SaleDate")
+                        .HasColumnType("date")
+                        .HasColumnName("sale_date");
+
+                    b.Property<decimal?>("SoldQuantity")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("sold_quantity");
+
+                    b.Property<decimal?>("TotalAmount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("total_amount");
+
+                    b.Property<decimal?>("UnitPrice")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("unit_price");
+
+                    b.HasKey("HarvestRecordId")
+                        .HasName("harvest_record_pkey");
+
+                    b.HasIndex("HarvestDate")
+                        .HasDatabaseName("idx_harvest_record_harvest_date");
+
+                    b.HasIndex("HarvestId");
+
+                    b.HasIndex("SaleDate")
+                        .HasDatabaseName("idx_harvest_record_sale_date");
+
+                    b.ToTable("harvest_record", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.IotData", b =>
@@ -1972,6 +2045,18 @@ namespace CMMS.DAL.Migrations
                     b.Navigation("Harvest");
                 });
 
+            modelBuilder.Entity("CMMS.DAL.Entities.HarvestRecord", b =>
+                {
+                    b.HasOne("CMMS.DAL.Entities.Harvest", "Harvest")
+                        .WithMany("HarvestRecords")
+                        .HasForeignKey("HarvestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("harvest_record_harvest_id_fkey");
+
+                    b.Navigation("Harvest");
+                });
+
             modelBuilder.Entity("CMMS.DAL.Entities.IotData", b =>
                 {
                     b.HasOne("CMMS.DAL.Entities.IotDevice", "Device")
@@ -2328,6 +2413,8 @@ namespace CMMS.DAL.Migrations
             modelBuilder.Entity("CMMS.DAL.Entities.Harvest", b =>
                 {
                     b.Navigation("HarvestDetails");
+
+                    b.Navigation("HarvestRecords");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.HarvestDetail", b =>

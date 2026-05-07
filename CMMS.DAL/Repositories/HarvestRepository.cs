@@ -15,8 +15,7 @@ namespace CMMS.DAL.Repositories
                 .Include(h => h.Plot)
                 .Include(h => h.Season)
                 .Include(h => h.Crop)
-                .Include(h => h.HarvestDetails).ThenInclude(d => d.Bed)
-                .Include(h => h.HarvestRecords);
+                .Include(h => h.HarvestDetails).ThenInclude(d => d.Bed);
 
         public async Task<IEnumerable<Harvest>> GetAllAsync()
             => await WithIncludes()

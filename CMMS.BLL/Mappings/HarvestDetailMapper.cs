@@ -19,7 +19,11 @@ namespace CMMS.BLL.Mappings
             SeasonName = d.Harvest?.Season?.SeasonName,
             CropQuantity = d.CropQuantity,
             StartDate = d.StartDate,
-            EndDate = d.EndDate
+            EndDate = d.EndDate,
+            ActualHarvestDate = d.ActualHarvestDate,
+            ActualQuantity = d.ActualQuantity,
+            ActualWeightKg = d.ActualWeightKg,
+            HarvestNotes = d.HarvestNotes
         };
     }
 }
