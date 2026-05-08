@@ -219,7 +219,8 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.PlotArea).HasColumnName("plot_area");
             entity.Property(e => e.PlotLength).HasColumnName("plot_length");
             entity.Property(e => e.PlotWidth).HasColumnName("plot_width");
-            entity.Property(e => e.PlotMargin).HasColumnName("plot_margin").HasDefaultValue(0.3);
+            entity.Property(e => e.PlotMarginLength).HasColumnName("plot_margin_length").HasDefaultValue(1.0);
+            entity.Property(e => e.PlotMarginWidth).HasColumnName("plot_margin_width").HasDefaultValue(0.3);
             entity.Property(e => e.PlotName).HasColumnName("plot_name");
             entity.Property(e => e.PlotStatus).HasColumnName("plot_status");
             entity.Property(e => e.SoilId).HasColumnName("soil_id");

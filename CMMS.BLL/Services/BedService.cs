@@ -231,16 +231,19 @@ namespace CMMS.BLL.Services
             if (request.BedWidth < (request.RowsPerBed - 1) * crop.RowSpacing.Value)
                 return (null, "Chiều rộng luống không đủ chứa số hàng yêu cầu");
 
-            double bedLength = plot.PlotLength.Value - 2 * plot.PlotMargin;
-            if (bedLength <= 0) return (null, "plot_margin quá lớn so với plot_length");
+            double bedLength = plot.PlotLength.Value - 2 * plot.PlotMarginLength;
+            if (bedLength <= 0) return (null, "plot_margin_length quá lớn so với plot_length");
 
-            int bedCount = (int)Math.Floor(plot.PlotWidth.Value / (request.BedWidth + request.PathWidth));
+            double usableWidth = plot.PlotWidth.Value - 2 * plot.PlotMarginWidth;
+            if (usableWidth <= 0) return (null, "plot_margin_width quá lớn so với plot_width");
+
+            int bedCount = (int)Math.Floor(usableWidth / (request.BedWidth + request.PathWidth));
             if (bedCount <= 0) return (null, "Không thể chia luống với thông số hiện tại");
 
             int plantsPerRow = (int)Math.Floor(bedLength / crop.PlantSpacing.Value);
             int plantCount = plantsPerRow * request.RowsPerBed;
             double bedArea = bedLength * request.BedWidth;
-            double widthRemain = plot.PlotWidth.Value - bedCount * (request.BedWidth + request.PathWidth);
+            double widthRemain = usableWidth - bedCount * (request.BedWidth + request.PathWidth);
 
             var prefix = string.IsNullOrWhiteSpace(request.BedNamePrefix) ? "Luống" : request.BedNamePrefix!.Trim();
             var beds = Enumerable.Range(1, bedCount).Select(i => new BedPreviewItem
