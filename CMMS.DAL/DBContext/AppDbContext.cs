@@ -166,6 +166,8 @@ public partial class AppDbContext : DbContext
                 .HasDefaultValueSql("now()")
                 .HasColumnName("farm_created_at");
             entity.Property(e => e.FarmLocation).HasColumnName("farm_location");
+            entity.Property(e => e.Latitude).HasColumnName("latitude").HasColumnType("decimal(10,7)");
+            entity.Property(e => e.Longitude).HasColumnName("longitude").HasColumnType("decimal(10,7)");
             entity.Property(e => e.FarmName).HasColumnName("farm_name");
             entity.Property(e => e.FarmStatus).HasColumnName("farm_status");
         });

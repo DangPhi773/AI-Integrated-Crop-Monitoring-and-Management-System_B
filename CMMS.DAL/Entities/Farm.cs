@@ -18,6 +18,12 @@ public partial class Farm
     [StringLength(500)]
     public string? FarmLocation { get; set; }
 
+    [Column(TypeName = "decimal(10,7)")]
+    public decimal? Latitude { get; set; }
+
+    [Column(TypeName = "decimal(10,7)")]
+    public decimal? Longitude { get; set; }
+
     [Column(TypeName = "decimal(18,2)")]
     public decimal? FarmArea { get; set; }
 
