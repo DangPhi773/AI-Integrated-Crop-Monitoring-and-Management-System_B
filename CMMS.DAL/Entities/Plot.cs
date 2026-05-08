@@ -25,7 +25,9 @@ public partial class Plot
 
     public double? PlotWidth { get; set; }
 
-    public double PlotMargin { get; set; } = 0.3;
+    public double PlotMarginLength { get; set; } = 1.0;
+
+    public double PlotMarginWidth { get; set; } = 0.3;
 
     [MaxLength(50)]
     public string? PlotStatus { get; set; }

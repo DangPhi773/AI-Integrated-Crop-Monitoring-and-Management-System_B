@@ -14,7 +14,8 @@ namespace CMMS.DAL.DTOs.Plots
         public decimal? PlotArea { get; set; }
         public double? PlotLength { get; set; }
         public double? PlotWidth { get; set; }
-        public double? PlotMargin { get; set; }
+        public double? PlotMarginLength { get; set; }
+        public double? PlotMarginWidth { get; set; }
         public string? PlotStatus { get; set; }
     }
 
@@ -27,7 +28,8 @@ namespace CMMS.DAL.DTOs.Plots
         public decimal? PlotArea { get; set; }
         public double? PlotLength { get; set; }
         public double? PlotWidth { get; set; }
-        public double PlotMargin { get; set; }
+        public double PlotMarginLength { get; set; }
+        public double PlotMarginWidth { get; set; }
         public string? PlotStatus { get; set; }
         public DateTime? PlotCreatedAt { get; set; }
 
