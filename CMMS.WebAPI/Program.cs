@@ -91,7 +91,11 @@ builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Emai
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("Cloudinary"));
 builder.Services.Configure<VNPaySettings>(builder.Configuration.GetSection("PaymentSettings:VNPay"));
 builder.Services.Configure<PayOSSettings>(builder.Configuration.GetSection("PaymentSettings:PayOS"));
+builder.Services.Configure<GoogleMapsSettings>(builder.Configuration.GetSection("GoogleMaps"));
+builder.Services.Configure<WeatherSettings>(builder.Configuration.GetSection("Weather"));
 builder.Services.AddHttpClient<IPlantAnalysisService, PlantAnalysisService>();
+builder.Services.AddHttpClient<IGoogleMapsService, GoogleMapsService>();
+builder.Services.AddHttpClient<IWeatherService, WeatherService>();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
