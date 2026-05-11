@@ -12,6 +12,9 @@ namespace CMMS.DAL.DTOs.Farms
         public string? FarmLocation { get; set; }
         public decimal? FarmArea { get; set; }
         public string? FarmStatus { get; set; }
+
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
     }
 
     public class FarmResponse
@@ -19,6 +22,10 @@ namespace CMMS.DAL.DTOs.Farms
         public Guid FarmId { get; set; }
         public string? FarmName { get; set; }
         public string? FarmLocation { get; set; }
+
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
+
         public decimal? FarmArea { get; set; }
         public string? FarmStatus { get; set; }
         public DateTime? FarmCreatedAt { get; set; }

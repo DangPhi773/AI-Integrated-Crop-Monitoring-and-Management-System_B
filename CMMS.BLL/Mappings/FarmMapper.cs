@@ -13,6 +13,8 @@ namespace CMMS.BLL.Mappings
             FarmArea = f.FarmArea,
             FarmStatus = f.FarmStatus,
             FarmCreatedAt = f.FarmCreatedAt,
+            Latitude = f.Latitude,
+            Longitude = f.Longitude,
             SeasonsCount = f.Seasons?.Count ?? 0
         };
     }
