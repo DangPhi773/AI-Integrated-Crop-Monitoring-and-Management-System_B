@@ -87,8 +87,8 @@ namespace CMMS.BLL.Services
                 generationConfig = new
                 {
                     responseMimeType = "application/json",
-                    maxOutputTokens = 500,
-                    temperature = 0.2
+                    maxOutputTokens = 1000,
+                    temperature = 0.1
                 }
             };
 
@@ -118,12 +118,11 @@ namespace CMMS.BLL.Services
             try
             {
                 modelText = CleanJson(modelText);
-                result = JsonConvert.DeserializeObject<PlantAnalysisResultDto>(modelText)
-                         ?? CreateFallbackResult();
+                result = ParseGeminiResult(modelText);
             }
-            catch
+            catch (Exception ex)
             {
-                result = CreateFallbackResult();
+                throw new Exception($"Parse Gemini JSON lỗi. Raw: {modelText}. Error: {ex.Message}");
             }
 
             NormalizeResult(result);
@@ -131,29 +130,38 @@ namespace CMMS.BLL.Services
             return result;
         }
 
-        private PlantAnalysisResultDto CreateFallbackResult()
+        private PlantAnalysisResultDto ParseGeminiResult(string json)
         {
+            var obj = JObject.Parse(json);
+
             return new PlantAnalysisResultDto
             {
-                PossibleDisease = "Chưa xác định rõ",
-                Confidence = 0,
-                Description = "AI chưa trả về kết quả đúng định dạng. Vui lòng thử lại với ảnh rõ hơn.",
-                SymptomsDetected = new List<string>
-                {
-                    "Không xác định rõ triệu chứng từ ảnh hiện tại"
-                },
-                CareSuggestions = new List<string>
-                {
-                    "Chụp lại ảnh cây rõ hơn, đủ sáng và tập trung vào lá/cành có dấu hiệu bệnh."
-                },
-                TreatmentSteps = new List<string>
-                {
-                    "Theo dõi cây thêm 24-48 giờ.",
-                    "Kiểm tra thủ công các lá bị vàng, đốm hoặc héo.",
-                    "Nếu triệu chứng lan rộng, gửi báo cáo cho owner hoặc chuyên gia."
-                },
-                Severity = "low"
+                PossibleDisease = obj["possibleDisease"]?.ToString() ?? "Unclear",
+                Confidence = obj["confidence"]?.ToObject<double?>() ?? 0,
+                Description = obj["description"]?.ToString() ?? string.Empty,
+                SymptomsDetected = ToStringList(obj["symptomsDetected"]),
+                CareSuggestions = ToStringList(obj["careSuggestions"]),
+                TreatmentSteps = ToStringList(obj["treatmentSteps"]),
+                Severity = obj["severity"]?.ToString() ?? "low"
             };
+        }
+
+        private List<string> ToStringList(JToken? token)
+        {
+            if (token == null)
+                return new List<string>();
+
+            if (token.Type == JTokenType.Array)
+                return token.Select(x => x?.ToString() ?? string.Empty)
+                            .Where(x => !string.IsNullOrWhiteSpace(x))
+                            .ToList();
+
+            var text = token.ToString();
+
+            if (string.IsNullOrWhiteSpace(text))
+                return new List<string>();
+
+            return new List<string> { text };
         }
 
         private void NormalizeResult(PlantAnalysisResultDto result)
@@ -164,6 +172,12 @@ namespace CMMS.BLL.Services
             result.CareSuggestions ??= new List<string>();
             result.TreatmentSteps ??= new List<string>();
             result.Severity = NormalizeSeverity(result.Severity);
+
+            if (result.Confidence < 0)
+                result.Confidence = 0;
+
+            if (result.Confidence > 1)
+                result.Confidence = 1;
         }
 
         private string NormalizeSeverity(string? value)
@@ -184,7 +198,7 @@ namespace CMMS.BLL.Services
 
         private string GetPrompt(PlantAnalysisContextDto context)
         {
-            return $@"Analyze the plant image and environment data.
+            return $@"Analyze plant disease from image and environment data.
 
 Context:
 Plant={ShortText(context.PlantName, 40)}
@@ -195,15 +209,22 @@ SoilMoisture={FormatNumber(context.SoilMoisture)}%
 Light={FormatNumber(context.LightIntensity)}
 Weather={ShortText(context.WeatherCondition, 40)}
 
-Return ONLY valid minified JSON.
-Do not use markdown.
-Do not add explanation.
-All string values must be in English.
-If unsure, use ""Unclear"".
-Symptoms and treatment must be specific.
+Task:
+Identify the most likely plant disease, visible symptoms, and practical treatment.
 
-Example:
-{{""possibleDisease"":""Unclear"",""confidence"":0.5,""description"":""No clear disease symptoms detected."",""symptomsDetected"":[""No clear symptoms""],""careSuggestions"":[""Monitor the plant for 2 days""],""treatmentSteps"":[""Take a clearer close-up photo if symptoms spread""],""severity"":""low""}}";
+Rules:
+Return only a valid compact JSON object.
+Do not use markdown.
+Do not add explanation outside JSON.
+Use English only.
+Use short string values.
+Do not break strings with newlines.
+If uncertain, set possibleDisease to ""Unclear"".
+confidence must be 0 to 1.
+severity must be one of: low, medium, high.
+
+JSON example:
+{{""possibleDisease"":""Bacterial Soft Rot"",""confidence"":0.85,""description"":""Brown soft decay on cabbage head."",""symptomsDetected"":[""Brown lesions"",""Soft decay"",""Water-soaked tissue""],""careSuggestions"":[""Improve air circulation"",""Avoid overhead irrigation""],""treatmentSteps"":[""Remove infected tissue"",""Use copper-based bactericide if appropriate""],""severity"":""high""}}";
         }
 
         private string CleanJson(string text)
