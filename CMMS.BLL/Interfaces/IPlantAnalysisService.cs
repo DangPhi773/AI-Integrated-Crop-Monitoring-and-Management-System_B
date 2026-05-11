@@ -5,6 +5,8 @@ namespace CMMS.BLL.Interfaces
 {
     public interface IPlantAnalysisService
     {
-        Task<PlantAnalysisResultDto> AnalyzePlantImageAsync(IFormFile image);
+        Task<PlantAnalysisResultDto> AnalyzePlantImageAsync(
+            IFormFile image,
+            PlantAnalysisContextDto context);
     }
 }
