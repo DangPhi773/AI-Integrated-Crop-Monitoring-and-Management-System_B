@@ -60,7 +60,6 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<CropGrowthStage> CropGrowthStages { get; set; }
     public virtual DbSet<CropGrowthTask> CropGrowthTasks { get; set; }
     public virtual DbSet<GrowthTracking> GrowthTrackings { get; set; }
-    public virtual DbSet<SubTask> SubTasks { get; set; }
 
     public virtual DbSet<Attachment> Attachments { get; set; }
     public virtual DbSet<ReportAssignment> ReportAssignments { get; set; }
@@ -801,29 +800,6 @@ public partial class AppDbContext : DbContext
                   .HasForeignKey(d => d.StageId)
                   .OnDelete(DeleteBehavior.Restrict)
                   .HasConstraintName("growth_tracking_stage_id_fkey");
-        });
-
-        modelBuilder.Entity<SubTask>(entity =>
-        {
-            entity.ToTable("sub_tasks");
-            entity.HasKey(e => e.SubTaskId);
-            entity.Property(e => e.SubTaskId)
-                  .HasColumnName("sub_task_id");
-
-            entity.Property(e => e.Title)
-                  .IsRequired()
-                  .HasMaxLength(200)
-                  .HasColumnName("title");
-
-            entity.Property(e => e.Description)
-                  .HasColumnName("description");
-
-            entity.Property(e => e.TaskDetailId)
-                  .HasColumnName("task_detail_id");
-            entity.HasOne(d => d.TaskDetail)
-                  .WithMany(p => p.SubTasks)
-                  .HasForeignKey(d => d.TaskDetailId)
-                  .OnDelete(DeleteBehavior.Cascade); 
         });
 
         modelBuilder.Entity<Attachment>(entity =>
