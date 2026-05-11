@@ -53,5 +53,4 @@ public partial class TaskDetail
     public virtual Farm? Farm { get; set; }
 
     public virtual ICollection<WorkerSchedule> WorkerSchedules { get; set; } = new List<WorkerSchedule>();
-    public virtual ICollection<SubTask> SubTasks { get; set; } = new List<SubTask>();
 }
