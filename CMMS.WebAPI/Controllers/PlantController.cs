@@ -127,6 +127,10 @@ namespace CMMS.WebAPI.Controllers
             return text
                 .Replace("Cabbage head shows extensive brown, water-soaked, soft decay, primarily affecting the head.",
                     "Phần bắp cải có dấu hiệu thối mềm, màu nâu và úng nước, chủ yếu ảnh hưởng ở phần bắp.")
+                .Replace("Brown, soft, watery decay on the cabbage head.",
+                    "Phần bắp cải bị thối mềm, màu nâu và có dấu hiệu úng nước.")
+                .Replace("Brown soft decay on cabbage head.",
+                    "Phần bắp cải có dấu hiệu thối mềm màu nâu.")
                 .Replace("No clear disease symptoms detected.",
                     "Chưa phát hiện triệu chứng bệnh rõ ràng.")
                 .Replace("Short symptom description.",
@@ -139,6 +143,8 @@ namespace CMMS.WebAPI.Controllers
                     "Phần bắp có biểu hiện úng nước")
                 .Replace("Water-soaked appearance",
                     "Biểu hiện úng nước")
+                .Replace("Water-soaked tissue",
+                    "Mô cây bị úng nước")
                 .Replace("Yellow leaves",
                     "Lá vàng")
                 .Replace("Brown spots",
@@ -149,12 +155,22 @@ namespace CMMS.WebAPI.Controllers
                     "Tăng độ thông thoáng không khí")
                 .Replace("Avoid overhead irrigation",
                     "Tránh tưới nước trực tiếp lên lá hoặc phần bắp")
+                .Replace("Ensure good drainage",
+                    "Đảm bảo đất thoát nước tốt")
                 .Replace("Remove infected plants",
                     "Loại bỏ cây bị nhiễm bệnh")
                 .Replace("Remove and destroy infected plants",
                     "Loại bỏ và tiêu hủy cây bị bệnh")
+                .Replace("Remove infected tissue",
+                    "Loại bỏ phần mô bị nhiễm bệnh")
                 .Replace("Apply copper-based bactericides",
                     "Sử dụng thuốc diệt khuẩn gốc đồng theo hướng dẫn")
+                .Replace("Use copper-based bactericide if appropriate",
+                    "Sử dụng thuốc diệt khuẩn gốc đồng nếu phù hợp")
+                .Replace("Sanitize tools",
+                    "Vệ sinh dụng cụ sau khi xử lý cây bệnh")
+                .Replace("Practice crop rotation",
+                    "Luân canh cây trồng để hạn chế mầm bệnh")
                 .Replace("Monitor the plant for 2 days",
                     "Theo dõi cây trong 2 ngày")
                 .Replace("Take a clearer close-up photo if symptoms spread",
