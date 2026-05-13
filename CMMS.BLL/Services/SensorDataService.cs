@@ -12,6 +12,12 @@ namespace CMMS.BLL.Services
 {
     public class SensorDataService : ISensorDataService
     {
+        private const double TemperatureDelta = 0.5;
+        private const double HumidityDelta = 2.0;
+        private const double SoilMoistureDelta = 3.0;
+        private const double LightDelta = 50.0;
+        private static readonly TimeSpan HeartbeatInterval = TimeSpan.FromMinutes(30);
+
         private readonly IIotDataRepository _dataRepo;
         private readonly IIotDeviceRepository _deviceRepo;
         private readonly ISeasonRepository _seasonRepo;
@@ -33,29 +39,39 @@ namespace CMMS.BLL.Services
         {
             device.LastActiveAt = DateTimeHelper.VnNow();
 
-            Guid? seasonId = await FindActiveSeasonIdAsync(device);
-
             var recordedAt = request.Timestamp == default
                 ? DateTime.UtcNow
                 : DateTime.SpecifyKind(request.Timestamp, DateTimeKind.Utc);
 
-            var iotData = new IotData
-            {
-                SensorDataId = Guid.NewGuid(),
-                DeviceId = device.DeviceId,
-                SeasonId = seasonId,
-                RecordedAt = recordedAt,
-                Temperature = request.Temperature,
-                Humidity = request.Humidity,
-                SoilMoisture = request.SoilMoisture,
-                Light = request.Light,
-                IsRaining = request.IsRaining,
-                IsAlert = false,
-                RawData = JsonSerializer.Serialize(request),
-                CreatedAt = DateTimeHelper.VnNow()
-            };
+            var latest = await _dataRepo.GetLatestByDeviceIdAsync(device.DeviceId);
+            var persisted = false;
+            Guid? persistedId = null;
 
-            await _dataRepo.AddAsync(iotData);
+            if (ShouldPersist(latest, request, recordedAt))
+            {
+                var seasonId = await FindActiveSeasonIdAsync(device);
+
+                var iotData = new IotData
+                {
+                    SensorDataId = Guid.NewGuid(),
+                    DeviceId = device.DeviceId,
+                    SeasonId = seasonId,
+                    RecordedAt = recordedAt,
+                    Temperature = request.Temperature,
+                    Humidity = request.Humidity,
+                    SoilMoisture = request.SoilMoisture,
+                    Light = request.Light,
+                    IsRaining = request.IsRaining,
+                    IsAlert = false,
+                    RawData = JsonSerializer.Serialize(request),
+                    CreatedAt = DateTimeHelper.VnNow()
+                };
+
+                await _dataRepo.AddAsync(iotData);
+                persisted = true;
+                persistedId = iotData.SensorDataId;
+            }
+
             await _deviceRepo.SaveChangesAsync();
 
             var farmId = device.Bed?.Plot?.FarmId;
@@ -63,25 +79,25 @@ namespace CMMS.BLL.Services
             {
                 await _realtime.PushSensorDataAsync(farmId.Value, device.DeviceId, new
                 {
-                    sensorDataId = iotData.SensorDataId,
+                    sensorDataId = persistedId,
                     deviceId = device.DeviceId,
                     deviceCode = device.DeviceCode,
-                    seasonId = iotData.SeasonId,
-                    recordedAt = iotData.RecordedAt,
-                    temperature = iotData.Temperature,
-                    humidity = iotData.Humidity,
-                    soilMoisture = iotData.SoilMoisture,
-                    light = iotData.Light,
-                    isRaining = iotData.IsRaining,
-                    isAlert = iotData.IsAlert
+                    recordedAt,
+                    temperature = request.Temperature,
+                    humidity = request.Humidity,
+                    soilMoisture = request.SoilMoisture,
+                    light = request.Light,
+                    isRaining = request.IsRaining,
+                    isAlert = false,
+                    persisted
                 });
             }
 
             return new SensorDataResponse
             {
-                Id = iotData.SensorDataId,
+                Id = persistedId ?? Guid.Empty,
                 IsAlert = false,
-                Message = "Data received successfully"
+                Message = persisted ? "Data persisted" : "Data accepted (no significant change)"
             };
         }
 
@@ -111,6 +127,31 @@ namespace CMMS.BLL.Services
             var result = data.Select(IotDataMapper.ToResponse);
 
             return new ApiResponse<IEnumerable<IotDataResponse>> { Success = true, Data = result };
+        }
+
+        private static bool ShouldPersist(IotData? latest, SensorDataRequest request, DateTime recordedAt)
+        {
+            if (latest == null) return true;
+
+            if (latest.RecordedAt == null) return true;
+
+            var elapsed = recordedAt - latest.RecordedAt.Value;
+            if (elapsed >= HeartbeatInterval) return true;
+
+            if (ExceedsDelta(latest.Temperature, request.Temperature, TemperatureDelta)) return true;
+            if (ExceedsDelta(latest.Humidity, request.Humidity, HumidityDelta)) return true;
+            if (ExceedsDelta(latest.SoilMoisture, request.SoilMoisture, SoilMoistureDelta)) return true;
+            if (ExceedsDelta(latest.Light, request.Light, LightDelta)) return true;
+            if (latest.IsRaining != request.IsRaining) return true;
+
+            return false;
+        }
+
+        private static bool ExceedsDelta(double? previous, double? current, double delta)
+        {
+            if (!previous.HasValue && !current.HasValue) return false;
+            if (!previous.HasValue || !current.HasValue) return true;
+            return Math.Abs(current.Value - previous.Value) >= delta;
         }
 
         private async Task<Guid?> FindActiveSeasonIdAsync(IotDevice device)
