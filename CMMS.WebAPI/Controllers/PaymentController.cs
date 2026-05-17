@@ -11,98 +11,38 @@ namespace CMMS.WebAPI.Controllers;
 public class PaymentController : ControllerBase
 {
     private readonly IDiagnosisBillingService _billingService;
-    private readonly IConfiguration _config;
 
-    public PaymentController(IDiagnosisBillingService billingService, IConfiguration config)
+    public PaymentController(IDiagnosisBillingService billingService)
     {
         _billingService = billingService;
-        _config = config;
     }
 
-    [HttpPost("price-setting")]
+    [HttpPost("upload")]
     [Authorize(Policy = "OwnerOnly")]
-    public async Task<IActionResult> CreatePriceSetting([FromBody] CreatePriceSettingRequest request)
+    public async Task<IActionResult> Upload([FromForm] UploadPaymentRequest request)
+    {
+        var ownerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await _billingService.UploadPaymentAsync(request, ownerId);
+        return Ok(result);
+    }
+
+    [HttpGet("my")]
+    [Authorize(Policy = "SpecialistOnly")]
+    public async Task<IActionResult> GetMy()
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var result = await _billingService.CreatePriceSettingAsync(request, userId);
+        var role = User.FindFirstValue(ClaimTypes.Role) ?? "";
+        var result = await _billingService.GetMyPaymentsAsync(userId, role);
         return Ok(result);
     }
 
-    [HttpGet("bill/{priceSettingId}")]
+    [HttpGet("{id:guid}")]
     [Authorize(Policy = "SpecialistOnly")]
-    public async Task<IActionResult> GetBillInfo(Guid priceSettingId)
+    public async Task<IActionResult> GetById(Guid id)
     {
-        var result = await _billingService.GetBillInfoAsync(priceSettingId);
-        return Ok(result);
-    }
-
-    [HttpGet("bill")]
-    [Authorize(Policy = "SpecialistOnly")]
-    public async Task<IActionResult> GetBillByParams(
-        [FromQuery] Guid farmId,
-        [FromQuery] Guid expertId,
-        [FromQuery] DateTime month)
-    {
-        var result = await _billingService.GetBillInfoByParamsAsync(farmId, expertId, month);
-        return Ok(result);
-    }
-
-    [HttpPost("create")]
-    [Authorize(Policy = "OwnerOnly")]
-    public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentRequest request)
-    {
-        var result = await _billingService.CreatePaymentAsync(request);
-        return Ok(result);
-    }
-
-    [HttpGet("vnpay-return")]
-    [AllowAnonymous]
-    public async Task<IActionResult> VNPayReturn()
-    {
-        await _billingService.ProcessPaymentCallbackAsync("vnpay", Request.Query);
-
-        var paymentId = Request.Query["vnp_TxnRef"].ToString();
-        var status = Request.Query["vnp_ResponseCode"].ToString() == "00" ? "success" : "failed";
-
-        var frontendUrl = _config["FrontendUrl"] ?? "http://localhost:3000";
-        return Redirect($"{frontendUrl}/payment/result?id={paymentId}&status={status}");
-    }
-
-    [HttpGet("payos-return")]
-    [AllowAnonymous]
-    public async Task<IActionResult> PayOSReturn()
-    {
-        await _billingService.ProcessPaymentCallbackAsync("payos", Request.Query);
-
-        var orderCode = Request.Query["orderCode"].ToString();
-        var status = Request.Query["status"].ToString() == "PAID" ? "success" : "failed";
-
-        var frontendUrl = _config["FrontendUrl"] ?? "http://localhost:3000";
-        return Redirect($"{frontendUrl}/payment/result?id={orderCode}&status={status}");
-    }
-
-    [HttpGet("payos-cancel")]
-    [AllowAnonymous]
-    public IActionResult PayOSCancel()
-    {
-        var frontendUrl = _config["FrontendUrl"] ?? "http://localhost:3000";
-        return Redirect($"{frontendUrl}/payment/cancelled");
-    }
-
-    [HttpGet("my-bills")]
-    [Authorize(Policy = "SpecialistOnly")]
-    public async Task<IActionResult> GetMyBills()
-    {
-        var expertId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var result = await _billingService.GetMyBillsAsync(expertId);
-        return Ok(result);
-    }
-
-    [HttpGet("price-settings")]
-    [Authorize(Policy = "OwnerOnly")]
-    public async Task<IActionResult> GetAllPriceSettings()
-    {
-        var result = await _billingService.GetAllPriceSettingsAsync();
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var role = User.FindFirstValue(ClaimTypes.Role) ?? "";
+        var result = await _billingService.GetPaymentByIdAsync(id, userId, role);
         return Ok(result);
     }
 }

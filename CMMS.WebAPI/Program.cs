@@ -87,8 +87,6 @@ builder.Services.AddScoped<IGrowthTrackingService, GrowthTrackingService>();
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("Cloudinary"));
-builder.Services.Configure<VNPaySettings>(builder.Configuration.GetSection("PaymentSettings:VNPay"));
-builder.Services.Configure<PayOSSettings>(builder.Configuration.GetSection("PaymentSettings:PayOS"));
 builder.Services.Configure<GoogleMapsSettings>(builder.Configuration.GetSection("GoogleMaps"));
 builder.Services.Configure<WeatherSettings>(builder.Configuration.GetSection("Weather"));
 builder.Services.AddHttpClient<IPlantAnalysisService, PlantAnalysisService>();
@@ -101,8 +99,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 
-builder.Services.AddScoped<VNPayService>();
-builder.Services.AddHttpClient<PayOSService>();
+builder.Services.AddScoped<IDiagnosisContractService, DiagnosisContractService>();
 builder.Services.AddScoped<IDiagnosisBillingService, DiagnosisBillingService>();
 
 builder.Services.AddSignalR()

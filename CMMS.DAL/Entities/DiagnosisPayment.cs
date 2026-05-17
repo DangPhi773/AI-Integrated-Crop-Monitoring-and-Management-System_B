@@ -9,7 +9,10 @@ public class DiagnosisPayment
     [Key]
     public Guid Id { get; set; }
 
-    public Guid PriceSettingId { get; set; }
+    public Guid ContractId { get; set; }
+
+    [Column(TypeName = "date")]
+    public DateTime Month { get; set; }
 
     public int TotalDiagnoses { get; set; }
 
@@ -19,13 +22,11 @@ public class DiagnosisPayment
     [MaxLength(20)]
     public string Status { get; set; } = "pending";
 
-    [MaxLength(20)]
-    public string PaymentProvider { get; set; } = null!;
+    [MaxLength(500)]
+    public string? BillImageUrl { get; set; }
 
-    [Column(TypeName = "jsonb")]
-    public string? ProviderData { get; set; }
-
-    public long? PayOSOrderCode { get; set; }
+    [MaxLength(200)]
+    public string? BillPublicId { get; set; }
 
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
@@ -33,6 +34,6 @@ public class DiagnosisPayment
     [Column(TypeName = "timestamp")]
     public DateTime? PaidAt { get; set; }
 
-    [ForeignKey("PriceSettingId")]
-    public virtual DiagnosisPriceSetting? PriceSetting { get; set; }
+    [ForeignKey("ContractId")]
+    public virtual DiagnosisContract? Contract { get; set; }
 }
