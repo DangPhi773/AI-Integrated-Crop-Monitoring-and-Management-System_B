@@ -5,27 +5,45 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CMMS.DAL.Entities;
 
-public class DiagnosisPriceSetting
+public class DiagnosisContract
 {
     [Key]
     public Guid Id { get; set; }
+
+    [MaxLength(30)]
+    public string ContractCode { get; set; } = null!;
 
     public Guid FarmId { get; set; }
 
     public Guid ExpertId { get; set; }
 
-    [Column(TypeName = "date")]
-    public DateTime Month { get; set; }
+    [MaxLength(50)]
+    public string BankAccount { get; set; } = null!;
+
+    [MaxLength(100)]
+    public string BankName { get; set; } = null!;
+
+    [MaxLength(100)]
+    public string AccountHolder { get; set; } = null!;
 
     [Column(TypeName = "decimal(12,2)")]
     public decimal PricePerDiagnosis { get; set; }
 
+    [Column(TypeName = "date")]
+    public DateTime StartDate { get; set; }
+
+    [Column(TypeName = "date")]
+    public DateTime? EndDate { get; set; }
+
+    [MaxLength(20)]
+    public string Status { get; set; } = "active";
+
     public string? Notes { get; set; }
+
+    public Guid? CreatedBy { get; set; }
 
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
-
-    public Guid? CreatedBy { get; set; }
 
     [ForeignKey("FarmId")]
     public virtual Farm? Farm { get; set; }

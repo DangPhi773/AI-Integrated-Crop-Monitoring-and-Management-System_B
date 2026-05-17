@@ -65,7 +65,7 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<ReportAssignment> ReportAssignments { get; set; }
     public virtual DbSet<DiagnosisResult> DiagnosisResults { get; set; }
     public virtual DbSet<ReportEnvironmentSnapshot> ReportEnvironmentSnapshots { get; set; }
-    public virtual DbSet<DiagnosisPriceSetting> DiagnosisPriceSettings { get; set; }
+    public virtual DbSet<DiagnosisContract> DiagnosisContracts { get; set; }
     public virtual DbSet<DiagnosisPayment> DiagnosisPayments { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -926,42 +926,48 @@ public partial class AppDbContext : DbContext
                 .HasConstraintName("report_env_snapshot_device_id_fkey");
         });
 
-        modelBuilder.Entity<DiagnosisPriceSetting>(entity =>
+        modelBuilder.Entity<DiagnosisContract>(entity =>
         {
-            entity.ToTable("diagnosis_price_setting");
-            entity.HasKey(e => e.Id).HasName("diagnosis_price_setting_pkey");
+            entity.ToTable("diagnosis_contract");
+            entity.HasKey(e => e.Id).HasName("diagnosis_contract_pkey");
 
             entity.Property(e => e.Id)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("id");
+            entity.Property(e => e.ContractCode).HasColumnName("contract_code").HasMaxLength(30);
             entity.Property(e => e.FarmId).HasColumnName("farm_id");
             entity.Property(e => e.ExpertId).HasColumnName("expert_id");
-            entity.Property(e => e.Month).HasColumnName("month").HasColumnType("date");
+            entity.Property(e => e.BankAccount).HasColumnName("bank_account").HasMaxLength(50);
+            entity.Property(e => e.BankName).HasColumnName("bank_name").HasMaxLength(100);
+            entity.Property(e => e.AccountHolder).HasColumnName("account_holder").HasMaxLength(100);
             entity.Property(e => e.PricePerDiagnosis).HasColumnName("price_per_diagnosis");
+            entity.Property(e => e.StartDate).HasColumnName("start_date").HasColumnType("date");
+            entity.Property(e => e.EndDate).HasColumnName("end_date").HasColumnType("date");
+            entity.Property(e => e.Status).HasColumnName("status").HasMaxLength(20).HasDefaultValue("active");
             entity.Property(e => e.Notes).HasColumnName("notes");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
-            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
 
-            entity.HasIndex(e => new { e.FarmId, e.ExpertId, e.Month })
+            entity.HasIndex(e => e.ContractCode)
                 .IsUnique()
-                .HasDatabaseName("diagnosis_price_setting_unique");
+                .HasDatabaseName("diagnosis_contract_code_unique");
 
-            entity.HasIndex(e => new { e.FarmId, e.Month })
-                .HasDatabaseName("idx_price_setting_farm_month");
+            entity.HasIndex(e => new { e.FarmId, e.ExpertId })
+                .HasDatabaseName("idx_contract_farm_expert");
 
             entity.HasOne(d => d.Farm).WithMany()
                 .HasForeignKey(d => d.FarmId)
-                .HasConstraintName("diagnosis_price_setting_farm_fkey");
+                .HasConstraintName("diagnosis_contract_farm_fkey");
 
             entity.HasOne(d => d.Expert).WithMany()
                 .HasForeignKey(d => d.ExpertId)
-                .HasConstraintName("diagnosis_price_setting_expert_fkey");
+                .HasConstraintName("diagnosis_contract_expert_fkey");
 
             entity.HasOne(d => d.Creator).WithMany()
                 .HasForeignKey(d => d.CreatedBy)
-                .HasConstraintName("diagnosis_price_setting_created_by_fkey");
+                .HasConstraintName("diagnosis_contract_created_by_fkey");
         });
 
         modelBuilder.Entity<DiagnosisPayment>(entity =>
@@ -972,23 +978,27 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Id)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("id");
-            entity.Property(e => e.PriceSettingId).HasColumnName("price_setting_id");
+            entity.Property(e => e.ContractId).HasColumnName("contract_id");
+            entity.Property(e => e.Month).HasColumnName("month").HasColumnType("date");
             entity.Property(e => e.TotalDiagnoses).HasColumnName("total_diagnoses");
             entity.Property(e => e.Amount).HasColumnName("amount");
-            entity.Property(e => e.Status).HasColumnName("status").HasDefaultValue("pending");
-            entity.Property(e => e.PaymentProvider).HasColumnName("payment_provider");
-            entity.Property(e => e.ProviderData).HasColumnName("provider_data");
+            entity.Property(e => e.Status).HasColumnName("status").HasMaxLength(20).HasDefaultValue("pending");
+            entity.Property(e => e.BillImageUrl).HasColumnName("bill_image_url").HasMaxLength(500);
+            entity.Property(e => e.BillPublicId).HasColumnName("bill_public_id").HasMaxLength(200);
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
             entity.Property(e => e.PaidAt).HasColumnName("paid_at");
 
-            entity.HasIndex(e => e.Status).HasDatabaseName("idx_payment_status");
-            entity.HasIndex(e => e.PaymentProvider).HasDatabaseName("idx_payment_provider");
+            entity.HasIndex(e => new { e.ContractId, e.Month })
+                .IsUnique()
+                .HasDatabaseName("diagnosis_payment_contract_month_unique");
 
-            entity.HasOne(d => d.PriceSetting).WithMany(p => p.Payments)
-                .HasForeignKey(d => d.PriceSettingId)
-                .HasConstraintName("diagnosis_payment_price_setting_fkey");
+            entity.HasIndex(e => e.Status).HasDatabaseName("idx_payment_status");
+
+            entity.HasOne(d => d.Contract).WithMany(p => p.Payments)
+                .HasForeignKey(d => d.ContractId)
+                .HasConstraintName("diagnosis_payment_contract_fkey");
         });
 
         OnModelCreatingPartial(modelBuilder);
