@@ -1,17 +1,20 @@
 namespace CMMS.DAL.DTOs.Payment;
 
-public class BillInfoResponse
+public class ContractResponse
 {
-    public Guid ContractId { get; set; }
+    public Guid Id { get; set; }
     public string ContractCode { get; set; } = null!;
+    public Guid FarmId { get; set; }
     public string FarmName { get; set; } = null!;
+    public Guid ExpertId { get; set; }
     public string ExpertName { get; set; } = null!;
     public string BankAccount { get; set; } = null!;
     public string BankName { get; set; } = null!;
     public string AccountHolder { get; set; } = null!;
-    public DateTime Month { get; set; }
     public decimal PricePerDiagnosis { get; set; }
-    public int TotalDiagnoses { get; set; }
-    public decimal TotalAmount { get; set; }
-    public bool IsPaid { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public string Status { get; set; } = null!;
+    public string? Notes { get; set; }
+    public DateTime CreatedAt { get; set; }
 }

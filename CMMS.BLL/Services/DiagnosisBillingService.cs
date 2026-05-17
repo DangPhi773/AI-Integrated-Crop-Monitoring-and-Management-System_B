@@ -5,273 +5,193 @@ using CMMS.DAL.DBContext;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Payment;
 using CMMS.DAL.Entities;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
 
 namespace CMMS.BLL.Services;
 
 public class DiagnosisBillingService : IDiagnosisBillingService
 {
     private readonly AppDbContext _db;
-    private readonly VNPayService _vnpay;
-    private readonly PayOSService _payos;
+    private readonly ICloudinaryService _cloudinary;
     private readonly IPaymentRealtime _realtime;
 
-    public DiagnosisBillingService(AppDbContext db, VNPayService vnpay, PayOSService payos, IPaymentRealtime realtime)
+    public DiagnosisBillingService(AppDbContext db, ICloudinaryService cloudinary, IPaymentRealtime realtime)
     {
         _db = db;
-        _vnpay = vnpay;
-        _payos = payos;
+        _cloudinary = cloudinary;
         _realtime = realtime;
     }
 
-    public async Task<ApiResponse<BillInfoResponse>> CreatePriceSettingAsync(CreatePriceSettingRequest request, Guid userId)
+    public async Task<ApiResponse<BillInfoResponse>> GetBillForMonthAsync(Guid contractId, DateTime month, Guid userId, string role)
     {
-        var month = new DateTime(request.Month.Year, request.Month.Month, 1);
+        var contract = await _db.DiagnosisContracts
+            .Include(c => c.Farm)
+            .Include(c => c.Expert)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == contractId);
 
-        var existing = await _db.DiagnosisPriceSettings
-            .FirstOrDefaultAsync(x => x.FarmId == request.FarmId
-                && x.ExpertId == request.ExpertId
-                && x.Month == month);
+        if (contract == null || !CanAccessContract(contract, userId, role))
+            return new ApiResponse<BillInfoResponse> { Success = false, Message = "Không tìm thấy hợp đồng" };
 
-        if (existing != null)
-        {
-            existing.PricePerDiagnosis = request.PricePerDiagnosis;
-            existing.Notes = request.Notes;
-        }
-        else
-        {
-            existing = new DiagnosisPriceSetting
-            {
-                Id = Guid.NewGuid(),
-                FarmId = request.FarmId,
-                ExpertId = request.ExpertId,
-                Month = month,
-                PricePerDiagnosis = request.PricePerDiagnosis,
-                Notes = request.Notes,
-                CreatedBy = userId,
-                CreatedAt = DateTimeHelper.VnNow()
-            };
-            _db.DiagnosisPriceSettings.Add(existing);
-        }
-
-        await _db.SaveChangesAsync();
-
-        var bill = await BuildBillInfo(existing.Id);
-        return new ApiResponse<BillInfoResponse> { Success = true, Data = bill };
-    }
-
-    public async Task<ApiResponse<BillInfoResponse>> GetBillInfoAsync(Guid priceSettingId)
-    {
-        var bill = await BuildBillInfo(priceSettingId);
-        if (bill == null)
-            return new ApiResponse<BillInfoResponse> { Success = false, Message = "Không tìm thấy cài đặt giá" };
-        return new ApiResponse<BillInfoResponse> { Success = true, Data = bill };
-    }
-
-    public async Task<ApiResponse<BillInfoResponse>> GetBillInfoByParamsAsync(Guid farmId, Guid expertId, DateTime month)
-    {
-        var normalizedMonth = new DateTime(month.Year, month.Month, 1);
-
-        var setting = await _db.DiagnosisPriceSettings
-            .FirstOrDefaultAsync(x => x.FarmId == farmId
-                && x.ExpertId == expertId
-                && x.Month == normalizedMonth);
-
-        if (setting == null)
-            return new ApiResponse<BillInfoResponse> { Success = false, Message = "Không tìm thấy cài đặt giá cho tháng này" };
-
-        var bill = await BuildBillInfo(setting.Id);
-        return new ApiResponse<BillInfoResponse> { Success = true, Data = bill };
-    }
-
-    public async Task<ApiResponse<PaymentUrlResponse>> CreatePaymentAsync(CreatePaymentRequest request)
-    {
-        var setting = await _db.DiagnosisPriceSettings
-            .Include(x => x.Farm)
-            .Include(x => x.Expert)
-            .FirstOrDefaultAsync(x => x.Id == request.PriceSettingId);
-
-        if (setting == null)
-            return new ApiResponse<PaymentUrlResponse> { Success = false, Message = "Không tìm thấy cài đặt giá" };
+        var monthStart = new DateTime(month.Year, month.Month, 1);
+        var totalDiagnoses = await CountDiagnoses(contract.FarmId, contract.ExpertId, monthStart);
 
         var isPaid = await _db.DiagnosisPayments
-            .AnyAsync(p => p.PriceSettingId == setting.Id && p.Status == "success");
-        if (isPaid)
-            return new ApiResponse<PaymentUrlResponse> { Success = false, Message = "Hóa đơn này đã thanh toán" };
+            .AnyAsync(p => p.ContractId == contract.Id && p.Month == monthStart && p.Status == "paid");
 
-        var totalDiagnoses = await CountDiagnoses(setting);
+        return new ApiResponse<BillInfoResponse>
+        {
+            Success = true,
+            Data = new BillInfoResponse
+            {
+                ContractId = contract.Id,
+                ContractCode = contract.ContractCode,
+                FarmName = contract.Farm?.FarmName ?? "",
+                ExpertName = contract.Expert?.Fullname ?? "",
+                BankAccount = contract.BankAccount,
+                BankName = contract.BankName,
+                AccountHolder = contract.AccountHolder,
+                Month = monthStart,
+                PricePerDiagnosis = contract.PricePerDiagnosis,
+                TotalDiagnoses = totalDiagnoses,
+                TotalAmount = totalDiagnoses * contract.PricePerDiagnosis,
+                IsPaid = isPaid
+            }
+        };
+    }
+
+    public async Task<ApiResponse<PaymentResponse>> UploadPaymentAsync(UploadPaymentRequest request, Guid ownerId)
+    {
+        var (ok, error) = FileValidator.ValidateImage(request.BillFile, maxMb: 5);
+        if (!ok)
+            return new ApiResponse<PaymentResponse> { Success = false, Message = error! };
+
+        var contract = await _db.DiagnosisContracts
+            .Include(c => c.Farm)
+            .Include(c => c.Expert)
+            .FirstOrDefaultAsync(c => c.Id == request.ContractId);
+
+        if (contract == null || contract.CreatedBy != ownerId)
+            return new ApiResponse<PaymentResponse> { Success = false, Message = "Không tìm thấy hợp đồng" };
+        if (contract.Status != "active")
+            return new ApiResponse<PaymentResponse> { Success = false, Message = "Hợp đồng đã kết thúc" };
+
+        var monthStart = new DateTime(request.Month.Year, request.Month.Month, 1);
+
+        var alreadyPaid = await _db.DiagnosisPayments
+            .AnyAsync(p => p.ContractId == contract.Id && p.Month == monthStart && p.Status == "paid");
+        if (alreadyPaid)
+            return new ApiResponse<PaymentResponse> { Success = false, Message = "Tháng này đã thanh toán" };
+
+        var totalDiagnoses = await CountDiagnoses(contract.FarmId, contract.ExpertId, monthStart);
         if (totalDiagnoses == 0)
-            return new ApiResponse<PaymentUrlResponse> { Success = false, Message = "Không có chẩn đoán nào trong tháng" };
+            return new ApiResponse<PaymentResponse> { Success = false, Message = "Không có chẩn đoán nào trong tháng" };
 
-        var totalAmount = totalDiagnoses * setting.PricePerDiagnosis;
-        var paymentId = Guid.NewGuid();
-        var orderInfo = $"Thanh toan chan doan {setting.Month:MM/yyyy} - {setting.Expert?.Fullname}";
+        var totalAmount = totalDiagnoses * contract.PricePerDiagnosis;
 
-        var gateway = GetGateway(request.Provider);
-        var gatewayResult = await gateway.CreatePaymentUrlAsync(paymentId, totalAmount, orderInfo);
+        var upload = await _cloudinary.UploadFileAsync(request.BillFile, "payment-bills");
 
+        var now = DateTimeHelper.VnNow();
         var payment = new DiagnosisPayment
         {
-            Id = paymentId,
-            PriceSettingId = request.PriceSettingId,
+            Id = Guid.NewGuid(),
+            ContractId = contract.Id,
+            Month = monthStart,
             TotalDiagnoses = totalDiagnoses,
             Amount = totalAmount,
-            Status = "pending",
-            PaymentProvider = request.Provider.ToLower(),
-            CreatedAt = DateTimeHelper.VnNow(),
-            PayOSOrderCode = gatewayResult.OrderCode
+            Status = "paid",
+            BillImageUrl = upload.SecureUrl,
+            BillPublicId = upload.PublicId,
+            CreatedAt = now,
+            PaidAt = now
         };
         _db.DiagnosisPayments.Add(payment);
         await _db.SaveChangesAsync();
 
-        return new ApiResponse<PaymentUrlResponse>
+        await _realtime.PushPaymentStatusAsync(contract.ExpertId, new
+        {
+            paymentId = payment.Id,
+            contractId = contract.Id,
+            contractCode = contract.ContractCode,
+            month = monthStart,
+            amount = totalAmount,
+            billImageUrl = upload.SecureUrl,
+            paidAt = now
+        });
+
+        return new ApiResponse<PaymentResponse>
         {
             Success = true,
-            Data = new PaymentUrlResponse { PaymentId = paymentId, PaymentUrl = gatewayResult.Url }
+            Data = new PaymentResponse
+            {
+                Id = payment.Id,
+                ContractId = contract.Id,
+                ContractCode = contract.ContractCode,
+                FarmName = contract.Farm?.FarmName ?? "",
+                ExpertName = contract.Expert?.Fullname ?? "",
+                Month = monthStart,
+                TotalDiagnoses = totalDiagnoses,
+                Amount = totalAmount,
+                BillImageUrl = upload.SecureUrl,
+                Status = "paid",
+                CreatedAt = now,
+                PaidAt = now
+            },
+            Message = "Thanh toán đã được ghi nhận"
         };
     }
 
-    public async Task<ApiResponse<string>> ProcessPaymentCallbackAsync(string provider, IQueryCollection query)
+    public async Task<ApiResponse<IEnumerable<PaymentResponse>>> GetMyPaymentsAsync(Guid userId, string role)
     {
-        var gateway = GetGateway(provider);
-        var result = await gateway.ProcessCallbackAsync(query);
-
-        DiagnosisPayment? payment = null;
-        var providerLower = provider.ToLower();
-
-        if (providerLower == "vnpay")
-        {
-            if (Guid.TryParse(result.PaymentId, out var pid))
-                payment = await _db.DiagnosisPayments.AsNoTracking().FirstOrDefaultAsync(p => p.Id == pid);
-        }
-        else if (providerLower == "payos")
-        {
-            if (long.TryParse(result.PaymentId, out var orderCode))
-                payment = await _db.DiagnosisPayments.AsNoTracking().FirstOrDefaultAsync(p => p.PayOSOrderCode == orderCode);
-        }
-
-        if (payment == null)
-            return new ApiResponse<string> { Success = false, Message = "Không tìm thấy giao dịch" };
-
-        if (payment.Status != "pending")
-        {
-            return new ApiResponse<string>
-            {
-                Success = payment.Status == "success",
-                Message = payment.Status == "success"
-                    ? "Thanh toán đã được xử lý trước đó"
-                    : "Thanh toán trước đó đã thất bại"
-            };
-        }
-
-        var newStatus = result.Success ? "success" : "failed";
-        var paidAt = result.Success ? (DateTime?)DateTimeHelper.VnNow() : null;
-        var providerData = JsonSerializer.Serialize(result.RawData);
-
-        var rowsUpdated = await _db.DiagnosisPayments
-            .Where(p => p.Id == payment.Id && p.Status == "pending")
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(p => p.Status, newStatus)
-                .SetProperty(p => p.ProviderData, providerData)
-                .SetProperty(p => p.PaidAt, paidAt));
-
-        if (rowsUpdated == 0)
-        {
-            var latest = await _db.DiagnosisPayments.AsNoTracking()
-                .FirstOrDefaultAsync(p => p.Id == payment.Id);
-            return new ApiResponse<string>
-            {
-                Success = latest?.Status == "success",
-                Message = latest?.Status == "success"
-                    ? "Thanh toán đã được xử lý trước đó"
-                    : "Thanh toán trước đó đã thất bại"
-            };
-        }
-
-        var ownerId = await _db.DiagnosisPriceSettings.AsNoTracking()
-            .Where(x => x.Id == payment.PriceSettingId)
-            .Select(x => x.CreatedBy)
-            .FirstOrDefaultAsync();
-
-        if (ownerId.HasValue && ownerId.Value != Guid.Empty)
-        {
-            await _realtime.PushPaymentStatusAsync(ownerId.Value, new
-            {
-                paymentId = payment.Id,
-                status = newStatus,
-                amount = payment.Amount,
-                provider = providerLower,
-                paidAt
-            });
-        }
-
-        return new ApiResponse<string>
-        {
-            Success = result.Success,
-            Message = result.Success ? "Thanh toán thành công" : "Thanh toán thất bại"
-        };
-    }
-
-    public async Task<ApiResponse<IEnumerable<BillInfoResponse>>> GetMyBillsAsync(Guid expertId)
-    {
-        var settingIds = await _db.DiagnosisPriceSettings
+        var query = _db.DiagnosisPayments
+            .Include(p => p.Contract!).ThenInclude(c => c.Farm)
+            .Include(p => p.Contract!).ThenInclude(c => c.Expert)
             .AsNoTracking()
-            .Where(x => x.ExpertId == expertId)
-            .OrderByDescending(x => x.Month)
-            .Select(x => x.Id)
-            .ToListAsync();
+            .OrderByDescending(p => p.PaidAt ?? p.CreatedAt)
+            .AsQueryable();
 
-        var resultList = new List<BillInfoResponse>();
-
-        foreach (var id in settingIds)
+        query = role switch
         {
-            var bill = await BuildBillInfo(id);
-            if (bill != null) resultList.Add(bill);
-        }
+            "Owner" => query.Where(p => p.Contract!.CreatedBy == userId),
+            "Specialist" => query.Where(p => p.Contract!.ExpertId == userId),
+            _ => query.Where(p => false)
+        };
 
-        return new ApiResponse<IEnumerable<BillInfoResponse>>
+        var items = await query.ToListAsync();
+        return new ApiResponse<IEnumerable<PaymentResponse>>
         {
             Success = true,
-            Data = resultList
+            Data = items.Select(Map)
         };
     }
 
-    private async Task<BillInfoResponse?> BuildBillInfo(Guid priceSettingId)
+    public async Task<ApiResponse<PaymentResponse>> GetPaymentByIdAsync(Guid paymentId, Guid userId, string role)
     {
-        var setting = await _db.DiagnosisPriceSettings
-            .Include(x => x.Farm)
-            .Include(x => x.Expert)
-            .FirstOrDefaultAsync(x => x.Id == priceSettingId);
+        var p = await _db.DiagnosisPayments
+            .Include(x => x.Contract!).ThenInclude(c => c.Farm)
+            .Include(x => x.Contract!).ThenInclude(c => c.Expert)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == paymentId);
 
-        if (setting == null) return null;
+        if (p == null || p.Contract == null || !CanAccessContract(p.Contract, userId, role))
+            return new ApiResponse<PaymentResponse> { Success = false, Message = "Không tìm thấy thanh toán" };
 
-        var totalDiagnoses = await CountDiagnoses(setting);
-
-        var isPaid = await _db.DiagnosisPayments
-            .AnyAsync(p => p.PriceSettingId == setting.Id && p.Status == "success");
-
-        return new BillInfoResponse
-        {
-            PriceSettingId = setting.Id,
-            FarmName = setting.Farm?.FarmName ?? "",
-            ExpertName = setting.Expert?.Fullname ?? "",
-            Month = setting.Month,
-            PricePerDiagnosis = setting.PricePerDiagnosis,
-            TotalDiagnoses = totalDiagnoses,
-            TotalAmount = totalDiagnoses * setting.PricePerDiagnosis,
-            IsPaid = isPaid
-        };
+        return new ApiResponse<PaymentResponse> { Success = true, Data = Map(p) };
     }
 
-    private async Task<int> CountDiagnoses(DiagnosisPriceSetting setting)
+    private static bool CanAccessContract(DiagnosisContract c, Guid userId, string role) => role switch
     {
-        var monthStart = setting.Month;
+        "Owner" => c.CreatedBy == userId,
+        "Specialist" => c.ExpertId == userId,
+        _ => false
+    };
+
+    private async Task<int> CountDiagnoses(Guid farmId, Guid expertId, DateTime monthStart)
+    {
         var monthEnd = monthStart.AddMonths(1);
 
         return await _db.DiagnosisResults
-            .Where(dr => dr.DiagnosedBy == setting.ExpertId
+            .Where(dr => dr.DiagnosedBy == expertId
                 && dr.Status == "FINAL"
                 && dr.CreatedAt >= monthStart
                 && dr.CreatedAt < monthEnd)
@@ -283,53 +203,23 @@ public class DiagnosisBillingService : IDiagnosisBillingService
                 x => x.r.SeasonId,
                 s => s.SeasonId,
                 (x, s) => new { x.dr, x.r, s })
-            .Where(x => x.s.FarmId == setting.FarmId)
+            .Where(x => x.s.FarmId == farmId)
             .CountAsync();
     }
 
-    private IPaymentGateway GetGateway(string provider)
+    private static PaymentResponse Map(DiagnosisPayment p) => new()
     {
-        return provider.ToLower() switch
-        {
-            "vnpay" => _vnpay,
-            "payos" => _payos,
-            _ => throw new ArgumentException($"Provider không hỗ trợ: {provider}")
-        };
-    }
-
-    public async Task<ApiResponse<IEnumerable<BillInfoResponse>>> GetAllPriceSettingsAsync()
-    {
-        try
-        {
-            var settingsIds = await _db.DiagnosisPriceSettings
-                .AsNoTracking()
-                .OrderByDescending(x => x.Month)
-                .Select(x => x.Id)
-                .ToListAsync();
-
-            var resultList = new List<BillInfoResponse>();
-
-            foreach (var id in settingsIds)
-            {
-                var bill = await BuildBillInfo(id);
-                if (bill != null) resultList.Add(bill);
-            }
-
-            return new ApiResponse<IEnumerable<BillInfoResponse>>
-            {
-                Success = true,
-                Data = resultList,
-                Message = $"Lấy được {resultList.Count} bản ghi cấu hình giá."
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ApiResponse<IEnumerable<BillInfoResponse>>
-            {
-                Success = false,
-                Message = "Lỗi khi lấy danh sách cấu hình giá",
-                Errors = new List<string> { ex.Message }
-            };
-        }
-    }
+        Id = p.Id,
+        ContractId = p.ContractId,
+        ContractCode = p.Contract?.ContractCode ?? "",
+        FarmName = p.Contract?.Farm?.FarmName ?? "",
+        ExpertName = p.Contract?.Expert?.Fullname ?? "",
+        Month = p.Month,
+        TotalDiagnoses = p.TotalDiagnoses,
+        Amount = p.Amount,
+        BillImageUrl = p.BillImageUrl,
+        Status = p.Status,
+        CreatedAt = p.CreatedAt,
+        PaidAt = p.PaidAt
+    };
 }
