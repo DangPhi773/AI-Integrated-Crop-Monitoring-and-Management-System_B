@@ -39,6 +39,19 @@ namespace CMMS.BLL.Services
         {
             device.LastActiveAt = DateTimeHelper.VnNow();
 
+            var rangeErrors = SensorRangeValidator.Validate(
+                request.Temperature, request.Humidity, request.SoilMoisture, request.Light);
+            if (rangeErrors.Count > 0)
+            {
+                await _deviceRepo.SaveChangesAsync();
+                return new SensorDataResponse
+                {
+                    Id = Guid.Empty,
+                    IsAlert = true,
+                    Message = "Dữ liệu cảm biến nằm ngoài khoảng cho phép: " + string.Join(" | ", rangeErrors)
+                };
+            }
+
             var recordedAt = request.Timestamp == default
                 ? DateTime.UtcNow
                 : DateTime.SpecifyKind(request.Timestamp, DateTimeKind.Utc);

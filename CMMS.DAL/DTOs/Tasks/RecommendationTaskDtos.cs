@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace CMMS.DAL.DTOs.Tasks
 {
@@ -10,8 +7,13 @@ namespace CMMS.DAL.DTOs.Tasks
     {
         public Guid? CreatedByOwnerId { get; set; }
         public Guid? AssignedToWorkerId { get; set; }
+
+        [StringLength(200, MinimumLength = 1, ErrorMessage = "Title phải từ 1 đến 200 ký tự")]
         public string? Title { get; set; }
+
         public DateTime? TaskScheduledAt { get; set; }
+
+        [StringLength(50, ErrorMessage = "TaskStatus tối đa 50 ký tự")]
         public string? TaskStatus { get; set; }
     }
 

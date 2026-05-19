@@ -1,15 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace CMMS.DAL.DTOs.Tasks
 {
-    // ===== TASK (mẫu công việc, dùng lại được) =====
-
     public class TaskRequest
     {
+        [StringLength(200, MinimumLength = 1, ErrorMessage = "Tiêu đề công việc phải từ 1 đến 200 ký tự")]
         public string? TaskTitle { get; set; }
+
+        [StringLength(50, ErrorMessage = "TaskStatus tối đa 50 ký tự")]
         public string? TaskStatus { get; set; }
+
+        [StringLength(1000, ErrorMessage = "TaskNotes tối đa 1000 ký tự")]
         public string? TaskNotes { get; set; }
+
+        [StringLength(50, ErrorMessage = "TaskType tối đa 50 ký tự")]
         public string? TaskType { get; set; }
     }
 
@@ -25,8 +31,6 @@ namespace CMMS.DAL.DTOs.Tasks
         public int TaskDetailsCount { get; set; }
     }
 
-    // ===== TASK DETAIL (chi tiết: ai làm, ở đâu, khi nào) =====
-
     public class TaskDetailRequest
     {
         public Guid? TaskId { get; set; }
@@ -37,7 +41,11 @@ namespace CMMS.DAL.DTOs.Tasks
         public List<Guid>? PlotIds { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+
+        [StringLength(1000, ErrorMessage = "Notes tối đa 1000 ký tự")]
         public string? Notes { get; set; }
+
+        [StringLength(50, ErrorMessage = "Status tối đa 50 ký tự")]
         public string? Status { get; set; }
     }
 
@@ -59,6 +67,8 @@ namespace CMMS.DAL.DTOs.Tasks
 
     public class UpdateTaskDetailStatusRequest
     {
+        [Required(ErrorMessage = "Status là bắt buộc")]
+        [StringLength(50, MinimumLength = 1, ErrorMessage = "Status phải từ 1 đến 50 ký tự")]
         public string Status { get; set; } = null!;
     }
 }

@@ -487,6 +487,11 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.Bed).WithMany(p => p.HarvestDetails)
                 .HasForeignKey(d => d.BedId)
                 .HasConstraintName("harvest_detail_bed_id_fkey");
+
+            entity.HasIndex(d => new { d.HarvestId, d.BedId })
+                .IsUnique()
+                .HasFilter("bed_id IS NOT NULL")
+                .HasDatabaseName("ix_harvest_detail_harvest_bed_unique");
         });
 
         modelBuilder.Entity<Soil>(entity =>
