@@ -7,9 +7,9 @@ namespace CMMS.DAL.Entities;
 public class DiagnosisPayment
 {
     [Key]
-    public Guid Id { get; set; }
+    public Guid DiagnosisPaymentId { get; set; }
 
-    public Guid ContractId { get; set; }
+    public Guid SpecialistId { get; set; }
 
     [Column(TypeName = "date")]
     public DateTime Month { get; set; }
@@ -20,7 +20,7 @@ public class DiagnosisPayment
     public decimal Amount { get; set; }
 
     [MaxLength(20)]
-    public string Status { get; set; } = "pending";
+    public string Status { get; set; } = "paid";
 
     [MaxLength(500)]
     public string? BillImageUrl { get; set; }
@@ -34,6 +34,8 @@ public class DiagnosisPayment
     [Column(TypeName = "timestamp")]
     public DateTime? PaidAt { get; set; }
 
-    [ForeignKey("ContractId")]
-    public virtual DiagnosisContract? Contract { get; set; }
+    [ForeignKey("SpecialistId")]
+    public virtual User? Specialist { get; set; }
+
+    public virtual ICollection<DiagnosisPaymentItem> Items { get; set; } = new List<DiagnosisPaymentItem>();
 }

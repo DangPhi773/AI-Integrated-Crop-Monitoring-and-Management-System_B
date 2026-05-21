@@ -38,7 +38,7 @@ namespace CMMS.BLL.Mappings
 
         public static DiagnosisResponse ToDiagnosisResponse(DiagnosisResult d, string? diagnoserName = null) => new()
         {
-            Id = d.Id,
+            Id = d.DiagnosisResultId,
             ReportId = d.ReportId,
             ReportNo = d.Report?.ReportNo,
             ReportTitle = d.Report?.Title,

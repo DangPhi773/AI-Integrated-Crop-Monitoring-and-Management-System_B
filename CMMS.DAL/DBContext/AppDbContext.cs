@@ -67,6 +67,7 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<ReportEnvironmentSnapshot> ReportEnvironmentSnapshots { get; set; }
     public virtual DbSet<DiagnosisContract> DiagnosisContracts { get; set; }
     public virtual DbSet<DiagnosisPayment> DiagnosisPayments { get; set; }
+    public virtual DbSet<DiagnosisPaymentItem> DiagnosisPaymentItems { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -875,11 +876,11 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<DiagnosisResult>(entity =>
         {
             entity.ToTable("diagnosis_result");
-            entity.HasKey(e => e.Id).HasName("diagnosis_result_pkey");
+            entity.HasKey(e => e.DiagnosisResultId).HasName("diagnosis_result_pkey");
 
-            entity.Property(e => e.Id)
+            entity.Property(e => e.DiagnosisResultId)
                 .HasDefaultValueSql("gen_random_uuid()")
-                .HasColumnName("id");
+                .HasColumnName("diagnosis_result_id");
             entity.Property(e => e.ReportId).HasColumnName("report_id");
             entity.Property(e => e.DiagnosedBy).HasColumnName("diagnosed_by");
             entity.Property(e => e.DiseaseName).HasColumnName("disease_name");
@@ -934,13 +935,12 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<DiagnosisContract>(entity =>
         {
             entity.ToTable("diagnosis_contract");
-            entity.HasKey(e => e.Id).HasName("diagnosis_contract_pkey");
+            entity.HasKey(e => e.DiagnosisContractId).HasName("diagnosis_contract_pkey");
 
-            entity.Property(e => e.Id)
+            entity.Property(e => e.DiagnosisContractId)
                 .HasDefaultValueSql("gen_random_uuid()")
-                .HasColumnName("id");
+                .HasColumnName("diagnosis_contract_id");
             entity.Property(e => e.ContractCode).HasColumnName("contract_code").HasMaxLength(30);
-            entity.Property(e => e.FarmId).HasColumnName("farm_id");
             entity.Property(e => e.ExpertId).HasColumnName("expert_id");
             entity.Property(e => e.BankAccount).HasColumnName("bank_account").HasMaxLength(50);
             entity.Property(e => e.BankName).HasColumnName("bank_name").HasMaxLength(100);
@@ -959,12 +959,8 @@ public partial class AppDbContext : DbContext
                 .IsUnique()
                 .HasDatabaseName("diagnosis_contract_code_unique");
 
-            entity.HasIndex(e => new { e.FarmId, e.ExpertId })
-                .HasDatabaseName("idx_contract_farm_expert");
-
-            entity.HasOne(d => d.Farm).WithMany()
-                .HasForeignKey(d => d.FarmId)
-                .HasConstraintName("diagnosis_contract_farm_fkey");
+            entity.HasIndex(e => new { e.ExpertId, e.Status })
+                .HasDatabaseName("idx_contract_expert_status");
 
             entity.HasOne(d => d.Expert).WithMany()
                 .HasForeignKey(d => d.ExpertId)
@@ -978,16 +974,16 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<DiagnosisPayment>(entity =>
         {
             entity.ToTable("diagnosis_payment");
-            entity.HasKey(e => e.Id).HasName("diagnosis_payment_pkey");
+            entity.HasKey(e => e.DiagnosisPaymentId).HasName("diagnosis_payment_pkey");
 
-            entity.Property(e => e.Id)
+            entity.Property(e => e.DiagnosisPaymentId)
                 .HasDefaultValueSql("gen_random_uuid()")
-                .HasColumnName("id");
-            entity.Property(e => e.ContractId).HasColumnName("contract_id");
+                .HasColumnName("diagnosis_payment_id");
+            entity.Property(e => e.SpecialistId).HasColumnName("specialist_id");
             entity.Property(e => e.Month).HasColumnName("month").HasColumnType("date");
             entity.Property(e => e.TotalDiagnoses).HasColumnName("total_diagnoses");
             entity.Property(e => e.Amount).HasColumnName("amount");
-            entity.Property(e => e.Status).HasColumnName("status").HasMaxLength(20).HasDefaultValue("pending");
+            entity.Property(e => e.Status).HasColumnName("status").HasMaxLength(20).HasDefaultValue("paid");
             entity.Property(e => e.BillImageUrl).HasColumnName("bill_image_url").HasMaxLength(500);
             entity.Property(e => e.BillPublicId).HasColumnName("bill_public_id").HasMaxLength(200);
             entity.Property(e => e.CreatedAt)
@@ -995,15 +991,49 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("created_at");
             entity.Property(e => e.PaidAt).HasColumnName("paid_at");
 
-            entity.HasIndex(e => new { e.ContractId, e.Month })
+            entity.HasIndex(e => new { e.SpecialistId, e.Month })
                 .IsUnique()
-                .HasDatabaseName("diagnosis_payment_contract_month_unique");
+                .HasDatabaseName("diagnosis_payment_specialist_month_unique");
 
             entity.HasIndex(e => e.Status).HasDatabaseName("idx_payment_status");
 
-            entity.HasOne(d => d.Contract).WithMany(p => p.Payments)
+            entity.HasOne(d => d.Specialist).WithMany()
+                .HasForeignKey(d => d.SpecialistId)
+                .HasConstraintName("diagnosis_payment_specialist_fkey");
+        });
+
+        modelBuilder.Entity<DiagnosisPaymentItem>(entity =>
+        {
+            entity.ToTable("diagnosis_payment_item");
+            entity.HasKey(e => e.DiagnosisPaymentItemId).HasName("diagnosis_payment_item_pkey");
+
+            entity.Property(e => e.DiagnosisPaymentItemId)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("diagnosis_payment_item_id");
+            entity.Property(e => e.PaymentId).HasColumnName("payment_id");
+            entity.Property(e => e.DiagnosisResultId).HasColumnName("diagnosis_result_id");
+            entity.Property(e => e.ContractId).HasColumnName("contract_id");
+
+            entity.HasIndex(e => e.DiagnosisResultId)
+                .IsUnique()
+                .HasDatabaseName("diagnosis_payment_item_result_unique");
+
+            entity.HasIndex(e => e.PaymentId).HasDatabaseName("idx_payment_item_payment");
+
+            entity.HasOne(d => d.Payment).WithMany(p => p.Items)
+                .HasForeignKey(d => d.PaymentId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("diagnosis_payment_item_payment_fkey");
+
+            entity.HasOne(d => d.DiagnosisResult).WithMany()
+                .HasForeignKey(d => d.DiagnosisResultId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("diagnosis_payment_item_result_fkey");
+
+            entity.HasOne(d => d.Contract).WithMany()
                 .HasForeignKey(d => d.ContractId)
-                .HasConstraintName("diagnosis_payment_contract_fkey");
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("diagnosis_payment_item_contract_fkey");
         });
 
         OnModelCreatingPartial(modelBuilder);

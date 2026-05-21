@@ -46,7 +46,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [Authorize(Roles = "Owner")]
+        [Authorize(Roles = "Owner,Worker")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateHarvestRequest request)
         {
@@ -55,7 +55,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [Authorize(Roles = "Owner")]
+        [Authorize(Roles = "Owner,Worker")]
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateHarvestRequest request)
         {

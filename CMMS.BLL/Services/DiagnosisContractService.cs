@@ -19,10 +19,6 @@ public class DiagnosisContractService : IDiagnosisContractService
 
     public async Task<ApiResponse<ContractResponse>> CreateAsync(CreateContractRequest request, Guid ownerId)
     {
-        var farmExists = await _db.Farms.AnyAsync(f => f.FarmId == request.FarmId);
-        if (!farmExists)
-            return Fail("Không tìm thấy trang trại");
-
         var expert = await _db.Users
             .Include(u => u.Role)
             .FirstOrDefaultAsync(u => u.UserId == request.ExpertId);
@@ -34,6 +30,18 @@ public class DiagnosisContractService : IDiagnosisContractService
         if (request.EndDate.HasValue && request.EndDate.Value.Date <= request.StartDate.Date)
             return Fail("Ngày kết thúc phải sau ngày bắt đầu");
 
+        var existingActive = await _db.DiagnosisContracts
+            .FirstOrDefaultAsync(c => c.ExpertId == request.ExpertId && c.Status == "active");
+
+        if (existingActive != null)
+        {
+            if (request.StartDate.Date <= existingActive.StartDate.Date)
+                return Fail("Ngày bắt đầu phải sau ngày bắt đầu của hợp đồng đang hiệu lực");
+
+            existingActive.Status = "terminated";
+            existingActive.EndDate = request.StartDate.Date.AddDays(-1);
+        }
+
         var now = DateTimeHelper.VnNow();
         var prefix = $"HD-{now:yyyyMM}";
         var seq = await _db.DiagnosisContracts.CountAsync(c => c.ContractCode.StartsWith(prefix)) + 1;
@@ -41,9 +49,8 @@ public class DiagnosisContractService : IDiagnosisContractService
 
         var contract = new DiagnosisContract
         {
-            Id = Guid.NewGuid(),
+            DiagnosisContractId = Guid.NewGuid(),
             ContractCode = code,
-            FarmId = request.FarmId,
             ExpertId = request.ExpertId,
             BankAccount = request.BankAccount,
             BankName = request.BankName,
@@ -60,7 +67,7 @@ public class DiagnosisContractService : IDiagnosisContractService
         _db.DiagnosisContracts.Add(contract);
         await _db.SaveChangesAsync();
 
-        var response = await BuildResponse(contract.Id);
+        var response = await BuildResponse(contract.DiagnosisContractId);
         return new ApiResponse<ContractResponse>
         {
             Success = true,
@@ -72,10 +79,9 @@ public class DiagnosisContractService : IDiagnosisContractService
     public async Task<ApiResponse<ContractResponse>> GetByIdAsync(Guid id, Guid userId, string role)
     {
         var contract = await _db.DiagnosisContracts
-            .Include(c => c.Farm)
             .Include(c => c.Expert)
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == id);
+            .FirstOrDefaultAsync(c => c.DiagnosisContractId == id);
 
         if (contract == null || !CanAccess(contract, userId, role))
             return new ApiResponse<ContractResponse> { Success = false, Message = "Không tìm thấy hợp đồng" };
@@ -86,7 +92,6 @@ public class DiagnosisContractService : IDiagnosisContractService
     public async Task<ApiResponse<IEnumerable<ContractResponse>>> GetMyContractsAsync(Guid userId, string role)
     {
         var query = _db.DiagnosisContracts
-            .Include(c => c.Farm)
             .Include(c => c.Expert)
             .AsNoTracking()
             .OrderByDescending(c => c.CreatedAt)
@@ -110,7 +115,6 @@ public class DiagnosisContractService : IDiagnosisContractService
     public async Task<ApiResponse<IEnumerable<ContractResponse>>> GetAllAsync()
     {
         var items = await _db.DiagnosisContracts
-            .Include(c => c.Farm)
             .Include(c => c.Expert)
             .AsNoTracking()
             .OrderByDescending(c => c.CreatedAt)
@@ -126,7 +130,7 @@ public class DiagnosisContractService : IDiagnosisContractService
 
     public async Task<ApiResponse<ContractResponse>> UpdateAsync(Guid id, UpdateContractRequest request, Guid ownerId)
     {
-        var contract = await _db.DiagnosisContracts.FirstOrDefaultAsync(c => c.Id == id);
+        var contract = await _db.DiagnosisContracts.FirstOrDefaultAsync(c => c.DiagnosisContractId == id);
         if (contract == null || contract.CreatedBy != ownerId)
             return new ApiResponse<ContractResponse> { Success = false, Message = "Không tìm thấy hợp đồng" };
         if (contract.Status != "active")
@@ -138,7 +142,6 @@ public class DiagnosisContractService : IDiagnosisContractService
         contract.BankAccount = request.BankAccount;
         contract.BankName = request.BankName;
         contract.AccountHolder = request.AccountHolder;
-        contract.PricePerDiagnosis = request.PricePerDiagnosis;
         contract.EndDate = request.EndDate?.Date;
         contract.Notes = request.Notes;
 
@@ -155,7 +158,7 @@ public class DiagnosisContractService : IDiagnosisContractService
 
     public async Task<ApiResponse<string>> TerminateAsync(Guid id, Guid ownerId)
     {
-        var contract = await _db.DiagnosisContracts.FirstOrDefaultAsync(c => c.Id == id);
+        var contract = await _db.DiagnosisContracts.FirstOrDefaultAsync(c => c.DiagnosisContractId == id);
         if (contract == null || contract.CreatedBy != ownerId)
             return new ApiResponse<string> { Success = false, Message = "Không tìm thấy hợp đồng" };
         if (contract.Status == "terminated")
@@ -171,19 +174,16 @@ public class DiagnosisContractService : IDiagnosisContractService
     private async Task<ContractResponse?> BuildResponse(Guid id)
     {
         var c = await _db.DiagnosisContracts
-            .Include(x => x.Farm)
             .Include(x => x.Expert)
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.DiagnosisContractId == id);
         return c == null ? null : Map(c);
     }
 
     private static ContractResponse Map(DiagnosisContract c) => new()
     {
-        Id = c.Id,
+        Id = c.DiagnosisContractId,
         ContractCode = c.ContractCode,
-        FarmId = c.FarmId,
-        FarmName = c.Farm?.FarmName ?? "",
         ExpertId = c.ExpertId,
         ExpertName = c.Expert?.Fullname ?? "",
         BankAccount = c.BankAccount,

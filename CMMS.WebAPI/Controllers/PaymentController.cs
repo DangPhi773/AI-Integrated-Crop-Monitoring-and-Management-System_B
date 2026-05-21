@@ -17,6 +17,16 @@ public class PaymentController : ControllerBase
         _billingService = billingService;
     }
 
+    [HttpGet("bill")]
+    [Authorize(Policy = "SpecialistOnly")]
+    public async Task<IActionResult> GetBill([FromQuery] Guid specialistId, [FromQuery] DateTime month)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var role = User.FindFirstValue(ClaimTypes.Role) ?? "";
+        var result = await _billingService.GetBillForMonthAsync(specialistId, month, userId, role);
+        return Ok(result);
+    }
+
     [HttpPost("upload")]
     [Authorize(Policy = "OwnerOnly")]
     public async Task<IActionResult> Upload([FromForm] UploadPaymentRequest request)

@@ -4,8 +4,6 @@ public class ContractResponse
 {
     public Guid Id { get; set; }
     public string ContractCode { get; set; } = null!;
-    public Guid FarmId { get; set; }
-    public string FarmName { get; set; } = null!;
     public Guid ExpertId { get; set; }
     public string ExpertName { get; set; } = null!;
     public string BankAccount { get; set; } = null!;
