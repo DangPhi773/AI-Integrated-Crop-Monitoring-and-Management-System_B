@@ -204,7 +204,7 @@ namespace CMMS.BLL.Services
 
             var diagnosis = new DiagnosisResult
             {
-                Id = Guid.NewGuid(),
+                DiagnosisResultId = Guid.NewGuid(),
                 ReportId = reportId,
                 DiagnosedBy = diagnosedByUserId,
                 DiseaseName = request.DiseaseName,
@@ -235,7 +235,7 @@ namespace CMMS.BLL.Services
                     NoteId = Guid.NewGuid(),
                     UserId = report.OwnerId.Value,
                     ReportId = reportId,
-                    DiagnosisId = diagnosis.Id,
+                    DiagnosisId = diagnosis.DiagnosisResultId,
                     NoteType = "diagnosis_completed",
                     NoteTitle = $"Chẩn đoán hoàn tất cho báo cáo {report.ReportNo}",
                     NoteMessage = $"Bệnh: {request.DiseaseName} - Mức độ: {request.SeverityLevel}",

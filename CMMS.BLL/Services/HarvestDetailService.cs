@@ -86,6 +86,14 @@ namespace CMMS.BLL.Services
                 if (entity == null)
                     return new ApiResponse<HarvestDetailResponse> { Success = false, Message = "Không tìm thấy harvest detail" };
 
+                var parentStatus = entity.Harvest?.Status;
+                if (parentStatus == "cancelled" || parentStatus == "completed")
+                    return new ApiResponse<HarvestDetailResponse>
+                    {
+                        Success = false,
+                        Message = $"Không thể ghi nhận thu hoạch: harvest đang ở trạng thái '{parentStatus}'."
+                    };
+
                 if (!request.ActualQuantity.HasValue && !request.ActualWeightKg.HasValue)
                     return new ApiResponse<HarvestDetailResponse> { Success = false, Message = "Cần ghi ít nhất số lượng hoặc khối lượng" };
 

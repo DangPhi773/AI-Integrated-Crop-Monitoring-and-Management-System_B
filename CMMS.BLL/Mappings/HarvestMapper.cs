@@ -8,6 +8,8 @@ namespace CMMS.BLL.Mappings
         public static HarvestResponse ToResponse(Harvest h)
         {
             var details = h.HarvestDetails ?? new List<HarvestDetail>();
+            var hasAnyQuantity = details.Any(d => d.ActualQuantity.HasValue);
+            var hasAnyWeight = details.Any(d => d.ActualWeightKg.HasValue);
             var totalQuantity = details.Where(d => d.ActualQuantity.HasValue).Sum(d => d.ActualQuantity!.Value);
             var totalWeightKg = details.Where(d => d.ActualWeightKg.HasValue).Sum(d => d.ActualWeightKg!.Value);
             var harvestedBedsCount = details.Count(d => d.ActualHarvestDate.HasValue);
@@ -42,8 +44,8 @@ namespace CMMS.BLL.Mappings
                     HarvestNotes = d.HarvestNotes
                 }).ToList(),
                 HarvestedBedsCount = harvestedBedsCount,
-                TotalHarvestedQuantity = totalQuantity > 0 ? totalQuantity : null,
-                TotalHarvestedWeightKg = totalWeightKg > 0 ? totalWeightKg : null
+                TotalHarvestedQuantity = hasAnyQuantity ? totalQuantity : null,
+                TotalHarvestedWeightKg = hasAnyWeight ? totalWeightKg : null
             };
         }
 

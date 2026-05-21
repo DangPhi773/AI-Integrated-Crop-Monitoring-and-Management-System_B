@@ -6,7 +6,7 @@ namespace CMMS.DAL.DTOs.Payment;
 public class UploadPaymentRequest
 {
     [Required]
-    public Guid ContractId { get; set; }
+    public Guid SpecialistId { get; set; }
 
     [Required]
     public DateTime Month { get; set; }

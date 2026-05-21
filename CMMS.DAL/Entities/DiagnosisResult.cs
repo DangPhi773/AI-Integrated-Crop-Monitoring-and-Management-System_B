@@ -8,7 +8,7 @@ namespace CMMS.DAL.Entities;
 public class DiagnosisResult
 {
     [Key]
-    public Guid Id { get; set; }
+    public Guid DiagnosisResultId { get; set; }
 
     public Guid ReportId { get; set; }
 

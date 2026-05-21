@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using CMMS.DAL.DBContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CMMS.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260521012303_ReplaceContractFarmAndPaymentKey")]
+    partial class ReplaceContractFarmAndPaymentKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -369,10 +372,10 @@ namespace CMMS.DAL.Migrations
 
             modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisContract", b =>
                 {
-                    b.Property<Guid>("DiagnosisContractId")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("diagnosis_contract_id")
+                        .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<string>("AccountHolder")
@@ -437,7 +440,7 @@ namespace CMMS.DAL.Migrations
                         .HasDefaultValue("active")
                         .HasColumnName("status");
 
-                    b.HasKey("DiagnosisContractId")
+                    b.HasKey("Id")
                         .HasName("diagnosis_contract_pkey");
 
                     b.HasIndex("ContractCode")
@@ -454,10 +457,10 @@ namespace CMMS.DAL.Migrations
 
             modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisPayment", b =>
                 {
-                    b.Property<Guid>("DiagnosisPaymentId")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("diagnosis_payment_id")
+                        .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<decimal>("Amount")
@@ -504,7 +507,7 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("total_diagnoses");
 
-                    b.HasKey("DiagnosisPaymentId")
+                    b.HasKey("Id")
                         .HasName("diagnosis_payment_pkey");
 
                     b.HasIndex("Status")
@@ -519,10 +522,10 @@ namespace CMMS.DAL.Migrations
 
             modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisPaymentItem", b =>
                 {
-                    b.Property<Guid>("DiagnosisPaymentItemId")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("diagnosis_payment_item_id")
+                        .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<Guid>("ContractId")
@@ -537,7 +540,7 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("payment_id");
 
-                    b.HasKey("DiagnosisPaymentItemId")
+                    b.HasKey("Id")
                         .HasName("diagnosis_payment_item_pkey");
 
                     b.HasIndex("ContractId");
@@ -554,10 +557,10 @@ namespace CMMS.DAL.Migrations
 
             modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisResult", b =>
                 {
-                    b.Property<Guid>("DiagnosisResultId")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("diagnosis_result_id")
+                        .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<string>("Conclusion")
@@ -604,7 +607,7 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("timestamp")
                         .HasColumnName("updated_at");
 
-                    b.HasKey("DiagnosisResultId")
+                    b.HasKey("Id")
                         .HasName("diagnosis_result_pkey");
 
                     b.HasIndex("DiagnosedBy");

@@ -1,16 +1,30 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace CMMS.DAL.DTOs.IotDevices
 {
     public class IotDeviceRequest
     {
         public Guid? BedId { get; set; }
+
+        [StringLength(100, MinimumLength = 1, ErrorMessage = "DeviceCode phải từ 1 đến 100 ký tự")]
         public string? DeviceCode { get; set; }
+
+        [StringLength(150, MinimumLength = 1, ErrorMessage = "Name phải từ 1 đến 150 ký tự")]
         public string? Name { get; set; }
+
+        [StringLength(50, ErrorMessage = "Type tối đa 50 ký tự")]
         public string? Type { get; set; }
+
+        [StringLength(50, ErrorMessage = "Status tối đa 50 ký tự")]
         public string? Status { get; set; }
+
         public DateTime? InstallationDate { get; set; }
+
+        [Range(-90.0, 90.0, ErrorMessage = "Latitude phải từ -90 đến 90")]
         public double? Latitude { get; set; }
+
+        [Range(-180.0, 180.0, ErrorMessage = "Longitude phải từ -180 đến 180")]
         public double? Longitude { get; set; }
     }
 

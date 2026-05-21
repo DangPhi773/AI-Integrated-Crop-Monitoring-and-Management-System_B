@@ -8,12 +8,10 @@ namespace CMMS.DAL.Entities;
 public class DiagnosisContract
 {
     [Key]
-    public Guid Id { get; set; }
+    public Guid DiagnosisContractId { get; set; }
 
     [MaxLength(30)]
     public string ContractCode { get; set; } = null!;
-
-    public Guid FarmId { get; set; }
 
     public Guid ExpertId { get; set; }
 
@@ -45,14 +43,9 @@ public class DiagnosisContract
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 
-    [ForeignKey("FarmId")]
-    public virtual Farm? Farm { get; set; }
-
     [ForeignKey("ExpertId")]
     public virtual User? Expert { get; set; }
 
     [ForeignKey("CreatedBy")]
     public virtual User? Creator { get; set; }
-
-    public virtual ICollection<DiagnosisPayment> Payments { get; set; } = new List<DiagnosisPayment>();
 }
