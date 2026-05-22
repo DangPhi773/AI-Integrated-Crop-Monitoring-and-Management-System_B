@@ -62,6 +62,20 @@ namespace CMMS.BLL.Services
             return new ApiResponse<IEnumerable<ReportResponse>> { Success = true, Data = data };
         }
 
+        public async Task<ApiResponse<IEnumerable<ReportResponse>>> FilterReportsAsync(string? status = null)
+        {
+            var reports = await _reportRepo.FilterAsync(status);
+            var data = new List<ReportResponse>();
+            foreach (var r in reports)
+            {
+                var response = ReportMapper.ToResponse(r);
+                var attachments = await _attachmentRepo.GetByObjectAsync("report", r.ReportId);
+                response.Attachments = attachments.Select(AttachmentMapper.ToDto).ToList();
+                data.Add(response);
+            }
+            return new ApiResponse<IEnumerable<ReportResponse>> { Success = true, Data = data };
+        }
+
         public async Task<ApiResponse<ReportResponse>> GetReportByIdAsync(Guid id)
         {
             var r = await _reportRepo.GetByIdWithDetailsAsync(id);

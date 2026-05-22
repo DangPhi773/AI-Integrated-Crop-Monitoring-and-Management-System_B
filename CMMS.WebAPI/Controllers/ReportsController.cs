@@ -28,6 +28,14 @@ namespace CMMS.WebAPI.Controllers
         }
 
         [Authorize(Roles = "Owner,Worker,Specialist")]
+        [HttpGet("filter")]
+        public async Task<IActionResult> Filter([FromQuery] string? status = null)
+        {
+            var result = await _reportService.FilterReportsAsync(status);
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Owner,Worker,Specialist")]
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
