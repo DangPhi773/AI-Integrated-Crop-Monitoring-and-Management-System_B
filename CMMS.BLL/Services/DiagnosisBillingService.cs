@@ -210,6 +210,7 @@ public class DiagnosisBillingService : IDiagnosisBillingService
                 DiseaseName = dr.DiseaseName,
                 DiagnosedAt = dr.CreatedAt,
                 ReportId = dr.ReportId,
+                ReportNo = r.ReportNo,
                 ContractId = c.DiagnosisContractId,
                 ContractCode = c.ContractCode,
                 UnitPrice = c.PricePerDiagnosis,
@@ -247,7 +248,7 @@ public class DiagnosisBillingService : IDiagnosisBillingService
             .ToDictionaryAsync(x => x.DiagnosisContractId);
 
         var reportIds = diagnoses.Values.Select(d => d.ReportId).Distinct().ToList();
-        var farms = await (
+        var reportInfo = await (
             from r in _db.Reports.AsNoTracking()
             join s in _db.Seasons.AsNoTracking() on r.SeasonId equals s.SeasonId into sj
             from s in sj.DefaultIfEmpty()
@@ -257,6 +258,7 @@ public class DiagnosisBillingService : IDiagnosisBillingService
             select new
             {
                 r.ReportId,
+                r.ReportNo,
                 FarmId = f != null ? (Guid?)f.FarmId : null,
                 FarmName = f != null ? f.FarmName : null
             }
@@ -268,10 +270,12 @@ public class DiagnosisBillingService : IDiagnosisBillingService
             contracts.TryGetValue(it.ContractId, out var ct);
             Guid? farmId = null;
             string? farmName = null;
-            if (dr != null && farms.TryGetValue(dr.ReportId, out var farm))
+            string? reportNo = null;
+            if (dr != null && reportInfo.TryGetValue(dr.ReportId, out var info))
             {
-                farmId = farm.FarmId;
-                farmName = farm.FarmName;
+                farmId = info.FarmId;
+                farmName = info.FarmName;
+                reportNo = info.ReportNo;
             }
             return new PaymentItemResponse
             {
@@ -280,6 +284,7 @@ public class DiagnosisBillingService : IDiagnosisBillingService
                 DiseaseName = dr?.DiseaseName ?? "",
                 DiagnosedAt = dr?.CreatedAt ?? default,
                 ReportId = dr?.ReportId ?? Guid.Empty,
+                ReportNo = reportNo,
                 ContractId = it.ContractId,
                 ContractCode = ct?.ContractCode ?? "",
                 UnitPrice = ct?.PricePerDiagnosis ?? 0,
