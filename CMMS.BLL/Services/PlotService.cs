@@ -60,9 +60,10 @@ namespace CMMS.BLL.Services
                     PlotArea = request.PlotArea,
                     PlotLength = request.PlotLength,
                     PlotWidth = request.PlotWidth,
-                    PlotMargin = request.PlotMargin ?? 0.3,
+                    PlotMarginLength = request.PlotMarginLength ?? 1.0,
+                    PlotMarginWidth = request.PlotMarginWidth ?? 0.3,
                     PlotStatus = request.PlotStatus ?? "Active",
-                    BedCreatedAt = DateTimeHelper.VnNow()
+                    PlotCreatedAt = DateTimeHelper.VnNow()
                 };
 
                 await _plotRepo.AddAsync(entity);
@@ -90,7 +91,8 @@ namespace CMMS.BLL.Services
                 entity.PlotArea = request.PlotArea ?? entity.PlotArea;
                 entity.PlotLength = request.PlotLength ?? entity.PlotLength;
                 entity.PlotWidth = request.PlotWidth ?? entity.PlotWidth;
-                entity.PlotMargin = request.PlotMargin ?? entity.PlotMargin;
+                entity.PlotMarginLength = request.PlotMarginLength ?? entity.PlotMarginLength;
+                entity.PlotMarginWidth = request.PlotMarginWidth ?? entity.PlotMarginWidth;
                 entity.PlotStatus = request.PlotStatus ?? entity.PlotStatus;
 
                 _plotRepo.Update(entity);

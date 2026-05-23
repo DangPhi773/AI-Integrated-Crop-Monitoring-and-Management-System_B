@@ -1,15 +1,12 @@
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Payment;
-using Microsoft.AspNetCore.Http;
 
 namespace CMMS.BLL.Interfaces;
 
 public interface IDiagnosisBillingService
 {
-    Task<ApiResponse<BillInfoResponse>> CreatePriceSettingAsync(CreatePriceSettingRequest request, Guid userId);
-    Task<ApiResponse<BillInfoResponse>> GetBillInfoAsync(Guid priceSettingId);
-    Task<ApiResponse<BillInfoResponse>> GetBillInfoByParamsAsync(Guid farmId, Guid expertId, DateTime month);
-    Task<ApiResponse<PaymentUrlResponse>> CreatePaymentAsync(CreatePaymentRequest request);
-    Task<ApiResponse<string>> ProcessPaymentCallbackAsync(string provider, IQueryCollection query);
-    Task<ApiResponse<IEnumerable<BillInfoResponse>>> GetAllPriceSettingsAsync();
+    Task<ApiResponse<BillInfoResponse>> GetBillForMonthAsync(Guid specialistId, DateTime month, Guid userId, string role);
+    Task<ApiResponse<PaymentResponse>> UploadPaymentAsync(UploadPaymentRequest request, Guid ownerId);
+    Task<ApiResponse<IEnumerable<PaymentResponse>>> GetMyPaymentsAsync(Guid userId, string role);
+    Task<ApiResponse<PaymentResponse>> GetPaymentByIdAsync(Guid paymentId, Guid userId, string role);
 }

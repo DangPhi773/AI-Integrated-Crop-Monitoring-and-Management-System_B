@@ -64,6 +64,16 @@ namespace CMMS.BLL.Services
         {
             try
             {
+                var rangeErrors = SensorRangeValidator.Validate(
+                    request.Temperature, request.Humidity, request.SoilMoisture, request.Light);
+                if (rangeErrors.Count > 0)
+                    return new ApiResponse<string>
+                    {
+                        Success = false,
+                        Message = "Dữ liệu cảm biến nằm ngoài khoảng cho phép",
+                        Errors = rangeErrors
+                    };
+
                 var entity = new IotData
                 {
                     SensorDataId = Guid.NewGuid(),

@@ -28,6 +28,21 @@ namespace CMMS.BLL.Services
         {
             try
             {
+                if (!EmailValidator.IsValid(request.Email))
+                    return new ApiResponse<string> { Success = false, Message = "Email không hợp lệ." };
+
+                var passwordErrors = PasswordPolicy.Validate(request.Password);
+                if (passwordErrors.Count > 0)
+                    return new ApiResponse<string>
+                    {
+                        Success = false,
+                        Message = "Mật khẩu không đạt yêu cầu",
+                        Errors = passwordErrors
+                    };
+
+                if (string.IsNullOrWhiteSpace(request.Fullname) || request.Fullname.Trim().Length < 2)
+                    return new ApiResponse<string> { Success = false, Message = "Họ tên phải có ít nhất 2 ký tự." };
+
                 var exist = await _userRepo.GetByEmailAsync(request.Email);
                 if (exist != null) return new ApiResponse<string> { Success = false, Message = "Email đã tồn tại!" };
 

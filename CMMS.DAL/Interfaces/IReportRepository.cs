@@ -7,6 +7,7 @@ namespace CMMS.DAL.Interfaces
         Task<IEnumerable<Report>> GetAllAsync();
         Task<Report?> GetByIdAsync(Guid id);
         Task<IEnumerable<Report>> GetAllWithDetailsAsync();
+        Task<IEnumerable<Report>> FilterAsync(string? status = null);
         Task<Report?> GetByIdWithDetailsAsync(Guid id);
         System.Threading.Tasks.Task AddAsync(Report report);
         void Update(Report report);

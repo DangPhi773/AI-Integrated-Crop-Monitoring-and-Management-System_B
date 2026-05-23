@@ -53,7 +53,7 @@ public partial class User
     public virtual ICollection<RecommendationTask> RecommendationTaskAssignedToWorkers { get; set; } = new List<RecommendationTask>();
     public virtual ICollection<RecommendationTask> RecommendationTaskCreatedByOwners { get; set; } = new List<RecommendationTask>();
     public virtual ICollection<RecommendationTaskDetail> RecommendationTaskDetails { get; set; } = new List<RecommendationTaskDetail>();
-    public virtual ICollection<Report> CreatedReports { get; set; } = new List<Report>();
+    public virtual ICollection<Report> WorkerReports { get; set; } = new List<Report>();
     public virtual ICollection<Report> OwnedReports { get; set; } = new List<Report>();
     public virtual ICollection<WorkerSchedule> WorkerSchedules { get; set; } = new List<WorkerSchedule>();
 }

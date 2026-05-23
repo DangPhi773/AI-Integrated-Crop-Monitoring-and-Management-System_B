@@ -58,6 +58,8 @@ namespace CMMS.BLL.Services
                     FarmLocation = request.FarmLocation,
                     FarmArea = request.FarmArea,
                     FarmStatus = request.FarmStatus ?? "Active",
+                    Latitude = request.Latitude,
+                    Longitude = request.Longitude,
                     FarmCreatedAt = DateTimeHelper.VnNow()
                 };
 
@@ -82,6 +84,8 @@ namespace CMMS.BLL.Services
 
                 entity.FarmName = request.FarmName ?? entity.FarmName;
                 entity.FarmLocation = request.FarmLocation ?? entity.FarmLocation;
+                entity.Latitude = request.Latitude ?? entity.Latitude;
+                entity.Longitude = request.Longitude ?? entity.Longitude;
                 entity.FarmArea = request.FarmArea ?? entity.FarmArea;
                 entity.FarmStatus = request.FarmStatus ?? entity.FarmStatus;
 

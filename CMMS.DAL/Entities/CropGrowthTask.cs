@@ -1,10 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Task = CMMS.DAL.Entities.Task;
 
 namespace CMMS.DAL.Entities
 {
@@ -15,9 +13,8 @@ namespace CMMS.DAL.Entities
         public Guid GrowthTaskId { get; set; }
         public Guid StageId { get; set; }
 
-        [Required]
-        [MaxLength(255)]
-        public string TaskName { get; set; }
+        public Guid? TaskId { get; set; }
+
         public string? TaskDescription { get; set; }
 
         [MaxLength(100)]
@@ -37,6 +34,9 @@ namespace CMMS.DAL.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [ForeignKey("StageId")]
-        public virtual CropGrowthStage CropGrowthStage { get; set; }
+        public virtual CropGrowthStage CropGrowthStage { get; set; } = null!;
+
+        [ForeignKey("TaskId")]
+        public virtual Task? Task { get; set; }
     }
 }

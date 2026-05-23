@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -12,7 +12,7 @@ namespace CMMS.DAL.Entities
         public Guid TrackingId { get; set; }
 
         [Required]
-        public Guid SeasonDetailId { get; set; }
+        public Guid HarvestDetailId { get; set; }
 
         [Required]
         public Guid StageId { get; set; }
@@ -53,8 +53,8 @@ namespace CMMS.DAL.Entities
         [Column(TypeName = "timestamp")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        [ForeignKey("SeasonDetailId")]
-        public virtual SeasonsDetail SeasonDetail { get; set; } = null!;
+        [ForeignKey("HarvestDetailId")]
+        public virtual HarvestDetail HarvestDetail { get; set; } = null!;
 
         [ForeignKey("StageId")]
         public virtual CropGrowthStage CropGrowthStage { get; set; } = null!;

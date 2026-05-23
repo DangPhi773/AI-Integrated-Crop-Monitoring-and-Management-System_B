@@ -1,5 +1,6 @@
 using CMMS.BLL.Interfaces;
 using CMMS.BLL.Mappings;
+using CMMS.BLL.Realtime;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Tasks;
 using CMMS.DAL.Entities;
@@ -16,15 +17,18 @@ namespace CMMS.BLL.Services
         private readonly ITaskDetailRepository _repo;
         private readonly IWorkerScheduleRepository _scheduleRepo;
         private readonly IUserRepository _userRepo;
+        private readonly ITaskRealtime _realtime;
 
         public TaskDetailService(
             ITaskDetailRepository repo,
             IWorkerScheduleRepository scheduleRepo,
-            IUserRepository userRepo)
+            IUserRepository userRepo,
+            ITaskRealtime realtime)
         {
             _repo = repo;
             _scheduleRepo = scheduleRepo;
             _userRepo = userRepo;
+            _realtime = realtime;
         }
 
         public async Task<ApiResponse<IEnumerable<TaskDetailResponse>>> GetAllAsync()
@@ -135,6 +139,8 @@ namespace CMMS.BLL.Services
 
                 await SyncWorkerSchedulesAsync(entity.TaskDetailId, workerIds, entity.Task?.TaskTitle);
 
+                await PushTaskDetailEventsAsync(entity, workerIds, "created");
+
                 return new ApiResponse<string> { Success = true, Message = "Task detail created" };
             }
             catch (Exception ex)
@@ -149,6 +155,8 @@ namespace CMMS.BLL.Services
             {
                 var entity = await _repo.GetByIdAsync(id);
                 if (entity == null) return new ApiResponse<string> { Success = false, Message = "Task detail not found" };
+
+                var oldWorkerIds = entity.AssignedToWorkerIds?.ToList() ?? new List<Guid>();
 
                 var newWorkerIds = request.AssignedToWorkerIds;
                 if (newWorkerIds != null)
@@ -175,6 +183,9 @@ namespace CMMS.BLL.Services
                 {
                     await SyncWorkerSchedulesAsync(entity.TaskDetailId, newWorkerIds, entity.Task?.TaskTitle);
                 }
+
+                var affectedWorkerIds = oldWorkerIds.Union(entity.AssignedToWorkerIds ?? new List<Guid>()).ToList();
+                await PushTaskDetailEventsAsync(entity, affectedWorkerIds, "updated");
 
                 return new ApiResponse<string> { Success = true, Message = "Task detail updated" };
             }
@@ -203,6 +214,8 @@ namespace CMMS.BLL.Services
                 _repo.Update(entity);
                 await _repo.SaveChangesAsync();
 
+                await PushTaskDetailEventsAsync(entity, entity.AssignedToWorkerIds, "status-changed");
+
                 return new ApiResponse<string> { Success = true, Message = $"Đã cập nhật trạng thái thành '{status}'" };
             }
             catch (Exception ex)
@@ -218,17 +231,71 @@ namespace CMMS.BLL.Services
                 var entity = await _repo.GetByIdAsync(id);
                 if (entity == null) return new ApiResponse<string> { Success = false, Message = "Task detail not found" };
 
+                var affectedWorkerIds = entity.AssignedToWorkerIds?.ToList() ?? new List<Guid>();
+                var farmId = entity.FarmId;
+                var taskDetailId = entity.TaskDetailId;
+
                 var existingSchedules = await _scheduleRepo.GetByTaskDetailIdTrackingAsync(id);
                 if (existingSchedules.Any())
                     _scheduleRepo.DeleteRange(existingSchedules);
 
                 _repo.Delete(entity);
                 await _repo.SaveChangesAsync();
+
+                if (farmId.HasValue)
+                {
+                    await _realtime.PushTaskUpdatedAsync(farmId.Value, new
+                    {
+                        action = "deleted",
+                        taskDetailId
+                    });
+                }
+                foreach (var workerId in affectedWorkerIds)
+                {
+                    await _realtime.PushScheduleUpdatedAsync(workerId, new
+                    {
+                        action = "deleted",
+                        taskDetailId
+                    });
+                }
+
                 return new ApiResponse<string> { Success = true, Message = "Task detail deleted" };
             }
             catch (Exception ex)
             {
                 return new ApiResponse<string> { Success = false, Message = "Error deleting task detail", Errors = new List<string> { ex.Message } };
+            }
+        }
+
+        private async System.Threading.Tasks.Task PushTaskDetailEventsAsync(TaskDetail entity, IEnumerable<Guid> workerIds, string action)
+        {
+            if (entity.FarmId.HasValue)
+            {
+                await _realtime.PushTaskUpdatedAsync(entity.FarmId.Value, new
+                {
+                    action,
+                    taskDetailId = entity.TaskDetailId,
+                    taskId = entity.TaskId,
+                    seasonId = entity.SeasonId,
+                    farmId = entity.FarmId,
+                    status = entity.Status,
+                    startDate = entity.StartDate,
+                    endDate = entity.EndDate,
+                    assignedToWorkerIds = entity.AssignedToWorkerIds
+                });
+            }
+
+            foreach (var workerId in workerIds)
+            {
+                await _realtime.PushScheduleUpdatedAsync(workerId, new
+                {
+                    action,
+                    taskDetailId = entity.TaskDetailId,
+                    farmId = entity.FarmId,
+                    status = entity.Status,
+                    startDate = entity.StartDate,
+                    endDate = entity.EndDate
+                });
             }
         }
 

@@ -148,10 +148,6 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("bed_width");
 
-                    b.Property<Guid?>("CropId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("crop_id");
-
                     b.Property<int?>("CropQuantities")
                         .HasColumnType("integer")
                         .HasColumnName("crop_quantities");
@@ -164,11 +160,6 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("plant_count");
 
-                    b.Property<string>("PlantingPattern")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("planting_pattern");
-
                     b.Property<Guid?>("PlotId")
                         .HasColumnType("uuid")
                         .HasColumnName("plot_id");
@@ -179,8 +170,6 @@ namespace CMMS.DAL.Migrations
 
                     b.HasKey("BedId")
                         .HasName("beds_pkey");
-
-                    b.HasIndex("CropId");
 
                     b.HasIndex("PlotId");
 
@@ -253,39 +242,50 @@ namespace CMMS.DAL.Migrations
                         .HasColumnName("stage_id");
 
                     b.Property<string>("CommonDiseases")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("common_diseases");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasColumnName("created_at");
 
                     b.Property<Guid>("CropId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("crop_id");
 
                     b.Property<string>("GrowthIndicators")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("growth_indicators");
 
                     b.Property<double?>("HumidityMin")
-                        .HasColumnType("double precision");
+                        .HasColumnType("double precision")
+                        .HasColumnName("humidity_min");
 
                     b.Property<string>("Notes")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
 
                     b.Property<double?>("SoilMoistureMin")
-                        .HasColumnType("double precision");
+                        .HasColumnType("double precision")
+                        .HasColumnName("soil_moisture_min");
 
                     b.Property<string>("StageDescription")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("stage_description");
 
                     b.Property<string>("StageName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("stage_name");
 
                     b.Property<double?>("TemperatureMin")
-                        .HasColumnType("double precision");
+                        .HasColumnType("double precision")
+                        .HasColumnName("temperature_min");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("StageId");
 
@@ -299,143 +299,105 @@ namespace CMMS.DAL.Migrations
                     b.Property<Guid>("GrowthTaskId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("GrowthTaskId")
+                        .HasColumnName("growth_task_id")
                         .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp")
-                        .HasColumnName("CreatedAt")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<int?>("DurationMinutes")
-                        .HasColumnType("integer")
-                        .HasColumnName("DurationMinutes");
-
-                    b.Property<string>("Frequency")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("Frequency");
-
-                    b.Property<bool>("IsMandatory")
-                        .HasColumnType("boolean")
-                        .HasColumnName("IsMandatory");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("text")
-                        .HasColumnName("Notes");
-
-                    b.Property<int>("Priority")
-                        .HasColumnType("integer")
-                        .HasColumnName("Priority");
-
-                    b.Property<double?>("QuantityPerUnit")
-                        .HasColumnType("double precision")
-                        .HasColumnName("QuantityPerUnit");
-
-                    b.Property<string>("QuantityUnit")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("QuantityUnit");
-
-                    b.Property<string>("RequiredMaterials")
-                        .HasColumnType("text")
-                        .HasColumnName("RequiredMaterials");
-
-                    b.Property<string>("RequiredTools")
-                        .HasColumnType("text")
-                        .HasColumnName("RequiredTools");
-
-                    b.Property<Guid>("StageId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("StageId");
-
-                    b.Property<string>("TaskDescription")
-                        .HasColumnType("text")
-                        .HasColumnName("TaskDescription");
-
-                    b.Property<string>("TaskName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("TaskName");
-
-                    b.HasKey("GrowthTaskId");
-
-                    b.HasIndex("StageId");
-
-                    b.ToTable("crop_growth_tasks", "public");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisPayment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(12,2)")
-                        .HasColumnName("amount");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp")
                         .HasColumnName("created_at")
-                        .HasDefaultValueSql("now()");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("PaidAt")
-                        .HasColumnType("timestamp")
-                        .HasColumnName("paid_at");
-
-                    b.Property<string>("PaymentProvider")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("payment_provider");
-
-                    b.Property<Guid>("PriceSettingId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("price_setting_id");
-
-                    b.Property<string>("ProviderData")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("provider_data");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasDefaultValue("pending")
-                        .HasColumnName("status");
-
-                    b.Property<int>("TotalDiagnoses")
+                    b.Property<int?>("DurationMinutes")
                         .HasColumnType("integer")
-                        .HasColumnName("total_diagnoses");
+                        .HasColumnName("duration_minutes");
 
-                    b.HasKey("Id")
-                        .HasName("diagnosis_payment_pkey");
+                    b.Property<string>("Frequency")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("frequency");
 
-                    b.HasIndex("PaymentProvider")
-                        .HasDatabaseName("idx_payment_provider");
+                    b.Property<bool>("IsMandatory")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_mandatory");
 
-                    b.HasIndex("PriceSettingId");
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
 
-                    b.HasIndex("Status")
-                        .HasDatabaseName("idx_payment_status");
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer")
+                        .HasColumnName("priority");
 
-                    b.ToTable("diagnosis_payment", "public");
+                    b.Property<double?>("QuantityPerUnit")
+                        .HasColumnType("double precision")
+                        .HasColumnName("quantity_per_unit");
+
+                    b.Property<string>("QuantityUnit")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("quantity_unit");
+
+                    b.Property<string>("RequiredMaterials")
+                        .HasColumnType("text")
+                        .HasColumnName("required_materials");
+
+                    b.Property<string>("RequiredTools")
+                        .HasColumnType("text")
+                        .HasColumnName("required_tools");
+
+                    b.Property<Guid>("StageId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("stage_id");
+
+                    b.Property<string>("TaskDescription")
+                        .HasColumnType("text")
+                        .HasColumnName("task_description");
+
+                    b.Property<Guid?>("TaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_id");
+
+                    b.HasKey("GrowthTaskId");
+
+                    b.HasIndex("StageId");
+
+                    b.HasIndex("TaskId");
+
+                    b.ToTable("crop_growth_tasks", "public");
                 });
 
-            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisPriceSetting", b =>
+            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisContract", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("DiagnosisContractId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("id")
+                        .HasColumnName("diagnosis_contract_id")
                         .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("AccountHolder")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("account_holder");
+
+                    b.Property<string>("BankAccount")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("bank_account");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("bank_name");
+
+                    b.Property<string>("ContractCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("contract_code");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -447,17 +409,13 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by");
 
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
                     b.Property<Guid>("ExpertId")
                         .HasColumnType("uuid")
                         .HasColumnName("expert_id");
-
-                    b.Property<Guid>("FarmId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("farm_id");
-
-                    b.Property<DateTime>("Month")
-                        .HasColumnType("date")
-                        .HasColumnName("month");
 
                     b.Property<string>("Notes")
                         .HasColumnType("text")
@@ -467,29 +425,139 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("decimal(12,2)")
                         .HasColumnName("price_per_diagnosis");
 
-                    b.HasKey("Id")
-                        .HasName("diagnosis_price_setting_pkey");
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("active")
+                        .HasColumnName("status");
+
+                    b.HasKey("DiagnosisContractId")
+                        .HasName("diagnosis_contract_pkey");
+
+                    b.HasIndex("ContractCode")
+                        .IsUnique()
+                        .HasDatabaseName("diagnosis_contract_code_unique");
 
                     b.HasIndex("CreatedBy");
 
-                    b.HasIndex("ExpertId");
+                    b.HasIndex("ExpertId", "Status")
+                        .HasDatabaseName("idx_contract_expert_status");
 
-                    b.HasIndex("FarmId", "Month")
-                        .HasDatabaseName("idx_price_setting_farm_month");
+                    b.ToTable("diagnosis_contract", "public");
+                });
 
-                    b.HasIndex("FarmId", "ExpertId", "Month")
+            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisPayment", b =>
+                {
+                    b.Property<Guid>("DiagnosisPaymentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("diagnosis_payment_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("BillImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("bill_image_url");
+
+                    b.Property<string>("BillPublicId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("bill_public_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<DateTime>("Month")
+                        .HasColumnType("date")
+                        .HasColumnName("month");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp")
+                        .HasColumnName("paid_at");
+
+                    b.Property<Guid>("SpecialistId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("specialist_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("paid")
+                        .HasColumnName("status");
+
+                    b.Property<int>("TotalDiagnoses")
+                        .HasColumnType("integer")
+                        .HasColumnName("total_diagnoses");
+
+                    b.HasKey("DiagnosisPaymentId")
+                        .HasName("diagnosis_payment_pkey");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("idx_payment_status");
+
+                    b.HasIndex("SpecialistId", "Month")
                         .IsUnique()
-                        .HasDatabaseName("diagnosis_price_setting_unique");
+                        .HasDatabaseName("diagnosis_payment_specialist_month_unique");
 
-                    b.ToTable("diagnosis_price_setting", "public");
+                    b.ToTable("diagnosis_payment", "public");
+                });
+
+            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisPaymentItem", b =>
+                {
+                    b.Property<Guid>("DiagnosisPaymentItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("diagnosis_payment_item_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<Guid>("ContractId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("contract_id");
+
+                    b.Property<Guid>("DiagnosisResultId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("diagnosis_result_id");
+
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("payment_id");
+
+                    b.HasKey("DiagnosisPaymentItemId")
+                        .HasName("diagnosis_payment_item_pkey");
+
+                    b.HasIndex("ContractId");
+
+                    b.HasIndex("DiagnosisResultId")
+                        .IsUnique()
+                        .HasDatabaseName("diagnosis_payment_item_result_unique");
+
+                    b.HasIndex("PaymentId")
+                        .HasDatabaseName("idx_payment_item_payment");
+
+                    b.ToTable("diagnosis_payment_item", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisResult", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("DiagnosisResultId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("id")
+                        .HasColumnName("diagnosis_result_id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<string>("Conclusion")
@@ -536,7 +604,7 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("timestamp")
                         .HasColumnName("updated_at");
 
-                    b.HasKey("Id")
+                    b.HasKey("DiagnosisResultId")
                         .HasName("diagnosis_result_pkey");
 
                     b.HasIndex("DiagnosedBy");
@@ -580,6 +648,14 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("farm_status");
 
+                    b.Property<decimal?>("Latitude")
+                        .HasColumnType("decimal(10,7)")
+                        .HasColumnName("latitude");
+
+                    b.Property<decimal?>("Longitude")
+                        .HasColumnType("decimal(10,7)")
+                        .HasColumnName("longitude");
+
                     b.HasKey("FarmId")
                         .HasName("farms_pkey");
 
@@ -594,60 +670,199 @@ namespace CMMS.DAL.Migrations
                         .HasColumnName("tracking_id");
 
                     b.Property<double?>("ActualHeight")
-                        .HasColumnType("double precision");
+                        .HasColumnType("double precision")
+                        .HasColumnName("actual_height");
 
                     b.Property<double?>("ActualYield")
-                        .HasColumnType("double precision");
+                        .HasColumnType("double precision")
+                        .HasColumnName("actual_yield");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasColumnName("created_at");
 
                     b.Property<int?>("DelayDays")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("delay_days");
 
                     b.Property<string>("DelayReason")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("delay_reason");
 
                     b.Property<DateTime?>("EndDate")
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasColumnName("end_date");
+
+                    b.Property<Guid>("HarvestDetailId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("harvest_detail_id");
 
                     b.Property<string>("HealthStatus")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("health_status");
 
                     b.Property<DateTime?>("LastObservedAt")
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasColumnName("last_observed_at");
 
                     b.Property<Guid?>("LastUpdatedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("last_updated_by");
 
                     b.Property<string>("Notes")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("SeasonDetailId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
 
                     b.Property<Guid>("StageId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("stage_id");
 
                     b.Property<DateTime>("StartDate")
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasColumnName("start_date");
 
                     b.Property<string>("TrackingStatus")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("tracking_status");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("TrackingId");
 
-                    b.HasIndex("SeasonDetailId");
+                    b.HasIndex("HarvestDetailId");
 
                     b.HasIndex("StageId");
 
                     b.ToTable("growth_tracking", "public");
+                });
+
+            modelBuilder.Entity("CMMS.DAL.Entities.Harvest", b =>
+                {
+                    b.Property<Guid>("HarvestId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("harvest_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<Guid>("CropId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("crop_id");
+
+                    b.Property<DateOnly?>("ExpectedDate")
+                        .HasColumnType("date")
+                        .HasColumnName("expected_date");
+
+                    b.Property<decimal?>("ExpectedQuantity")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("expected_quantity");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<Guid>("PlotId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("plot_id");
+
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("season_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("planned")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("unit");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("HarvestId")
+                        .HasName("harvest_pkey");
+
+                    b.HasIndex("CropId");
+
+                    b.HasIndex("PlotId");
+
+                    b.HasIndex("SeasonId");
+
+                    b.ToTable("harvest", "public");
+                });
+
+            modelBuilder.Entity("CMMS.DAL.Entities.HarvestDetail", b =>
+                {
+                    b.Property<Guid>("HarvestDetailId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("harvest_detail_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateOnly?>("ActualHarvestDate")
+                        .HasColumnType("date")
+                        .HasColumnName("actual_harvest_date");
+
+                    b.Property<int?>("ActualQuantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("actual_quantity");
+
+                    b.Property<decimal?>("ActualWeightKg")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("actual_weight_kg");
+
+                    b.Property<Guid?>("BedId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("bed_id");
+
+                    b.Property<int?>("CropQuantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("crop_quantity");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<Guid>("HarvestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("harvest_id");
+
+                    b.Property<string>("HarvestNotes")
+                        .HasColumnType("text")
+                        .HasColumnName("harvest_notes");
+
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.HasKey("HarvestDetailId")
+                        .HasName("harvest_detail_pkey");
+
+                    b.HasIndex("BedId");
+
+                    b.HasIndex("HarvestId", "BedId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_harvest_detail_harvest_bed_unique")
+                        .HasFilter("bed_id IS NOT NULL");
+
+                    b.ToTable("harvest_detail", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.IotData", b =>
@@ -852,12 +1067,6 @@ namespace CMMS.DAL.Migrations
                         .HasColumnName("plot_id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime?>("BedCreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp")
-                        .HasColumnName("bed_created_at")
-                        .HasDefaultValueSql("now()");
-
                     b.Property<Guid?>("FarmId")
                         .HasColumnType("uuid")
                         .HasColumnName("farm_id");
@@ -866,15 +1075,27 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("plot_area");
 
+                    b.Property<DateTime?>("PlotCreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("plot_created_at")
+                        .HasDefaultValueSql("now()");
+
                     b.Property<double?>("PlotLength")
                         .HasColumnType("double precision")
                         .HasColumnName("plot_length");
 
-                    b.Property<double>("PlotMargin")
+                    b.Property<double>("PlotMarginLength")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("double precision")
+                        .HasDefaultValue(1.0)
+                        .HasColumnName("plot_margin_length");
+
+                    b.Property<double>("PlotMarginWidth")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("double precision")
                         .HasDefaultValue(0.29999999999999999)
-                        .HasColumnName("plot_margin");
+                        .HasColumnName("plot_margin_width");
 
                     b.Property<string>("PlotName")
                         .HasMaxLength(255)
@@ -1019,10 +1240,6 @@ namespace CMMS.DAL.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("now()");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
                     b.Property<string>("Description")
                         .HasColumnType("text")
                         .HasColumnName("description");
@@ -1067,18 +1284,22 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("timestamp")
                         .HasColumnName("updated_at");
 
+                    b.Property<Guid?>("WorkerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("worker_id");
+
                     b.HasKey("ReportId")
                         .HasName("report_pkey");
 
                     b.HasIndex("BedId");
-
-                    b.HasIndex("CreatedBy");
 
                     b.HasIndex("OwnerId");
 
                     b.HasIndex("PlotId");
 
                     b.HasIndex("SeasonId");
+
+                    b.HasIndex("WorkerId");
 
                     b.ToTable("report", "public");
                 });
@@ -1267,58 +1488,6 @@ namespace CMMS.DAL.Migrations
                     b.ToTable("seasons", "public");
                 });
 
-            modelBuilder.Entity("CMMS.DAL.Entities.SeasonsDetail", b =>
-                {
-                    b.Property<Guid>("SeasonDetailId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("season_detail_id")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<Guid?>("BedId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("bed_id");
-
-                    b.Property<Guid?>("CropId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("crop_id");
-
-                    b.Property<int?>("CropQuantity")
-                        .HasColumnType("integer")
-                        .HasColumnName("crop_quantity");
-
-                    b.Property<DateOnly?>("EndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("end_date");
-
-                    b.Property<DateOnly?>("SeasonExpectedHarvestDate")
-                        .HasColumnType("date")
-                        .HasColumnName("season_expected_harvest_date");
-
-                    b.Property<Guid?>("SeasonId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("season_id");
-
-                    b.Property<DateOnly?>("StartDate")
-                        .HasColumnType("date")
-                        .HasColumnName("start_date");
-
-                    b.Property<decimal?>("TotalHarvestYield")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("total_harvest_yield");
-
-                    b.HasKey("SeasonDetailId")
-                        .HasName("seasons_detail_pkey");
-
-                    b.HasIndex("BedId");
-
-                    b.HasIndex("CropId");
-
-                    b.HasIndex("SeasonId");
-
-                    b.ToTable("seasons_detail", "public");
-                });
-
             modelBuilder.Entity("CMMS.DAL.Entities.Soil", b =>
                 {
                     b.Property<Guid>("SoilId")
@@ -1348,20 +1517,25 @@ namespace CMMS.DAL.Migrations
                 {
                     b.Property<Guid>("ComptId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("compt_id");
 
                     b.Property<string>("Compatibility")
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("compatibility");
 
                     b.Property<Guid>("CropId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("crop_id");
 
                     b.Property<string>("Note")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("note");
 
                     b.Property<Guid>("SoilId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("soil_id");
 
                     b.HasKey("ComptId");
 
@@ -1370,34 +1544,6 @@ namespace CMMS.DAL.Migrations
                     b.HasIndex("SoilId");
 
                     b.ToTable("soil_crop_compatibility", "public");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.SubTask", b =>
-                {
-                    b.Property<Guid>("SubTaskId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("sub_task_id");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<Guid>("TaskDetailId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("task_detail_id");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("title");
-
-                    b.HasKey("SubTaskId");
-
-                    b.HasIndex("TaskDetailId");
-
-                    b.ToTable("sub_tasks", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Task", b =>
@@ -1710,17 +1856,10 @@ namespace CMMS.DAL.Migrations
 
             modelBuilder.Entity("CMMS.DAL.Entities.Bed", b =>
                 {
-                    b.HasOne("CMMS.DAL.Entities.Crop", "Crop")
-                        .WithMany()
-                        .HasForeignKey("CropId")
-                        .HasConstraintName("beds_crop_id_fkey");
-
                     b.HasOne("CMMS.DAL.Entities.Plot", "Plot")
                         .WithMany("Beds")
                         .HasForeignKey("PlotId")
                         .HasConstraintName("beds_plot_id_fkey");
-
-                    b.Navigation("Crop");
 
                     b.Navigation("Plot");
                 });
@@ -1731,7 +1870,8 @@ namespace CMMS.DAL.Migrations
                         .WithMany("CropGrowthStages")
                         .HasForeignKey("CropId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("crop_growth_stages_crop_id_fkey");
 
                     b.Navigation("Crop");
                 });
@@ -1743,49 +1883,77 @@ namespace CMMS.DAL.Migrations
                         .HasForeignKey("StageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("FK_CropGrowthTasks_CropGrowthStages");
+                        .HasConstraintName("crop_growth_tasks_stage_id_fkey");
+
+                    b.HasOne("CMMS.DAL.Entities.Task", "Task")
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .HasConstraintName("crop_growth_tasks_task_id_fkey");
 
                     b.Navigation("CropGrowthStage");
+
+                    b.Navigation("Task");
                 });
 
-            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisPayment", b =>
-                {
-                    b.HasOne("CMMS.DAL.Entities.DiagnosisPriceSetting", "PriceSetting")
-                        .WithMany("Payments")
-                        .HasForeignKey("PriceSettingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("diagnosis_payment_price_setting_fkey");
-
-                    b.Navigation("PriceSetting");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisPriceSetting", b =>
+            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisContract", b =>
                 {
                     b.HasOne("CMMS.DAL.Entities.User", "Creator")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
-                        .HasConstraintName("diagnosis_price_setting_created_by_fkey");
+                        .HasConstraintName("diagnosis_contract_created_by_fkey");
 
                     b.HasOne("CMMS.DAL.Entities.User", "Expert")
                         .WithMany()
                         .HasForeignKey("ExpertId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("diagnosis_price_setting_expert_fkey");
-
-                    b.HasOne("CMMS.DAL.Entities.Farm", "Farm")
-                        .WithMany()
-                        .HasForeignKey("FarmId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("diagnosis_price_setting_farm_fkey");
+                        .HasConstraintName("diagnosis_contract_expert_fkey");
 
                     b.Navigation("Creator");
 
                     b.Navigation("Expert");
+                });
 
-                    b.Navigation("Farm");
+            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisPayment", b =>
+                {
+                    b.HasOne("CMMS.DAL.Entities.User", "Specialist")
+                        .WithMany()
+                        .HasForeignKey("SpecialistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("diagnosis_payment_specialist_fkey");
+
+                    b.Navigation("Specialist");
+                });
+
+            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisPaymentItem", b =>
+                {
+                    b.HasOne("CMMS.DAL.Entities.DiagnosisContract", "Contract")
+                        .WithMany()
+                        .HasForeignKey("ContractId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("diagnosis_payment_item_contract_fkey");
+
+                    b.HasOne("CMMS.DAL.Entities.DiagnosisResult", "DiagnosisResult")
+                        .WithMany()
+                        .HasForeignKey("DiagnosisResultId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("diagnosis_payment_item_result_fkey");
+
+                    b.HasOne("CMMS.DAL.Entities.DiagnosisPayment", "Payment")
+                        .WithMany("Items")
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("diagnosis_payment_item_payment_fkey");
+
+                    b.Navigation("Contract");
+
+                    b.Navigation("DiagnosisResult");
+
+                    b.Navigation("Payment");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisResult", b =>
@@ -1811,21 +1979,72 @@ namespace CMMS.DAL.Migrations
 
             modelBuilder.Entity("CMMS.DAL.Entities.GrowthTracking", b =>
                 {
-                    b.HasOne("CMMS.DAL.Entities.SeasonsDetail", "SeasonDetail")
+                    b.HasOne("CMMS.DAL.Entities.HarvestDetail", "HarvestDetail")
                         .WithMany("GrowthTrackings")
-                        .HasForeignKey("SeasonDetailId")
+                        .HasForeignKey("HarvestDetailId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("growth_tracking_harvest_detail_id_fkey");
 
                     b.HasOne("CMMS.DAL.Entities.CropGrowthStage", "CropGrowthStage")
                         .WithMany("GrowthTrackings")
                         .HasForeignKey("StageId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("growth_tracking_stage_id_fkey");
 
                     b.Navigation("CropGrowthStage");
 
-                    b.Navigation("SeasonDetail");
+                    b.Navigation("HarvestDetail");
+                });
+
+            modelBuilder.Entity("CMMS.DAL.Entities.Harvest", b =>
+                {
+                    b.HasOne("CMMS.DAL.Entities.Crop", "Crop")
+                        .WithMany("Harvests")
+                        .HasForeignKey("CropId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("harvest_crop_id_fkey");
+
+                    b.HasOne("CMMS.DAL.Entities.Plot", "Plot")
+                        .WithMany("Harvests")
+                        .HasForeignKey("PlotId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("harvest_plot_id_fkey");
+
+                    b.HasOne("CMMS.DAL.Entities.Season", "Season")
+                        .WithMany("Harvests")
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("harvest_season_id_fkey");
+
+                    b.Navigation("Crop");
+
+                    b.Navigation("Plot");
+
+                    b.Navigation("Season");
+                });
+
+            modelBuilder.Entity("CMMS.DAL.Entities.HarvestDetail", b =>
+                {
+                    b.HasOne("CMMS.DAL.Entities.Bed", "Bed")
+                        .WithMany("HarvestDetails")
+                        .HasForeignKey("BedId")
+                        .HasConstraintName("harvest_detail_bed_id_fkey");
+
+                    b.HasOne("CMMS.DAL.Entities.Harvest", "Harvest")
+                        .WithMany("HarvestDetails")
+                        .HasForeignKey("HarvestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("harvest_detail_harvest_id_fkey");
+
+                    b.Navigation("Bed");
+
+                    b.Navigation("Harvest");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.IotData", b =>
@@ -1937,11 +2156,6 @@ namespace CMMS.DAL.Migrations
                         .HasForeignKey("BedId")
                         .HasConstraintName("report_bed_id_fkey");
 
-                    b.HasOne("CMMS.DAL.Entities.User", "Creator")
-                        .WithMany("CreatedReports")
-                        .HasForeignKey("CreatedBy")
-                        .HasConstraintName("report_created_by_fkey");
-
                     b.HasOne("CMMS.DAL.Entities.User", "Owner")
                         .WithMany("OwnedReports")
                         .HasForeignKey("OwnerId")
@@ -1957,15 +2171,20 @@ namespace CMMS.DAL.Migrations
                         .HasForeignKey("SeasonId")
                         .HasConstraintName("report_season_id_fkey");
 
-                    b.Navigation("Bed");
+                    b.HasOne("CMMS.DAL.Entities.User", "Worker")
+                        .WithMany("WorkerReports")
+                        .HasForeignKey("WorkerId")
+                        .HasConstraintName("report_worker_id_fkey");
 
-                    b.Navigation("Creator");
+                    b.Navigation("Bed");
 
                     b.Navigation("Owner");
 
                     b.Navigation("Plot");
 
                     b.Navigation("Season");
+
+                    b.Navigation("Worker");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.ReportAssignment", b =>
@@ -2027,58 +2246,25 @@ namespace CMMS.DAL.Migrations
                     b.Navigation("Farm");
                 });
 
-            modelBuilder.Entity("CMMS.DAL.Entities.SeasonsDetail", b =>
-                {
-                    b.HasOne("CMMS.DAL.Entities.Bed", "Bed")
-                        .WithMany("SeasonsDetails")
-                        .HasForeignKey("BedId")
-                        .HasConstraintName("seasons_detail_bed_id_fkey");
-
-                    b.HasOne("CMMS.DAL.Entities.Crop", "Crop")
-                        .WithMany("SeasonsDetails")
-                        .HasForeignKey("CropId")
-                        .HasConstraintName("seasons_detail_crop_id_fkey");
-
-                    b.HasOne("CMMS.DAL.Entities.Season", "Season")
-                        .WithMany("SeasonsDetails")
-                        .HasForeignKey("SeasonId")
-                        .HasConstraintName("seasons_detail_season_id_fkey");
-
-                    b.Navigation("Bed");
-
-                    b.Navigation("Crop");
-
-                    b.Navigation("Season");
-                });
-
             modelBuilder.Entity("CMMS.DAL.Entities.SoilCropCompatibility", b =>
                 {
                     b.HasOne("CMMS.DAL.Entities.Crop", "Crop")
                         .WithMany("SoilCropCompatibilities")
                         .HasForeignKey("CropId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("soil_crop_compatibility_crop_id_fkey");
 
                     b.HasOne("CMMS.DAL.Entities.Soil", "Soil")
                         .WithMany("SoilCropCompatibilities")
                         .HasForeignKey("SoilId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("soil_crop_compatibility_soil_id_fkey");
 
                     b.Navigation("Crop");
 
                     b.Navigation("Soil");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.SubTask", b =>
-                {
-                    b.HasOne("CMMS.DAL.Entities.TaskDetail", "TaskDetail")
-                        .WithMany("SubTasks")
-                        .HasForeignKey("TaskDetailId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TaskDetail");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.TaskDetail", b =>
@@ -2163,16 +2349,16 @@ namespace CMMS.DAL.Migrations
 
             modelBuilder.Entity("CMMS.DAL.Entities.Bed", b =>
                 {
-                    b.Navigation("IotDevices");
+                    b.Navigation("HarvestDetails");
 
-                    b.Navigation("SeasonsDetails");
+                    b.Navigation("IotDevices");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Crop", b =>
                 {
                     b.Navigation("CropGrowthStages");
 
-                    b.Navigation("SeasonsDetails");
+                    b.Navigation("Harvests");
 
                     b.Navigation("SoilCropCompatibilities");
                 });
@@ -2184,9 +2370,9 @@ namespace CMMS.DAL.Migrations
                     b.Navigation("GrowthTrackings");
                 });
 
-            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisPriceSetting", b =>
+            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisPayment", b =>
                 {
-                    b.Navigation("Payments");
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisResult", b =>
@@ -2203,6 +2389,16 @@ namespace CMMS.DAL.Migrations
                     b.Navigation("TaskDetails");
                 });
 
+            modelBuilder.Entity("CMMS.DAL.Entities.Harvest", b =>
+                {
+                    b.Navigation("HarvestDetails");
+                });
+
+            modelBuilder.Entity("CMMS.DAL.Entities.HarvestDetail", b =>
+                {
+                    b.Navigation("GrowthTrackings");
+                });
+
             modelBuilder.Entity("CMMS.DAL.Entities.IotDevice", b =>
                 {
                     b.Navigation("IotDatas");
@@ -2211,6 +2407,8 @@ namespace CMMS.DAL.Migrations
             modelBuilder.Entity("CMMS.DAL.Entities.Plot", b =>
                 {
                     b.Navigation("Beds");
+
+                    b.Navigation("Harvests");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.RecommendationTask", b =>
@@ -2234,16 +2432,11 @@ namespace CMMS.DAL.Migrations
 
             modelBuilder.Entity("CMMS.DAL.Entities.Season", b =>
                 {
+                    b.Navigation("Harvests");
+
                     b.Navigation("Recommendations");
 
-                    b.Navigation("SeasonsDetails");
-
                     b.Navigation("TaskDetails");
-                });
-
-            modelBuilder.Entity("CMMS.DAL.Entities.SeasonsDetail", b =>
-                {
-                    b.Navigation("GrowthTrackings");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Soil", b =>
@@ -2260,15 +2453,11 @@ namespace CMMS.DAL.Migrations
 
             modelBuilder.Entity("CMMS.DAL.Entities.TaskDetail", b =>
                 {
-                    b.Navigation("SubTasks");
-
                     b.Navigation("WorkerSchedules");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.User", b =>
                 {
-                    b.Navigation("CreatedReports");
-
                     b.Navigation("Notifications");
 
                     b.Navigation("OwnedReports");
@@ -2278,6 +2467,8 @@ namespace CMMS.DAL.Migrations
                     b.Navigation("RecommendationTaskCreatedByOwners");
 
                     b.Navigation("RecommendationTaskDetails");
+
+                    b.Navigation("WorkerReports");
 
                     b.Navigation("WorkerSchedules");
                 });

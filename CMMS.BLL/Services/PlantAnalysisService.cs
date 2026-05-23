@@ -19,16 +19,26 @@ namespace CMMS.BLL.Services
             _httpClient = httpClient;
         }
 
-        private static readonly string[] AllowedMimeTypes = { "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif" };
-        private const long MaxImageBytes = 10 * 1024 * 1024;
+        private static readonly string[] AllowedMimeTypes =
+        {
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/heic",
+            "image/heif"
+        };
 
-        public async Task<PlantAnalysisResultDto> AnalyzePlantImageAsync(IFormFile image)
+        private const long MaxImageBytes = 2 * 1024 * 1024;
+
+        public async Task<PlantAnalysisResultDto> AnalyzePlantImageAsync(
+            IFormFile image,
+            PlantAnalysisContextDto context)
         {
             if (image == null || image.Length == 0)
                 throw new Exception("Thiếu ảnh.");
 
             if (image.Length > MaxImageBytes)
-                throw new Exception("Ảnh vượt quá 10MB.");
+                throw new Exception("Ảnh quá lớn. Vui lòng nén ảnh dưới 2MB trước khi gửi.");
 
             if (string.IsNullOrWhiteSpace(image.ContentType) ||
                 !AllowedMimeTypes.Contains(image.ContentType.ToLowerInvariant()))
@@ -62,7 +72,7 @@ namespace CMMS.BLL.Services
                     {
                         parts = new object[]
                         {
-                            new { text = GetPrompt() },
+                            new { text = GetPrompt(context) },
                             new
                             {
                                 inline_data = new
@@ -76,15 +86,19 @@ namespace CMMS.BLL.Services
                 },
                 generationConfig = new
                 {
-                    responseMimeType = "application/json"
+                    responseMimeType = "application/json",
+                    maxOutputTokens = 1000,
+                    temperature = 0.1
                 }
             };
 
             var json = JsonConvert.SerializeObject(requestBody);
+
             using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
             {
                 Content = new StringContent(json, Encoding.UTF8, "application/json")
             };
+
             request.Headers.Add("x-goog-api-key", apiKey);
 
             var response = await _httpClient.SendAsync(request);
@@ -99,37 +113,154 @@ namespace CMMS.BLL.Services
             if (string.IsNullOrWhiteSpace(modelText))
                 throw new Exception("Không có dữ liệu trả về từ Gemini.");
 
-            var result = JsonConvert.DeserializeObject<PlantAnalysisResultDto>(modelText);
+            PlantAnalysisResultDto result;
 
-            if (result == null)
-                throw new Exception("Parse JSON thất bại.");
+            try
+            {
+                modelText = CleanJson(modelText);
+                result = ParseGeminiResult(modelText);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Parse Gemini JSON lỗi. Raw: {modelText}. Error: {ex.Message}");
+            }
+
+            NormalizeResult(result);
 
             return result;
         }
 
-        private string GetPrompt()
+        private PlantAnalysisResultDto ParseGeminiResult(string json)
         {
-            return """
-Bạn là trợ lý hỗ trợ nhận diện bệnh cây từ ảnh.
+            var obj = JObject.Parse(json);
 
-Yêu cầu:
-- Phân tích ảnh cây hoặc lá cây.
-- Không khẳng định tuyệt đối.
-- Nếu không chắc chắn, ghi "Chưa xác định rõ".
-- Trả về JSON hợp lệ.
+            return new PlantAnalysisResultDto
+            {
+                PossibleDisease = obj["possibleDisease"]?.ToString() ?? "Unclear",
+                Confidence = obj["confidence"]?.ToObject<double?>() ?? 0,
+                Description = obj["description"]?.ToString() ?? string.Empty,
+                SymptomsDetected = ToStringList(obj["symptomsDetected"]),
+                CareSuggestions = ToStringList(obj["careSuggestions"]),
+                TreatmentSteps = ToStringList(obj["treatmentSteps"]),
+                Severity = obj["severity"]?.ToString() ?? "low"
+            };
+        }
 
-Schema:
-{
-  "possibleDisease": string,
-  "confidence": number,
-  "description": string,
-  "symptomsDetected": [string],
-  "careSuggestions": [string],
-  "severity": "low | medium | high"
-}
+        private List<string> ToStringList(JToken? token)
+        {
+            if (token == null)
+                return new List<string>();
 
-Chỉ trả JSON.
-""";
+            if (token.Type == JTokenType.Array)
+                return token.Select(x => x?.ToString() ?? string.Empty)
+                            .Where(x => !string.IsNullOrWhiteSpace(x))
+                            .ToList();
+
+            var text = token.ToString();
+
+            if (string.IsNullOrWhiteSpace(text))
+                return new List<string>();
+
+            return new List<string> { text };
+        }
+
+        private void NormalizeResult(PlantAnalysisResultDto result)
+        {
+            result.PossibleDisease ??= string.Empty;
+            result.Description ??= string.Empty;
+            result.SymptomsDetected ??= new List<string>();
+            result.CareSuggestions ??= new List<string>();
+            result.TreatmentSteps ??= new List<string>();
+            result.Severity = NormalizeSeverity(result.Severity);
+
+            if (result.Confidence < 0)
+                result.Confidence = 0;
+
+            if (result.Confidence > 1)
+                result.Confidence = 1;
+        }
+
+        private string NormalizeSeverity(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return "low";
+
+            var level = value.Trim().ToLowerInvariant();
+
+            return level switch
+            {
+                "low" => "low",
+                "medium" => "medium",
+                "high" => "high",
+                _ => "low"
+            };
+        }
+
+        private string GetPrompt(PlantAnalysisContextDto context)
+        {
+            return $@"Analyze plant disease from image and environment data.
+
+Context:
+Plant={ShortText(context.PlantName, 40)}
+Stage={ShortText(context.GrowthStage, 40)}
+Temp={FormatNumber(context.Temperature)}C
+AirHumidity={FormatNumber(context.AirHumidity)}%
+SoilMoisture={FormatNumber(context.SoilMoisture)}%
+Light={FormatNumber(context.LightIntensity)}
+Weather={ShortText(context.WeatherCondition, 40)}
+
+Task:
+Identify the most likely plant disease, visible symptoms, and practical treatment.
+
+Rules:
+Return only a valid compact JSON object.
+Do not use markdown.
+Do not add explanation outside JSON.
+Use English only.
+Use short string values.
+Do not break strings with newlines.
+If uncertain, set possibleDisease to ""Unclear"".
+confidence must be 0 to 1.
+severity must be one of: low, medium, high.
+
+JSON example:
+{{""possibleDisease"":""Bacterial Soft Rot"",""confidence"":0.85,""description"":""Brown soft decay on cabbage head."",""symptomsDetected"":[""Brown lesions"",""Soft decay"",""Water-soaked tissue""],""careSuggestions"":[""Improve air circulation"",""Avoid overhead irrigation""],""treatmentSteps"":[""Remove infected tissue"",""Use copper-based bactericide if appropriate""],""severity"":""high""}}";
+        }
+
+        private string CleanJson(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return string.Empty;
+
+            text = text.Trim();
+
+            text = text.Replace("```json", "");
+            text = text.Replace("```", "");
+
+            var start = text.IndexOf('{');
+            var end = text.LastIndexOf('}');
+
+            if (start >= 0 && end > start)
+                text = text.Substring(start, end - start + 1);
+
+            return text.Trim();
+        }
+
+        private string ShortText(string? value, int maxLength)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return "N/A";
+
+            value = value.Trim();
+
+            return value.Length <= maxLength
+                ? value
+                : value.Substring(0, maxLength);
+        }
+
+        private string FormatNumber(double? value)
+        {
+            return value.HasValue ? value.Value.ToString("0.#") : "N/A";
         }
     }
 }

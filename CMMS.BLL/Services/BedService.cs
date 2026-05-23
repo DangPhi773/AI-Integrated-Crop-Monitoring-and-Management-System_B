@@ -5,10 +5,6 @@ using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Beds;
 using CMMS.DAL.Entities;
 using CMMS.DAL.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CMMS.BLL.Services
 {
@@ -68,7 +64,6 @@ namespace CMMS.BLL.Services
                     BedArea = request.BedArea,
                     BedStatus = request.BedStatus ?? "Active",
                     CropQuantities = request.CropQuantities,
-                    CropId = request.CropId,
                     BedWidth = request.BedWidth,
                     BedLength = request.BedLength,
                     PathWidth = request.PathWidth,
@@ -101,7 +96,6 @@ namespace CMMS.BLL.Services
                 entity.BedArea = request.BedArea ?? entity.BedArea;
                 entity.BedStatus = request.BedStatus ?? entity.BedStatus;
                 entity.CropQuantities = request.CropQuantities ?? entity.CropQuantities;
-                entity.CropId = request.CropId ?? entity.CropId;
                 entity.BedWidth = request.BedWidth ?? entity.BedWidth;
                 entity.BedLength = request.BedLength ?? entity.BedLength;
                 entity.PathWidth = request.PathWidth ?? entity.PathWidth;
@@ -137,7 +131,7 @@ namespace CMMS.BLL.Services
                     };
                 }
 
-                if (entity.SeasonsDetails != null && entity.SeasonsDetails.Any())
+                if (entity.HarvestDetails != null && entity.HarvestDetails.Any())
                 {
                     return new ApiResponse<string>
                     {
@@ -196,7 +190,6 @@ namespace CMMS.BLL.Services
                     {
                         BedId = Guid.NewGuid(),
                         PlotId = request.PlotId,
-                        CropId = request.CropId,
                         BedName = b.BedName,
                         BedArea = (decimal)b.BedArea,
                         BedLength = b.BedLength,
@@ -238,16 +231,19 @@ namespace CMMS.BLL.Services
             if (request.BedWidth < (request.RowsPerBed - 1) * crop.RowSpacing.Value)
                 return (null, "Chiều rộng luống không đủ chứa số hàng yêu cầu");
 
-            double bedLength = plot.PlotLength.Value - 2 * plot.PlotMargin;
-            if (bedLength <= 0) return (null, "plot_margin quá lớn so với plot_length");
+            double bedLength = plot.PlotLength.Value - 2 * plot.PlotMarginLength;
+            if (bedLength <= 0) return (null, "plot_margin_length quá lớn so với plot_length");
 
-            int bedCount = (int)Math.Floor(plot.PlotWidth.Value / (request.BedWidth + request.PathWidth));
+            double usableWidth = plot.PlotWidth.Value - 2 * plot.PlotMarginWidth;
+            if (usableWidth <= 0) return (null, "plot_margin_width quá lớn so với plot_width");
+
+            int bedCount = (int)Math.Floor(usableWidth / (request.BedWidth + request.PathWidth));
             if (bedCount <= 0) return (null, "Không thể chia luống với thông số hiện tại");
 
             int plantsPerRow = (int)Math.Floor(bedLength / crop.PlantSpacing.Value);
             int plantCount = plantsPerRow * request.RowsPerBed;
             double bedArea = bedLength * request.BedWidth;
-            double widthRemain = plot.PlotWidth.Value - bedCount * (request.BedWidth + request.PathWidth);
+            double widthRemain = usableWidth - bedCount * (request.BedWidth + request.PathWidth);
 
             var prefix = string.IsNullOrWhiteSpace(request.BedNamePrefix) ? "Luống" : request.BedNamePrefix!.Trim();
             var beds = Enumerable.Range(1, bedCount).Select(i => new BedPreviewItem

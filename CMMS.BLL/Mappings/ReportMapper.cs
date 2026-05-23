@@ -9,8 +9,8 @@ namespace CMMS.BLL.Mappings
         {
             ReportId = r.ReportId,
             ReportNo = r.ReportNo,
-            CreatedBy = r.CreatedBy,
-            CreatorName = r.Creator?.Fullname,
+            WorkerId = r.WorkerId,
+            WorkerName = r.Worker?.Fullname,
             OwnerId = r.OwnerId,
             OwnerName = r.Owner?.Fullname,
             Title = r.Title,
@@ -38,7 +38,7 @@ namespace CMMS.BLL.Mappings
 
         public static DiagnosisResponse ToDiagnosisResponse(DiagnosisResult d, string? diagnoserName = null) => new()
         {
-            Id = d.Id,
+            Id = d.DiagnosisResultId,
             ReportId = d.ReportId,
             ReportNo = d.Report?.ReportNo,
             ReportTitle = d.Report?.Title,

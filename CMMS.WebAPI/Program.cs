@@ -1,9 +1,12 @@
 ﻿using CMMS.BLL.Configuration;
 using CMMS.BLL.Interfaces;
+using CMMS.BLL.Realtime;
 using CMMS.BLL.Services;
 using CMMS.DAL.DBContext;
 using CMMS.DAL.Interfaces;
 using CMMS.DAL.Repositories;
+using CMMS.WebAPI.Hubs;
+using CMMS.WebAPI.Hubs.Publishers;
 using CMMS.WebAPI.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +15,7 @@ using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,12 +41,12 @@ builder.Services.AddScoped<IFarmRepository, FarmRepository>();
 builder.Services.AddScoped<ISoilRepository, SoilRepository>();
 builder.Services.AddScoped<IPlotRepository, PlotRepository>();
 builder.Services.AddScoped<IBedRepository, BedRepository>();
-builder.Services.AddScoped<ISeasonsDetailRepository, SeasonsDetailRepository>();
+builder.Services.AddScoped<IHarvestRepository, HarvestRepository>();
+builder.Services.AddScoped<IHarvestDetailRepository, HarvestDetailRepository>();
 builder.Services.AddScoped<IIotDeviceRepository, IotDeviceRepository>();
 builder.Services.AddScoped<IIotDataRepository, IotDataRepository>();
 builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>();
 builder.Services.AddScoped<ICropGrowthTaskRepository, CropGrowthTaskRepository>();
-builder.Services.AddScoped<ISubTaskRepository, SubTaskRepository>();
 builder.Services.AddScoped<IWorkerScheduleRepository, WorkerScheduleRepository>();
 builder.Services.AddScoped<ICropGrowthStageRepository, CropGrowthStageRepository>();
 builder.Services.AddScoped<IReportRepository, ReportRepository>();
@@ -54,6 +58,7 @@ builder.Services.AddScoped<IReportEnvironmentSnapshotRepository, ReportEnvironme
 builder.Services.AddScoped<ISoilCropCompatibilityRepository, SoilCropCompatibilityRepository>();
 builder.Services.AddScoped<IRecommendationTaskRepository, RecommendationTaskRepository>();
 builder.Services.AddScoped<IRecommendationTaskDetailRepository, RecommendationTaskDetailRepository>();
+builder.Services.AddScoped<IGrowthTrackingRepository, GrowthTrackingRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICropService, CropService>();
@@ -65,25 +70,28 @@ builder.Services.AddScoped<IFarmService, FarmService>();
 builder.Services.AddScoped<ISoilService, SoilService>();
 builder.Services.AddScoped<IPlotService, PlotService>();
 builder.Services.AddScoped<IBedService, BedService>();
-builder.Services.AddScoped<ISeasonsDetailService, SeasonsDetailService>();
+builder.Services.AddScoped<IHarvestService, HarvestService>();
+builder.Services.AddScoped<IHarvestDetailService, HarvestDetailService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IIotDeviceService, IotDeviceService>();
 builder.Services.AddScoped<IIotDataService, IotDataService>();
 builder.Services.AddScoped<ISensorDataService, SensorDataService>();
 builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddScoped<ICropGrowthTaskService, CropGrowthTaskService>();
-builder.Services.AddScoped<ISubTaskService, SubTaskService>();
 builder.Services.AddScoped<IWorkerScheduleService, WorkerScheduleService>();
 builder.Services.AddScoped<ICropGrowthStageService, CropGrowthStageService>();
 builder.Services.AddScoped<ISoilCropCompatibilityService, SoilCropCompatibilityService>();
 builder.Services.AddScoped<IRecommendationTaskService, RecommendationTaskService>();
 builder.Services.AddScoped<IRecommendationTaskDetailService, RecommendationTaskDetailService>();
+builder.Services.AddScoped<IGrowthTrackingService, GrowthTrackingService>();
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("Cloudinary"));
-builder.Services.Configure<VNPaySettings>(builder.Configuration.GetSection("PaymentSettings:VNPay"));
-builder.Services.Configure<PayOSSettings>(builder.Configuration.GetSection("PaymentSettings:PayOS"));
+builder.Services.Configure<GoogleMapsSettings>(builder.Configuration.GetSection("GoogleMaps"));
+builder.Services.Configure<WeatherSettings>(builder.Configuration.GetSection("Weather"));
 builder.Services.AddHttpClient<IPlantAnalysisService, PlantAnalysisService>();
+builder.Services.AddHttpClient<IGoogleMapsService, GoogleMapsService>();
+builder.Services.AddHttpClient<IWeatherService, WeatherService>();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
@@ -91,9 +99,20 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 
-builder.Services.AddScoped<VNPayService>();
-builder.Services.AddHttpClient<PayOSService>();
+builder.Services.AddScoped<IDiagnosisContractService, DiagnosisContractService>();
 builder.Services.AddScoped<IDiagnosisBillingService, DiagnosisBillingService>();
+
+builder.Services.AddSignalR()
+    .AddMessagePackProtocol()
+    .AddJsonProtocol(opts =>
+    {
+        opts.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
+
+builder.Services.AddScoped<INotificationRealtime, NotificationRealtimePublisher>();
+builder.Services.AddScoped<IIotRealtime, IotRealtimePublisher>();
+builder.Services.AddScoped<ITaskRealtime, TaskRealtimePublisher>();
+builder.Services.AddScoped<IPaymentRealtime, PaymentRealtimePublisher>();
 
 builder.Services.AddEndpointsApiExplorer();
 var allowedOrigins = builder.Configuration
@@ -112,7 +131,8 @@ builder.Services.AddCors(options =>
                     && uri.Host.EndsWith(".vercel.app");
             })
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -124,7 +144,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true, 
+            ValidateIssuer = true,
             ValidateAudience = true,
             ValidIssuer = jwtSettings["Issuer"],
             ValidAudience = jwtSettings["Audience"],
@@ -133,7 +153,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(key),
             RoleClaimType = ClaimTypes.Role,
             NameClaimType = ClaimTypes.NameIdentifier,
-            ClockSkew = TimeSpan.Zero 
+            ClockSkew = TimeSpan.Zero
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = ctx =>
+            {
+                var accessToken = ctx.Request.Query["access_token"];
+                var path = ctx.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                    ctx.Token = accessToken;
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -187,5 +218,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<NotificationHub>("/hubs/notifications");
+app.MapHub<IotHub>("/hubs/iot");
+app.MapHub<TaskHub>("/hubs/tasks");
+app.MapHub<PaymentHub>("/hubs/payments");
 
 app.Run();

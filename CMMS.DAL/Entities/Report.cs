@@ -14,7 +14,7 @@ public partial class Report
     [MaxLength(50)]
     public string? ReportNo { get; set; }
 
-    public Guid? CreatedBy { get; set; }
+    public Guid? WorkerId { get; set; }
 
     public Guid? OwnerId { get; set; }
 
@@ -47,8 +47,8 @@ public partial class Report
     [Column(TypeName = "timestamp")]
     public DateTime? UpdatedAt { get; set; }
 
-    [ForeignKey("CreatedBy")]
-    public virtual User? Creator { get; set; }
+    [ForeignKey("WorkerId")]
+    public virtual User? Worker { get; set; }
 
     [ForeignKey("OwnerId")]
     public virtual User? Owner { get; set; }

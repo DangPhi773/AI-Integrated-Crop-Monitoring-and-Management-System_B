@@ -62,6 +62,20 @@ namespace CMMS.BLL.Services
             return new ApiResponse<IEnumerable<ReportResponse>> { Success = true, Data = data };
         }
 
+        public async Task<ApiResponse<IEnumerable<ReportResponse>>> FilterReportsAsync(string? status = null)
+        {
+            var reports = await _reportRepo.FilterAsync(status);
+            var data = new List<ReportResponse>();
+            foreach (var r in reports)
+            {
+                var response = ReportMapper.ToResponse(r);
+                var attachments = await _attachmentRepo.GetByObjectAsync("report", r.ReportId);
+                response.Attachments = attachments.Select(AttachmentMapper.ToDto).ToList();
+                data.Add(response);
+            }
+            return new ApiResponse<IEnumerable<ReportResponse>> { Success = true, Data = data };
+        }
+
         public async Task<ApiResponse<ReportResponse>> GetReportByIdAsync(Guid id)
         {
             var r = await _reportRepo.GetByIdWithDetailsAsync(id);
@@ -81,7 +95,7 @@ namespace CMMS.BLL.Services
             {
                 ReportId = Guid.NewGuid(),
                 ReportNo = reportNo,
-                CreatedBy = createdByUserId,
+                WorkerId = createdByUserId,
                 OwnerId = request.OwnerId,
                 Title = request.Title,
                 Description = request.Description,
@@ -204,7 +218,7 @@ namespace CMMS.BLL.Services
 
             var diagnosis = new DiagnosisResult
             {
-                Id = Guid.NewGuid(),
+                DiagnosisResultId = Guid.NewGuid(),
                 ReportId = reportId,
                 DiagnosedBy = diagnosedByUserId,
                 DiseaseName = request.DiseaseName,
@@ -235,7 +249,7 @@ namespace CMMS.BLL.Services
                     NoteId = Guid.NewGuid(),
                     UserId = report.OwnerId.Value,
                     ReportId = reportId,
-                    DiagnosisId = diagnosis.Id,
+                    DiagnosisId = diagnosis.DiagnosisResultId,
                     NoteType = "diagnosis_completed",
                     NoteTitle = $"Chẩn đoán hoàn tất cho báo cáo {report.ReportNo}",
                     NoteMessage = $"Bệnh: {request.DiseaseName} - Mức độ: {request.SeverityLevel}",

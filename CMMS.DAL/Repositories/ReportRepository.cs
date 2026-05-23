@@ -28,9 +28,29 @@ namespace CMMS.DAL.Repositories
         {
             return await _context.Reports
                 .AsNoTracking()
-                .Include(r => r.Creator)
+                .Include(r => r.Worker)
                 .Include(r => r.Owner)
                 .Include(r => r.EnvironmentSnapshots)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Report>> FilterAsync(string? status = null)
+        {
+            var query = _context.Reports
+                .AsNoTracking()
+                .Include(r => r.Worker)
+                .Include(r => r.Owner)
+                .Include(r => r.EnvironmentSnapshots)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                var normalized = status.Trim().ToUpper();
+                query = query.Where(r => r.Status != null && r.Status.ToUpper() == normalized);
+            }
+
+            return await query
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
         }
@@ -39,7 +59,7 @@ namespace CMMS.DAL.Repositories
         {
             return await _context.Reports
                 .AsNoTracking()
-                .Include(r => r.Creator)
+                .Include(r => r.Worker)
                 .Include(r => r.Owner)
                 .Include(r => r.EnvironmentSnapshots)
                 .FirstOrDefaultAsync(r => r.ReportId == id);
