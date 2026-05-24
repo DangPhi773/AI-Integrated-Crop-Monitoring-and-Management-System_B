@@ -59,6 +59,7 @@ builder.Services.AddScoped<ISoilCropCompatibilityRepository, SoilCropCompatibili
 builder.Services.AddScoped<IRecommendationTaskRepository, RecommendationTaskRepository>();
 builder.Services.AddScoped<IRecommendationTaskDetailRepository, RecommendationTaskDetailRepository>();
 builder.Services.AddScoped<IGrowthTrackingRepository, GrowthTrackingRepository>();
+builder.Services.AddScoped<IStatisticsRepository, StatisticsRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICropService, CropService>();
@@ -84,6 +85,7 @@ builder.Services.AddScoped<ISoilCropCompatibilityService, SoilCropCompatibilityS
 builder.Services.AddScoped<IRecommendationTaskService, RecommendationTaskService>();
 builder.Services.AddScoped<IRecommendationTaskDetailService, RecommendationTaskDetailService>();
 builder.Services.AddScoped<IGrowthTrackingService, GrowthTrackingService>();
+builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("Cloudinary"));
