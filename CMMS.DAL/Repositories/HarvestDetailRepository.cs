@@ -30,6 +30,9 @@ namespace CMMS.DAL.Repositories
         public async Task<IEnumerable<HarvestDetail>> GetByHarvestIdAsync(Guid harvestId)
             => await _context.HarvestDetails
                 .Include(d => d.Bed)
+                .Include(d => d.Harvest).ThenInclude(h => h.Crop)
+                .Include(d => d.Harvest).ThenInclude(h => h.Season)
+                .Include(d => d.Harvest).ThenInclude(h => h.Plot)
                 .Where(d => d.HarvestId == harvestId)
                 .AsNoTracking()
                 .ToListAsync();
