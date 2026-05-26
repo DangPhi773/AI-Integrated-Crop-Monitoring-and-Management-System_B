@@ -54,6 +54,7 @@ public class DiagnosisContractService : IDiagnosisContractService
             ExpertId = request.ExpertId,
             BankAccount = request.BankAccount,
             BankName = request.BankName,
+            BankBin = request.BankBin,
             AccountHolder = request.AccountHolder,
             PricePerDiagnosis = request.PricePerDiagnosis,
             StartDate = request.StartDate.Date,
@@ -141,6 +142,7 @@ public class DiagnosisContractService : IDiagnosisContractService
 
         contract.BankAccount = request.BankAccount;
         contract.BankName = request.BankName;
+        contract.BankBin = request.BankBin;
         contract.AccountHolder = request.AccountHolder;
         contract.EndDate = request.EndDate?.Date;
         contract.Notes = request.Notes;
@@ -188,6 +190,7 @@ public class DiagnosisContractService : IDiagnosisContractService
         ExpertName = c.Expert?.Fullname ?? "",
         BankAccount = c.BankAccount,
         BankName = c.BankName,
+        BankBin = c.BankBin,
         AccountHolder = c.AccountHolder,
         PricePerDiagnosis = c.PricePerDiagnosis,
         StartDate = c.StartDate,
