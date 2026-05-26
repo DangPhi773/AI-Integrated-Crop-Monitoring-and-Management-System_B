@@ -8,6 +8,7 @@ public class ContractResponse
     public string ExpertName { get; set; } = null!;
     public string BankAccount { get; set; } = null!;
     public string BankName { get; set; } = null!;
+    public string? BankBin { get; set; }
     public string AccountHolder { get; set; } = null!;
     public decimal PricePerDiagnosis { get; set; }
     public DateTime StartDate { get; set; }

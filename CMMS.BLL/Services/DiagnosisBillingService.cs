@@ -44,6 +44,20 @@ public class DiagnosisBillingService : IDiagnosisBillingService
             .AsNoTracking()
             .FirstOrDefaultAsync();
 
+        var totalAmount = items.Sum(i => i.UnitPrice);
+
+        string? qrUrl = null;
+        if (!isPaid && totalAmount > 0 && latestContract != null)
+        {
+            var addInfo = $"Thanh toan {specialist.Fullname} thang {monthStart:MM/yyyy}";
+            qrUrl = VietQrHelper.BuildImageUrl(
+                latestContract.BankBin,
+                latestContract.BankAccount,
+                totalAmount,
+                latestContract.AccountHolder,
+                addInfo);
+        }
+
         return new ApiResponse<BillInfoResponse>
         {
             Success = true,
@@ -54,10 +68,12 @@ public class DiagnosisBillingService : IDiagnosisBillingService
                 Month = monthStart,
                 BankAccount = latestContract?.BankAccount,
                 BankName = latestContract?.BankName,
+                BankBin = latestContract?.BankBin,
                 AccountHolder = latestContract?.AccountHolder,
                 TotalDiagnoses = items.Count,
-                TotalAmount = items.Sum(i => i.UnitPrice),
+                TotalAmount = totalAmount,
                 IsPaid = isPaid,
+                QrUrl = qrUrl,
                 Items = items
             }
         };
@@ -179,6 +195,91 @@ public class DiagnosisBillingService : IDiagnosisBillingService
             return new ApiResponse<PaymentResponse> { Success = false, Message = "Không tìm thấy thanh toán" };
 
         return new ApiResponse<PaymentResponse> { Success = true, Data = await MapPaymentAsync(p) };
+    }
+
+    public async Task<ApiResponse<IEnumerable<PendingBillResponse>>> GetPendingBillsAsync(Guid userId, string role, Guid? specialistId, bool dueOnly)
+    {
+        if (role != "Owner" && role != "Specialist")
+            return new ApiResponse<IEnumerable<PendingBillResponse>> { Success = false, Message = "Không có quyền truy cập" };
+
+        var today = DateTimeHelper.VnNow().Date;
+
+        var raw = await (
+            from dr in _db.DiagnosisResults.AsNoTracking()
+            join c in _db.DiagnosisContracts.AsNoTracking()
+                on dr.DiagnosedBy equals c.ExpertId
+            join u in _db.Users.AsNoTracking()
+                on dr.DiagnosedBy equals u.UserId
+            where dr.Status == "FINAL"
+                && dr.CreatedAt >= c.StartDate
+                && (c.EndDate == null || dr.CreatedAt <= c.EndDate)
+                && !_db.DiagnosisPaymentItems.Any(pi => pi.DiagnosisResultId == dr.DiagnosisResultId)
+                && (role == "Owner" || dr.DiagnosedBy == userId)
+                && (specialistId == null || dr.DiagnosedBy == specialistId)
+            select new
+            {
+                SpecialistId = dr.DiagnosedBy,
+                SpecialistName = u.Fullname,
+                Year = dr.CreatedAt.Year,
+                MonthNum = dr.CreatedAt.Month,
+                Price = c.PricePerDiagnosis,
+                BankAccount = c.BankAccount,
+                BankName = c.BankName,
+                BankBin = c.BankBin,
+                AccountHolder = c.AccountHolder
+            }
+        ).ToListAsync();
+
+        var grouped = raw
+            .GroupBy(x => new { x.SpecialistId, x.Year, x.MonthNum })
+            .Select(g =>
+            {
+                var monthStart = new DateTime(g.Key.Year, g.Key.MonthNum, 1);
+                var nextMonth = monthStart.AddMonths(1);
+                var isDue = today >= nextMonth;
+                var daysOverdue = isDue ? (today - nextMonth).Days : 0;
+
+                var first = g.First();
+                var totalAmount = g.Sum(x => x.Price);
+
+                var qrUrl = VietQrHelper.BuildImageUrl(
+                    first.BankBin,
+                    first.BankAccount,
+                    totalAmount,
+                    first.AccountHolder,
+                    $"Thanh toan {first.SpecialistName} thang {monthStart:MM/yyyy}");
+
+                return new PendingBillResponse
+                {
+                    SpecialistId = g.Key.SpecialistId,
+                    SpecialistName = first.SpecialistName ?? "",
+                    Month = monthStart,
+                    TotalDiagnoses = g.Count(),
+                    TotalAmount = totalAmount,
+                    IsDue = isDue,
+                    DaysOverdue = daysOverdue,
+                    BankAccount = first.BankAccount,
+                    BankName = first.BankName,
+                    BankBin = first.BankBin,
+                    AccountHolder = first.AccountHolder,
+                    QrUrl = qrUrl
+                };
+            });
+
+        if (dueOnly)
+            grouped = grouped.Where(x => x.IsDue);
+
+        var result = grouped
+            .OrderBy(x => x.Month)
+            .ThenBy(x => x.SpecialistName)
+            .ToList();
+
+        return new ApiResponse<IEnumerable<PendingBillResponse>>
+        {
+            Success = true,
+            Data = result,
+            Message = $"Có {result.Count} đơn chưa thanh toán"
+        };
     }
 
     private async Task<List<BillItemResponse>> QueryUnpaidItemsAsync(Guid specialistId, DateTime monthStart)
