@@ -77,6 +77,7 @@ builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IIotDeviceService, IotDeviceService>();
 builder.Services.AddScoped<IIotDataService, IotDataService>();
 builder.Services.AddScoped<ISensorDataService, SensorDataService>();
+builder.Services.AddScoped<IAlertRuleEngine, AlertRuleEngine>();
 builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddScoped<ICropGrowthTaskService, CropGrowthTaskService>();
 builder.Services.AddScoped<IWorkerScheduleService, WorkerScheduleService>();
@@ -91,6 +92,7 @@ builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Emai
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("Cloudinary"));
 builder.Services.Configure<GoogleMapsSettings>(builder.Configuration.GetSection("GoogleMaps"));
 builder.Services.Configure<WeatherSettings>(builder.Configuration.GetSection("Weather"));
+builder.Services.Configure<SensorAlertSettings>(builder.Configuration.GetSection("SensorAlerts"));
 builder.Services.AddHttpClient<IPlantAnalysisService, PlantAnalysisService>();
 builder.Services.AddHttpClient<IGoogleMapsService, GoogleMapsService>();
 builder.Services.AddHttpClient<IWeatherService, WeatherService>();
