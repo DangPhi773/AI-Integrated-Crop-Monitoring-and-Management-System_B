@@ -21,6 +21,10 @@ namespace CMMS.WebAPI.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetDetail(Guid id) => Ok(await _service.GetDetailAsync(id));
 
+        [Authorize(Roles = "Owner,Specialist")]
+        [HttpGet("diagnosis/{diagnosisId:guid}")]
+        public async Task<IActionResult> GetByDiagnosis(Guid diagnosisId) => Ok(await _service.GetByDiagnosisIdAsync(diagnosisId));
+
         [Authorize(Roles = "Specialist")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] RecommendationRequest req) => Ok(await _service.CreateAsync(req));

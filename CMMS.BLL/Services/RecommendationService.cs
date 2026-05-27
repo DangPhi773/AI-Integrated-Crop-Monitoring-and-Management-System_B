@@ -41,6 +41,20 @@ namespace CMMS.BLL.Services
             return new ApiResponse<RecommendationResponse> { Success = true, Data = res };
         }
 
+        public async Task<ApiResponse<IEnumerable<RecommendationResponse>>> GetByDiagnosisIdAsync(Guid diagnosisId)
+        {
+            try
+            {
+                var data = await _repo.GetByDiagnosisIdAsync(diagnosisId);
+                var response = data.Select(RecommendationMapper.ToResponse).ToList();
+                return new ApiResponse<IEnumerable<RecommendationResponse>> { Success = true, Data = response };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<IEnumerable<RecommendationResponse>> { Success = false, Message = ex.Message };
+            }
+        }
+
         public async Task<ApiResponse<string>> CreateAsync(RecommendationRequest request)
         {
             try
