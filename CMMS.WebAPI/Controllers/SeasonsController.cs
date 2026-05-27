@@ -17,7 +17,7 @@ namespace CMMS.WebAPI.Controllers
             _seasonService = seasonService;
         }
 
-        [Authorize(Roles = "Owner,Worker")]
+        [Authorize(Roles = "Owner,Worker,Specialist")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -25,7 +25,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [Authorize(Roles = "Owner")]
+        [Authorize(Roles = "Owner,Specialist")]
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
