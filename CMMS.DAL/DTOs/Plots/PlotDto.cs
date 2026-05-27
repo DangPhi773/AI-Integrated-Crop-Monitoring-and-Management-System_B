@@ -5,7 +5,10 @@ namespace CMMS.DAL.DTOs.Plots
 {
     public class PlotRequest
     {
+        [Required(ErrorMessage = "Mã trang trại (FarmId) là bắt buộc")] 
         public Guid? FarmId { get; set; }
+
+        [Required(ErrorMessage = "Mã loại đất (SoilId) là bắt buộc")]
         public Guid? SoilId { get; set; }
 
         [StringLength(150, MinimumLength = 1, ErrorMessage = "Tên thửa phải từ 1 đến 150 ký tự")]
