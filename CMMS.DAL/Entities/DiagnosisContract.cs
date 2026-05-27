@@ -21,6 +21,9 @@ public class DiagnosisContract
     [MaxLength(100)]
     public string BankName { get; set; } = null!;
 
+    [MaxLength(6)]
+    public string? BankBin { get; set; }
+
     [MaxLength(100)]
     public string AccountHolder { get; set; } = null!;
 
