@@ -13,13 +13,17 @@ namespace CMMS.WebAPI.Controllers
         private readonly IRecommendationService _service;
         public RecommendationsController(IRecommendationService service) => _service = service;
 
-        [Authorize(Roles = "Specialist")]
+        [Authorize(Roles = "Owner,Specialist")]
         [HttpGet]
         public async Task<IActionResult> GetAll() => Ok(await _service.GetListAsync());
 
-        [Authorize(Roles = "Specialist")]
+        [Authorize(Roles = "Owner,Specialist")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetDetail(Guid id) => Ok(await _service.GetDetailAsync(id));
+
+        [Authorize(Roles = "Owner,Specialist")]
+        [HttpGet("diagnosis/{diagnosisId:guid}")]
+        public async Task<IActionResult> GetByDiagnosis(Guid diagnosisId) => Ok(await _service.GetByDiagnosisIdAsync(diagnosisId));
 
         [Authorize(Roles = "Specialist")]
         [HttpPost]

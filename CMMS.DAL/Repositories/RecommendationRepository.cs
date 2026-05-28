@@ -28,7 +28,18 @@ namespace CMMS.DAL.Repositories
         {
             return await _context.Recommendations
                 .Include(r => r.Diagnosis)
+                .Include(r => r.Season)
                 .FirstOrDefaultAsync(r => r.RecommendationId == id);
+        }
+
+        public async Task<IEnumerable<Recommendation>> GetByDiagnosisIdAsync(Guid diagnosisId)
+        {
+            return await _context.Recommendations
+                .Include(r => r.Diagnosis)
+                .Include(r => r.Season)
+                .Where(r => r.DiagnosisId == diagnosisId)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
         }
 
         public async System.Threading.Tasks.Task AddAsync(Recommendation rec) => await _context.Recommendations.AddAsync(rec);

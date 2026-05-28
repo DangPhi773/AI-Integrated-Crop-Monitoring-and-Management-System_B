@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace CMMS.DAL.DTOs.Recommendation
 {
@@ -6,7 +7,11 @@ namespace CMMS.DAL.DTOs.Recommendation
     {
         public Guid? SeasonId { get; set; }
         public Guid? DiagnosisId { get; set; }
+
+        [StringLength(200, MinimumLength = 1, ErrorMessage = "Title phải từ 1 đến 200 ký tự")]
         public string? Title { get; set; }
+
+        [StringLength(5000, ErrorMessage = "Content tối đa 5000 ký tự")]
         public string? Content { get; set; }
     }
 

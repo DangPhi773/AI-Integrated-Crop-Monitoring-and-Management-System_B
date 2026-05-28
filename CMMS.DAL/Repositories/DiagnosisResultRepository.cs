@@ -27,7 +27,7 @@ namespace CMMS.DAL.Repositories
                 .AsNoTracking()
                 .Include(d => d.Diagnoser)
                 .Include(d => d.Report)
-                .FirstOrDefaultAsync(d => d.Id == id);
+                .FirstOrDefaultAsync(d => d.DiagnosisResultId == id);
         }
 
         public async Task<List<DiagnosisResult>> GetByReportIdAsync(Guid reportId)
