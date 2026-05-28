@@ -11,6 +11,7 @@ namespace CMMS.DAL.Interfaces
     {
         Task<IEnumerable<Recommendation>> GetAllWithDetailsAsync();
         Task<Recommendation?> GetByIdWithDetailsAsync(Guid id);
+        Task<IEnumerable<Recommendation>> GetByDiagnosisIdAsync(Guid diagnosisId);
         System.Threading.Tasks.Task AddAsync(Recommendation recommendation);
         void Update(Recommendation recommendation);
         void Delete(Recommendation recommendation);

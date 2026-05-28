@@ -11,12 +11,10 @@ namespace CMMS.WebAPI.Controllers;
 public class ContractController : ControllerBase
 {
     private readonly IDiagnosisContractService _contractService;
-    private readonly IDiagnosisBillingService _billingService;
 
-    public ContractController(IDiagnosisContractService contractService, IDiagnosisBillingService billingService)
+    public ContractController(IDiagnosisContractService contractService)
     {
         _contractService = contractService;
-        _billingService = billingService;
     }
 
     [HttpPost]
@@ -71,16 +69,6 @@ public class ContractController : ControllerBase
     {
         var ownerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var result = await _contractService.TerminateAsync(id, ownerId);
-        return Ok(result);
-    }
-
-    [HttpGet("{id:guid}/bill")]
-    [Authorize(Policy = "SpecialistOnly")]
-    public async Task<IActionResult> GetBill(Guid id, [FromQuery] DateTime month)
-    {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var role = User.FindFirstValue(ClaimTypes.Role) ?? "";
-        var result = await _billingService.GetBillForMonthAsync(id, month, userId, role);
         return Ok(result);
     }
 }

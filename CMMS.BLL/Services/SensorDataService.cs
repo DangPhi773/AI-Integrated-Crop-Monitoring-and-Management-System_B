@@ -22,22 +22,38 @@ namespace CMMS.BLL.Services
         private readonly IIotDeviceRepository _deviceRepo;
         private readonly ISeasonRepository _seasonRepo;
         private readonly IIotRealtime _realtime;
+        private readonly IAlertRuleEngine _alertEngine;
 
         public SensorDataService(
             IIotDataRepository dataRepo,
             IIotDeviceRepository deviceRepo,
             ISeasonRepository seasonRepo,
-            IIotRealtime realtime)
+            IIotRealtime realtime,
+            IAlertRuleEngine alertEngine)
         {
             _dataRepo = dataRepo;
             _deviceRepo = deviceRepo;
             _seasonRepo = seasonRepo;
             _realtime = realtime;
+            _alertEngine = alertEngine;
         }
 
         public async Task<SensorDataResponse> ProcessSensorDataAsync(IotDevice device, SensorDataRequest request)
         {
             device.LastActiveAt = DateTimeHelper.VnNow();
+
+            var rangeErrors = SensorRangeValidator.Validate(
+                request.Temperature, request.Humidity, request.SoilMoisture, request.Light);
+            if (rangeErrors.Count > 0)
+            {
+                await _deviceRepo.SaveChangesAsync();
+                return new SensorDataResponse
+                {
+                    Id = Guid.Empty,
+                    IsAlert = true,
+                    Message = "Dữ liệu cảm biến nằm ngoài khoảng cho phép: " + string.Join(" | ", rangeErrors)
+                };
+            }
 
             var recordedAt = request.Timestamp == default
                 ? DateTime.UtcNow
@@ -92,6 +108,8 @@ namespace CMMS.BLL.Services
                     persisted
                 });
             }
+
+            await _alertEngine.EvaluateAndNotifyAsync(device, request, persistedId, recordedAt);
 
             return new SensorDataResponse
             {

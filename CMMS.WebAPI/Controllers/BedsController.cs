@@ -73,7 +73,7 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [Authorize(Roles = "Owner")]
+        [Authorize(Roles = "Owner,Specialist")]
         [HttpGet("plot/{plotId}")]
         public async Task<IActionResult> GetBedsByPlot(Guid plotId)
         {

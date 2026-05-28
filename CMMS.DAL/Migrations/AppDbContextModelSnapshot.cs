@@ -369,10 +369,10 @@ namespace CMMS.DAL.Migrations
 
             modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisContract", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("DiagnosisContractId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("id")
+                        .HasColumnName("diagnosis_contract_id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<string>("AccountHolder")
@@ -386,6 +386,10 @@ namespace CMMS.DAL.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("bank_account");
+
+                    b.Property<string>("BankBin")
+                        .HasMaxLength(6)
+                        .HasColumnType("character varying(6)");
 
                     b.Property<string>("BankName")
                         .IsRequired()
@@ -417,10 +421,6 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("expert_id");
 
-                    b.Property<Guid>("FarmId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("farm_id");
-
                     b.Property<string>("Notes")
                         .HasColumnType("text")
                         .HasColumnName("notes");
@@ -441,7 +441,7 @@ namespace CMMS.DAL.Migrations
                         .HasDefaultValue("active")
                         .HasColumnName("status");
 
-                    b.HasKey("Id")
+                    b.HasKey("DiagnosisContractId")
                         .HasName("diagnosis_contract_pkey");
 
                     b.HasIndex("ContractCode")
@@ -450,20 +450,18 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("CreatedBy");
 
-                    b.HasIndex("ExpertId");
-
-                    b.HasIndex("FarmId", "ExpertId")
-                        .HasDatabaseName("idx_contract_farm_expert");
+                    b.HasIndex("ExpertId", "Status")
+                        .HasDatabaseName("idx_contract_expert_status");
 
                     b.ToTable("diagnosis_contract", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisPayment", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("DiagnosisPaymentId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("id")
+                        .HasColumnName("diagnosis_payment_id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<decimal>("Amount")
@@ -480,10 +478,6 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("bill_public_id");
 
-                    b.Property<Guid>("ContractId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("contract_id");
-
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp")
@@ -498,37 +492,76 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("timestamp")
                         .HasColumnName("paid_at");
 
+                    b.Property<Guid>("SpecialistId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("specialist_id");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
-                        .HasDefaultValue("pending")
+                        .HasDefaultValue("paid")
                         .HasColumnName("status");
 
                     b.Property<int>("TotalDiagnoses")
                         .HasColumnType("integer")
                         .HasColumnName("total_diagnoses");
 
-                    b.HasKey("Id")
+                    b.HasKey("DiagnosisPaymentId")
                         .HasName("diagnosis_payment_pkey");
 
                     b.HasIndex("Status")
                         .HasDatabaseName("idx_payment_status");
 
-                    b.HasIndex("ContractId", "Month")
+                    b.HasIndex("SpecialistId", "Month")
                         .IsUnique()
-                        .HasDatabaseName("diagnosis_payment_contract_month_unique");
+                        .HasDatabaseName("diagnosis_payment_specialist_month_unique");
 
                     b.ToTable("diagnosis_payment", "public");
                 });
 
-            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisResult", b =>
+            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisPaymentItem", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("DiagnosisPaymentItemId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("id")
+                        .HasColumnName("diagnosis_payment_item_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<Guid>("ContractId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("contract_id");
+
+                    b.Property<Guid>("DiagnosisResultId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("diagnosis_result_id");
+
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("payment_id");
+
+                    b.HasKey("DiagnosisPaymentItemId")
+                        .HasName("diagnosis_payment_item_pkey");
+
+                    b.HasIndex("ContractId");
+
+                    b.HasIndex("DiagnosisResultId")
+                        .IsUnique()
+                        .HasDatabaseName("diagnosis_payment_item_result_unique");
+
+                    b.HasIndex("PaymentId")
+                        .HasDatabaseName("idx_payment_item_payment");
+
+                    b.ToTable("diagnosis_payment_item", "public");
+                });
+
+            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisResult", b =>
+                {
+                    b.Property<Guid>("DiagnosisResultId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("diagnosis_result_id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<string>("Conclusion")
@@ -575,7 +608,7 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("timestamp")
                         .HasColumnName("updated_at");
 
-                    b.HasKey("Id")
+                    b.HasKey("DiagnosisResultId")
                         .HasName("diagnosis_result_pkey");
 
                     b.HasIndex("DiagnosedBy");
@@ -828,7 +861,10 @@ namespace CMMS.DAL.Migrations
 
                     b.HasIndex("BedId");
 
-                    b.HasIndex("HarvestId");
+                    b.HasIndex("HarvestId", "BedId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_harvest_detail_harvest_bed_unique")
+                        .HasFilter("bed_id IS NOT NULL");
 
                     b.ToTable("harvest_detail", "public");
                 });
@@ -1877,30 +1913,51 @@ namespace CMMS.DAL.Migrations
                         .IsRequired()
                         .HasConstraintName("diagnosis_contract_expert_fkey");
 
-                    b.HasOne("CMMS.DAL.Entities.Farm", "Farm")
-                        .WithMany()
-                        .HasForeignKey("FarmId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("diagnosis_contract_farm_fkey");
-
                     b.Navigation("Creator");
 
                     b.Navigation("Expert");
-
-                    b.Navigation("Farm");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisPayment", b =>
                 {
-                    b.HasOne("CMMS.DAL.Entities.DiagnosisContract", "Contract")
-                        .WithMany("Payments")
-                        .HasForeignKey("ContractId")
+                    b.HasOne("CMMS.DAL.Entities.User", "Specialist")
+                        .WithMany()
+                        .HasForeignKey("SpecialistId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("diagnosis_payment_contract_fkey");
+                        .HasConstraintName("diagnosis_payment_specialist_fkey");
+
+                    b.Navigation("Specialist");
+                });
+
+            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisPaymentItem", b =>
+                {
+                    b.HasOne("CMMS.DAL.Entities.DiagnosisContract", "Contract")
+                        .WithMany()
+                        .HasForeignKey("ContractId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("diagnosis_payment_item_contract_fkey");
+
+                    b.HasOne("CMMS.DAL.Entities.DiagnosisResult", "DiagnosisResult")
+                        .WithMany()
+                        .HasForeignKey("DiagnosisResultId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("diagnosis_payment_item_result_fkey");
+
+                    b.HasOne("CMMS.DAL.Entities.DiagnosisPayment", "Payment")
+                        .WithMany("Items")
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("diagnosis_payment_item_payment_fkey");
 
                     b.Navigation("Contract");
+
+                    b.Navigation("DiagnosisResult");
+
+                    b.Navigation("Payment");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisResult", b =>
@@ -2317,9 +2374,9 @@ namespace CMMS.DAL.Migrations
                     b.Navigation("GrowthTrackings");
                 });
 
-            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisContract", b =>
+            modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisPayment", b =>
                 {
-                    b.Navigation("Payments");
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.DiagnosisResult", b =>

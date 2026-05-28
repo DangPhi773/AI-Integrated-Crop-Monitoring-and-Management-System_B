@@ -8,6 +8,7 @@ namespace CMMS.BLL.Interfaces
     public interface IReportService
     {
         Task<ApiResponse<IEnumerable<ReportResponse>>> GetAllReportsAsync();
+        Task<ApiResponse<IEnumerable<ReportResponse>>> FilterReportsAsync(string? status = null);
         Task<ApiResponse<ReportResponse>> GetReportByIdAsync(Guid id);
         Task<ApiResponse<ReportResponse>> CreateReportAsync(CreateReportRequest request, Guid createdByUserId, List<IFormFile>? images = null);
         Task<ApiResponse<string>> AssignReportAsync(Guid reportId, AssignReportRequest request, Guid assignedByUserId);
