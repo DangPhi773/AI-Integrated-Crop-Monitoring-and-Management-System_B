@@ -1,19 +1,23 @@
-﻿using CMMS.BLL.Interfaces;
+﻿using System.Text;
+using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using System.Globalization;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace CMMS.BLL.Services
 {
     public class PlantAnalysisService : IPlantAnalysisService
     {
-        private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
+        private readonly HttpClient _httpClient;
+
+        public PlantAnalysisService(IConfiguration configuration, HttpClient httpClient)
+        {
+            _configuration = configuration;
+            _httpClient = httpClient;
+        }
 
         private static readonly string[] AllowedMimeTypes =
         {
@@ -24,277 +28,269 @@ namespace CMMS.BLL.Services
             "image/heif"
         };
 
-        private const long MaxImageBytes = 10 * 1024 * 1024;
-        private const string ModelVersion = "gemini-vision-n8n-v1";
-
-        public PlantAnalysisService(HttpClient httpClient, IConfiguration configuration)
-        {
-            _httpClient = httpClient;
-            _configuration = configuration;
-
-            var timeoutSeconds = _configuration.GetValue("N8nAi:TimeoutSeconds", 60);
-            _httpClient.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
-        }
+        private const long MaxImageBytes = 2 * 1024 * 1024;
 
         public async Task<PlantAnalysisResultDto> AnalyzePlantImageAsync(
             IFormFile image,
             PlantAnalysisContextDto context)
         {
-            ValidateImage(image);
-
-            var webhookUrl = _configuration["N8nAi:WebhookUrl"];
-            if (string.IsNullOrWhiteSpace(webhookUrl))
-                throw new Exception("Thiếu cấu hình N8nAi:WebhookUrl.");
-
-            var timeoutSeconds = _configuration.GetValue("N8nAi:TimeoutSeconds", 60);
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
-
-            using var form = new MultipartFormDataContent();
-
-            await using var imageStream = image.OpenReadStream();
-            using var imageContent = new StreamContent(imageStream);
-            imageContent.Headers.ContentType = new MediaTypeHeaderValue(image.ContentType);
-            form.Add(imageContent, "image", image.FileName);
-
-            AddFormField(form, "farmId", context.FarmId?.ToString());
-            AddFormField(form, "plotId", context.PlotId?.ToString());
-            AddFormField(form, "bedId", context.BedId?.ToString());
-            AddFormField(form, "plantName", context.PlantName);
-            AddFormField(form, "growthStage", context.GrowthStage);
-            AddFormField(form, "temperature", context.Temperature?.ToString(CultureInfo.InvariantCulture));
-            AddFormField(form, "airHumidity", context.AirHumidity?.ToString(CultureInfo.InvariantCulture));
-            AddFormField(form, "soilMoisture", context.SoilMoisture?.ToString(CultureInfo.InvariantCulture));
-            AddFormField(form, "lightIntensity", context.LightIntensity?.ToString(CultureInfo.InvariantCulture));
-            AddFormField(form, "weatherCondition", context.WeatherCondition);
-            AddFormField(form, "language", "vi");
-
-            using var request = new HttpRequestMessage(HttpMethod.Post, webhookUrl)
-            {
-                Content = form
-            };
-
-            var secret = _configuration["N8nAi:Secret"];
-            if (!string.IsNullOrWhiteSpace(secret))
-                request.Headers.Add("X-Crop-AI-Secret", secret);
-
-            using var response = await _httpClient.SendAsync(request, cts.Token);
-            var raw = await response.Content.ReadAsStringAsync(cts.Token);
-
-            if (!response.IsSuccessStatusCode)
-                throw new Exception($"n8n AI workflow lỗi {(int)response.StatusCode}: {raw}");
-
-            var n8nResult = ParseN8nResponse(raw);
-            return BuildResult(n8nResult, context);
-        }
-
-        private static void AddFormField(MultipartFormDataContent form, string name, string? value)
-        {
-            if (!string.IsNullOrWhiteSpace(value))
-                form.Add(new StringContent(value, Encoding.UTF8), name);
-        }
-
-        private static N8nDiagnosisResponse ParseN8nResponse(string raw)
-        {
-            try
-            {
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                };
-
-                var trimmed = raw.Trim();
-
-                if (trimmed.StartsWith("["))
-                {
-                    var list = JsonSerializer.Deserialize<List<N8nDiagnosisResponse>>(trimmed, options);
-                    if (list is { Count: > 0 })
-                        return list[0];
-                }
-
-                var result = JsonSerializer.Deserialize<N8nDiagnosisResponse>(trimmed, options);
-                if (result == null)
-                    throw new Exception("Response rỗng.");
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Parse n8n/Gemini JSON lỗi. Raw: {raw}. Error: {ex.Message}");
-            }
-        }
-
-        private static PlantAnalysisResultDto BuildResult(N8nDiagnosisResponse result, PlantAnalysisContextDto context)
-        {
-            var disease = FirstNonEmpty(result.Disease, result.PossibleDisease, "Không xác định");
-            var diseaseCode = FirstNonEmpty(result.DiseaseCode, ToDiseaseCode(disease));
-            var confidence = Clamp(result.Confidence ?? 0.5);
-            var severity = FirstNonEmpty(result.Severity, "Trung bình");
-            var description = FirstNonEmpty(
-                result.Description,
-                $"Gemini dự đoán cây {context.PlantName} có khả năng mắc: {disease}."
-            );
-
-            var symptoms = NormalizeList(
-                result.Symptoms,
-                "Chưa phát hiện triệu chứng cụ thể từ phản hồi Gemini."
-            );
-
-            var solutions = NormalizeList(
-                result.Solutions ?? result.CareSuggestions,
-                "Theo dõi cây và kiểm tra lại sau 2–3 ngày."
-            );
-
-            var treatmentSteps = NormalizeList(
-                result.TreatmentSteps,
-                "Liên hệ kỹ thuật viên nếu triệu chứng lan rộng."
-            );
-
-            var english = result.English ?? new PlantDiagnosisLanguageDto
-            {
-                Disease = FirstNonEmpty(result.EnglishDisease, disease),
-                Description = FirstNonEmpty(result.EnglishDescription, description),
-                Severity = severity,
-                Symptoms = symptoms,
-                CareSuggestions = solutions,
-                TreatmentSteps = treatmentSteps
-            };
-
-            var vietnamese = result.Vietnamese ?? new PlantDiagnosisLanguageDto
-            {
-                Disease = disease,
-                Description = description,
-                Severity = severity,
-                Symptoms = symptoms,
-                CareSuggestions = solutions,
-                TreatmentSteps = treatmentSteps
-            };
-
-            return new PlantAnalysisResultDto
-            {
-                PossibleDisease = disease,
-                DiseaseCode = diseaseCode,
-                Confidence = confidence,
-                Severity = severity,
-                Description = description,
-                SymptomsDetected = symptoms,
-                CareSuggestions = solutions,
-                TreatmentSteps = treatmentSteps,
-                IsConfident = confidence >= 0.55,
-                ModelVersion = ModelVersion,
-                TopPredictions = result.TopPredictions ?? new List<PlantPredictionDto>
-                {
-                    new PlantPredictionDto
-                    {
-                        Label = diseaseCode,
-                        DisplayName = disease,
-                        Confidence = confidence
-                    }
-                },
-                English = english,
-                Vietnamese = vietnamese,
-                ContextUsed = context
-            };
-        }
-
-        private static void ValidateImage(IFormFile image)
-        {
             if (image == null || image.Length == 0)
                 throw new Exception("Thiếu ảnh.");
 
             if (image.Length > MaxImageBytes)
-                throw new Exception("Ảnh quá lớn. Vui lòng nén ảnh dưới 10MB trước khi gửi.");
+                throw new Exception("Ảnh quá lớn. Vui lòng nén ảnh dưới 2MB trước khi gửi.");
 
             if (string.IsNullOrWhiteSpace(image.ContentType) ||
                 !AllowedMimeTypes.Contains(image.ContentType.ToLowerInvariant()))
-            {
                 throw new Exception("Định dạng ảnh không hỗ trợ. Chỉ chấp nhận JPEG, PNG, WEBP, HEIC/HEIF.");
+
+            using var memoryStream = new MemoryStream();
+            await image.CopyToAsync(memoryStream);
+
+            var imageBytes = memoryStream.ToArray();
+            var base64Image = Convert.ToBase64String(imageBytes);
+
+            var apiKey = _configuration["Gemini:ApiKey"];
+            var model = _configuration["Gemini:Model"];
+            var baseUrl = _configuration["Gemini:BaseUrl"];
+
+            if (string.IsNullOrWhiteSpace(apiKey))
+                throw new Exception("Thiếu Gemini API key.");
+
+            if (string.IsNullOrWhiteSpace(model))
+                throw new Exception("Thiếu Gemini model.");
+
+            if (string.IsNullOrWhiteSpace(baseUrl))
+                throw new Exception("Thiếu Gemini base url.");
+
+            var endpoint = $"{baseUrl}/models/{model}:generateContent";
+
+            var requestBody = new
+            {
+                contents = new[]
+                {
+                    new
+                    {
+                        parts = new object[]
+                        {
+                            new { text = GetPrompt(context) },
+                            new
+                            {
+                                inline_data = new
+                                {
+                                    mime_type = image.ContentType,
+                                    data = base64Image
+                                }
+                            }
+                        }
+                    }
+                },
+                generationConfig = new
+                {
+                    responseMimeType = "application/json",
+                    maxOutputTokens = 1500,
+                    temperature = 0
+                }
+            };
+
+            var json = JsonConvert.SerializeObject(requestBody);
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+
+            request.Headers.Add("x-goog-api-key", apiKey);
+
+            var response = await _httpClient.SendAsync(request);
+            var responseText = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+                throw new Exception($"Gemini lỗi: {responseText}");
+
+            var modelText = ExtractGeminiText(responseText);
+
+            if (string.IsNullOrWhiteSpace(modelText))
+                throw new Exception("Không có dữ liệu trả về từ Gemini.");
+
+            try
+            {
+                modelText = CleanJson(modelText);
+                var result = ParseGeminiResult(modelText);
+                NormalizeResult(result);
+                return result;
+            }
+            catch
+            {
+                return CreateFallbackResult();
             }
         }
 
-        private static List<string> NormalizeList(List<string>? values, string fallback)
+        private string? ExtractGeminiText(string responseText)
         {
-            var cleaned = values?
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .Select(x => x.Trim())
-                .ToList();
+            var root = JObject.Parse(responseText);
 
-            return cleaned is { Count: > 0 } ? cleaned : new List<string> { fallback };
+            return root["candidates"]?[0]?["content"]?["parts"]?[0]?["text"]?.ToString();
         }
 
-        private static string FirstNonEmpty(params string?[] values)
+        private PlantAnalysisResultDto ParseGeminiResult(string json)
         {
-            return values.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))?.Trim() ?? string.Empty;
+            var obj = JObject.Parse(json);
+
+            return new PlantAnalysisResultDto
+            {
+                PossibleDisease = obj["possibleDisease"]?.ToString() ?? "Unclear",
+                Confidence = obj["confidence"]?.ToObject<double?>() ?? 0,
+                Description = obj["description"]?.ToString() ?? string.Empty,
+                SymptomsDetected = ToStringList(obj["symptomsDetected"]),
+                CareSuggestions = ToStringList(obj["careSuggestions"]),
+                TreatmentSteps = ToStringList(obj["treatmentSteps"]),
+                Severity = obj["severity"]?.ToString() ?? "low"
+            };
         }
 
-        private static double Clamp(double value)
+        private List<string> ToStringList(JToken? token)
         {
-            if (double.IsNaN(value) || double.IsInfinity(value)) return 0;
-            if (value < 0) return 0;
-            if (value > 1) return 1;
-            return value;
+            if (token == null)
+                return new List<string>();
+
+            if (token.Type == JTokenType.Array)
+            {
+                return token.Select(x => x?.ToString() ?? string.Empty)
+                            .Where(x => !string.IsNullOrWhiteSpace(x))
+                            .ToList();
+            }
+
+            var text = token.ToString();
+
+            if (string.IsNullOrWhiteSpace(text))
+                return new List<string>();
+
+            return new List<string> { text };
         }
 
-        private static string ToDiseaseCode(string disease)
+        private void NormalizeResult(PlantAnalysisResultDto result)
         {
-            if (string.IsNullOrWhiteSpace(disease))
-                return "UNKNOWN";
+            result.PossibleDisease ??= "Unclear";
+            result.Description ??= string.Empty;
+            result.SymptomsDetected ??= new List<string>();
+            result.CareSuggestions ??= new List<string>();
+            result.TreatmentSteps ??= new List<string>();
+            result.Severity = NormalizeSeverity(result.Severity);
 
-            var normalized = disease
-                .Trim()
-                .ToUpperInvariant()
-                .Replace(" ", "_")
-                .Replace("-", "_")
-                .Replace("/", "_");
+            if (result.Confidence < 0)
+                result.Confidence = 0;
 
-            return new string(normalized.Where(c => char.IsLetterOrDigit(c) || c == '_').ToArray());
+            if (result.Confidence > 1)
+                result.Confidence = 1;
         }
 
-        private sealed class N8nDiagnosisResponse
+        private string NormalizeSeverity(string? value)
         {
-            [JsonPropertyName("disease")]
-            public string? Disease { get; set; }
+            if (string.IsNullOrWhiteSpace(value))
+                return "low";
 
-            [JsonPropertyName("possibleDisease")]
-            public string? PossibleDisease { get; set; }
+            var level = value.Trim().ToLowerInvariant();
 
-            [JsonPropertyName("diseaseCode")]
-            public string? DiseaseCode { get; set; }
+            return level switch
+            {
+                "low" => "low",
+                "medium" => "medium",
+                "high" => "high",
+                _ => "low"
+            };
+        }
 
-            [JsonPropertyName("confidence")]
-            public double? Confidence { get; set; }
+        private PlantAnalysisResultDto CreateFallbackResult()
+        {
+            return new PlantAnalysisResultDto
+            {
+                PossibleDisease = "Unclear",
+                Confidence = 0,
+                Description = "Gemini returned invalid JSON. Please try again with a clearer image.",
+                SymptomsDetected = new List<string>(),
+                CareSuggestions = new List<string>
+                {
+                    "Upload a clearer plant image",
+                    "Take photo in good lighting",
+                    "Avoid blurry or cropped leaves"
+                },
+                TreatmentSteps = new List<string>(),
+                Severity = "low"
+            };
+        }
 
-            [JsonPropertyName("severity")]
-            public string? Severity { get; set; }
+        private string GetPrompt(PlantAnalysisContextDto context)
+        {
+            return $@"Analyze plant disease from image and environment data.
 
-            [JsonPropertyName("description")]
-            public string? Description { get; set; }
+            Context:
+            Plant={ShortText(context.PlantName, 40)}
+            Stage={ShortText(context.GrowthStage, 40)}
+            Temp={FormatNumber(context.Temperature)}C
+            AirHumidity={FormatNumber(context.AirHumidity)}%
+            SoilMoisture={FormatNumber(context.SoilMoisture)}%
+            Light={FormatNumber(context.LightIntensity)}
+            Weather={ShortText(context.WeatherCondition, 40)}
 
-            [JsonPropertyName("symptoms")]
-            public List<string>? Symptoms { get; set; }
+            Task:
+            Identify the most likely plant disease, visible symptoms, and practical treatment.
 
-            [JsonPropertyName("solutions")]
-            public List<string>? Solutions { get; set; }
+            Rules:
+            Return only one valid compact JSON object.
+            Do not use markdown.
+            Do not add explanation outside JSON.
+            JSON keys must stay in English.
+            All JSON values must be in Vietnamese.
+            Use natural Vietnamese for farmers.
+            Use short string values.
+            Do not break strings with newlines.
+            All string values must be complete and closed.
+            Do not use trailing commas.
+            description max 120 characters.
+            Each array item max 60 characters.
+            If uncertain, set possibleDisease to ""Chưa xác định rõ"".
+            confidence must be 0 to 1.
+            severity must be one of: low, medium, high.
 
-            [JsonPropertyName("careSuggestions")]
-            public List<string>? CareSuggestions { get; set; }
+            Required JSON format:
+            {{""possibleDisease"":""Sâu ăn lá bắp cải"",""confidence"":0.9,""description"":""Lá bị sâu cắn tạo nhiều lỗ thủng."",""symptomsDetected"":[""Lá có lỗ thủng"",""Mép lá bị cắn phá""],""careSuggestions"":[""Kiểm tra cây thường xuyên"",""Loại bỏ lá bị hại""],""treatmentSteps"":[""Bắt sâu bằng tay"",""Dùng chế phẩm sinh học phù hợp""],""severity"":""medium""}}";
+        }
 
-            [JsonPropertyName("treatmentSteps")]
-            public List<string>? TreatmentSteps { get; set; }
+        private string CleanJson(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return string.Empty;
 
-            [JsonPropertyName("topPredictions")]
-            public List<PlantPredictionDto>? TopPredictions { get; set; }
+            text = text.Trim();
 
-            [JsonPropertyName("english")]
-            public PlantDiagnosisLanguageDto? English { get; set; }
+            text = text.Replace("```json", "");
+            text = text.Replace("```", "");
 
-            [JsonPropertyName("vietnamese")]
-            public PlantDiagnosisLanguageDto? Vietnamese { get; set; }
+            var start = text.IndexOf('{');
+            var end = text.LastIndexOf('}');
 
-            [JsonPropertyName("englishDisease")]
-            public string? EnglishDisease { get; set; }
+            if (start >= 0 && end > start)
+                text = text.Substring(start, end - start + 1);
 
-            [JsonPropertyName("englishDescription")]
-            public string? EnglishDescription { get; set; }
+            return text.Trim();
+        }
+
+        private string ShortText(string? value, int maxLength)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return "N/A";
+
+            value = value.Trim();
+
+            return value.Length <= maxLength
+                ? value
+                : value.Substring(0, maxLength);
+        }
+
+        private string FormatNumber(double? value)
+        {
+            return value.HasValue ? value.Value.ToString("0.#") : "N/A";
         }
     }
 }
