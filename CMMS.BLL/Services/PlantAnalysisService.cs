@@ -224,37 +224,37 @@ namespace CMMS.BLL.Services
         {
             return $@"Analyze plant disease from image and environment data.
 
-            Context:
-            Plant={ShortText(context.PlantName, 40)}
-            Stage={ShortText(context.GrowthStage, 40)}
-            Temp={FormatNumber(context.Temperature)}C
-            AirHumidity={FormatNumber(context.AirHumidity)}%
-            SoilMoisture={FormatNumber(context.SoilMoisture)}%
-            Light={FormatNumber(context.LightIntensity)}
-            Weather={ShortText(context.WeatherCondition, 40)}
+Context:
+Plant={ShortText(context.PlantName, 40)}
+Stage={ShortText(context.GrowthStage, 40)}
+Temp={FormatNumber(context.Temperature)}C
+AirHumidity={FormatNumber(context.AirHumidity)}%
+SoilMoisture={FormatNumber(context.SoilMoisture)}%
+Light={FormatNumber(context.LightIntensity)}
+Weather={ShortText(context.WeatherCondition, 40)}
 
-            Task:
-            Identify the most likely plant disease, visible symptoms, and practical treatment.
+Task:
+Identify the most likely plant disease, visible symptoms, and practical treatment.
 
-            Rules:
-            Return only one valid compact JSON object.
-            Do not use markdown.
-            Do not add explanation outside JSON.
-            JSON keys must stay in English.
-            All JSON values must be in Vietnamese.
-            Use natural Vietnamese for farmers.
-            Use short string values.
-            Do not break strings with newlines.
-            All string values must be complete and closed.
-            Do not use trailing commas.
-            description max 120 characters.
-            Each array item max 60 characters.
-            If uncertain, set possibleDisease to ""Chưa xác định rõ"".
-            confidence must be 0 to 1.
-            severity must be one of: low, medium, high .
+Rules:
+Return only one valid compact JSON object.
+Do not use markdown.
+Do not add explanation outside JSON.
+JSON keys must stay in English.
+All JSON values must be in Vietnamese.
+Use natural Vietnamese for farmers.
+Use short string values.
+Do not break strings with newlines.
+All string values must be complete and closed.
+Do not use trailing commas.
+description max 120 characters.
+Each array item max 60 characters.
+If uncertain, set possibleDisease to ""Chưa xác định rõ"".
+confidence must be 0 to 1.
+severity must be one of: low, medium, high.
 
-            Required JSON format:
-            {{""possibleDisease"":""Sâu ăn lá bắp cải"",""confidence"":0.9,""description"":""Lá bị sâu cắn tạo nhiều lỗ thủng."",""symptomsDetected"":[""Lá có lỗ thủng"",""Mép lá bị cắn phá""],""careSuggestions"":[""Kiểm tra cây thường xuyên"",""Loại bỏ lá bị hại""],""treatmentSteps"":[""Bắt sâu bằng tay"",""Dùng chế phẩm sinh học phù hợp""],""severity"":""medium""}}";
+Required JSON format:
+{{""possibleDisease"":""Sâu ăn lá bắp cải"",""confidence"":0.9,""description"":""Lá bị sâu cắn tạo nhiều lỗ thủng."",""symptomsDetected"":[""Lá có lỗ thủng"",""Mép lá bị cắn phá""],""careSuggestions"":[""Kiểm tra cây thường xuyên"",""Loại bỏ lá bị hại""],""treatmentSteps"":[""Bắt sâu bằng tay"",""Dùng chế phẩm sinh học phù hợp""],""severity"":""medium""}}";
         }
 
         private string CleanJson(string text)
