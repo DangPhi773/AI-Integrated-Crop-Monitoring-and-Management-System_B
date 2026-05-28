@@ -46,6 +46,7 @@ namespace CMMS.BLL.Services
 
             using var memoryStream = new MemoryStream();
             await image.CopyToAsync(memoryStream);
+
             var imageBytes = memoryStream.ToArray();
             var base64Image = Convert.ToBase64String(imageBytes);
 
@@ -87,8 +88,8 @@ namespace CMMS.BLL.Services
                 generationConfig = new
                 {
                     responseMimeType = "application/json",
-                    maxOutputTokens = 1000,
-                    temperature = 0.1
+                    maxOutputTokens = 1500,
+                    temperature = 0
                 }
             };
 
@@ -107,27 +108,29 @@ namespace CMMS.BLL.Services
             if (!response.IsSuccessStatusCode)
                 throw new Exception($"Gemini lỗi: {responseText}");
 
-            var root = JObject.Parse(responseText);
-            var modelText = root["candidates"]?[0]?["content"]?["parts"]?[0]?["text"]?.ToString();
+            var modelText = ExtractGeminiText(responseText);
 
             if (string.IsNullOrWhiteSpace(modelText))
                 throw new Exception("Không có dữ liệu trả về từ Gemini.");
 
-            PlantAnalysisResultDto result;
-
             try
             {
                 modelText = CleanJson(modelText);
-                result = ParseGeminiResult(modelText);
+                var result = ParseGeminiResult(modelText);
+                NormalizeResult(result);
+                return result;
             }
-            catch (Exception ex)
+            catch
             {
-                throw new Exception($"Parse Gemini JSON lỗi. Raw: {modelText}. Error: {ex.Message}");
+                return CreateFallbackResult();
             }
+        }
 
-            NormalizeResult(result);
+        private string? ExtractGeminiText(string responseText)
+        {
+            var root = JObject.Parse(responseText);
 
-            return result;
+            return root["candidates"]?[0]?["content"]?["parts"]?[0]?["text"]?.ToString();
         }
 
         private PlantAnalysisResultDto ParseGeminiResult(string json)
@@ -152,9 +155,11 @@ namespace CMMS.BLL.Services
                 return new List<string>();
 
             if (token.Type == JTokenType.Array)
+            {
                 return token.Select(x => x?.ToString() ?? string.Empty)
                             .Where(x => !string.IsNullOrWhiteSpace(x))
                             .ToList();
+            }
 
             var text = token.ToString();
 
@@ -166,7 +171,7 @@ namespace CMMS.BLL.Services
 
         private void NormalizeResult(PlantAnalysisResultDto result)
         {
-            result.PossibleDisease ??= string.Empty;
+            result.PossibleDisease ??= "Unclear";
             result.Description ??= string.Empty;
             result.SymptomsDetected ??= new List<string>();
             result.CareSuggestions ??= new List<string>();
@@ -196,35 +201,60 @@ namespace CMMS.BLL.Services
             };
         }
 
+        private PlantAnalysisResultDto CreateFallbackResult()
+        {
+            return new PlantAnalysisResultDto
+            {
+                PossibleDisease = "Unclear",
+                Confidence = 0,
+                Description = "Gemini returned invalid JSON. Please try again with a clearer image.",
+                SymptomsDetected = new List<string>(),
+                CareSuggestions = new List<string>
+                {
+                    "Upload a clearer plant image",
+                    "Take photo in good lighting",
+                    "Avoid blurry or cropped leaves"
+                },
+                TreatmentSteps = new List<string>(),
+                Severity = "low"
+            };
+        }
+
         private string GetPrompt(PlantAnalysisContextDto context)
         {
             return $@"Analyze plant disease from image and environment data.
 
-Context:
-Plant={ShortText(context.PlantName, 40)}
-Stage={ShortText(context.GrowthStage, 40)}
-Temp={FormatNumber(context.Temperature)}C
-AirHumidity={FormatNumber(context.AirHumidity)}%
-SoilMoisture={FormatNumber(context.SoilMoisture)}%
-Light={FormatNumber(context.LightIntensity)}
-Weather={ShortText(context.WeatherCondition, 40)}
+            Context:
+            Plant={ShortText(context.PlantName, 40)}
+            Stage={ShortText(context.GrowthStage, 40)}
+            Temp={FormatNumber(context.Temperature)}C
+            AirHumidity={FormatNumber(context.AirHumidity)}%
+            SoilMoisture={FormatNumber(context.SoilMoisture)}%
+            Light={FormatNumber(context.LightIntensity)}
+            Weather={ShortText(context.WeatherCondition, 40)}
 
-Task:
-Identify the most likely plant disease, visible symptoms, and practical treatment.
+            Task:
+            Identify the most likely plant disease, visible symptoms, and practical treatment.
 
-Rules:
-Return only a valid compact JSON object.
-Do not use markdown.
-Do not add explanation outside JSON.
-Use English only.
-Use short string values.
-Do not break strings with newlines.
-If uncertain, set possibleDisease to ""Unclear"".
-confidence must be 0 to 1.
-severity must be one of: low, medium, high.
+            Rules:
+            Return only one valid compact JSON object.
+            Do not use markdown.
+            Do not add explanation outside JSON.
+            JSON keys must stay in English.
+            All JSON values must be in Vietnamese.
+            Use natural Vietnamese for farmers.
+            Use short string values.
+            Do not break strings with newlines.
+            All string values must be complete and closed.
+            Do not use trailing commas.
+            description max 120 characters.
+            Each array item max 60 characters.
+            If uncertain, set possibleDisease to ""Chưa xác định rõ"".
+            confidence must be 0 to 1.
+            severity must be one of: low, medium, high.
 
-JSON example:
-{{""possibleDisease"":""Bacterial Soft Rot"",""confidence"":0.85,""description"":""Brown soft decay on cabbage head."",""symptomsDetected"":[""Brown lesions"",""Soft decay"",""Water-soaked tissue""],""careSuggestions"":[""Improve air circulation"",""Avoid overhead irrigation""],""treatmentSteps"":[""Remove infected tissue"",""Use copper-based bactericide if appropriate""],""severity"":""high""}}";
+            Required JSON format:
+            {{""possibleDisease"":""Sâu ăn lá bắp cải"",""confidence"":0.9,""description"":""Lá bị sâu cắn tạo nhiều lỗ thủng."",""symptomsDetected"":[""Lá có lỗ thủng"",""Mép lá bị cắn phá""],""careSuggestions"":[""Kiểm tra cây thường xuyên"",""Loại bỏ lá bị hại""],""treatmentSteps"":[""Bắt sâu bằng tay"",""Dùng chế phẩm sinh học phù hợp""],""severity"":""medium""}}";
         }
 
         private string CleanJson(string text)
