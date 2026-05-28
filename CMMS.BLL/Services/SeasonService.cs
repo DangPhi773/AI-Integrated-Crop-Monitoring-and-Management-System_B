@@ -51,6 +51,10 @@ namespace CMMS.BLL.Services
         {
             try
             {
+                if (request.SeasonStartDate.HasValue && request.SeasonEndDate.HasValue
+                    && request.SeasonStartDate > request.SeasonEndDate)
+                    return new ApiResponse<string> { Success = false, Message = "Ngày bắt đầu không được sau ngày kết thúc" };
+
                 var entity = new Season
                 {
                     SeasonId = Guid.NewGuid(),
@@ -90,6 +94,10 @@ namespace CMMS.BLL.Services
                 entity.Description = request.Description ?? entity.Description;
                 entity.SeasonNotes = request.SeasonNotes ?? entity.SeasonNotes;
                 entity.Status = request.Status ?? entity.Status;
+
+                if (entity.SeasonStartDate.HasValue && entity.SeasonEndDate.HasValue
+                    && entity.SeasonStartDate > entity.SeasonEndDate)
+                    return new ApiResponse<string> { Success = false, Message = "Ngày bắt đầu không được sau ngày kết thúc" };
 
                 _seasonRepo.Update(entity);
                 await _seasonRepo.SaveChangesAsync();
