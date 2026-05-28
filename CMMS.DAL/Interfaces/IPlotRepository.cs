@@ -11,6 +11,7 @@ namespace CMMS.DAL.Interfaces
     {
         Task<IEnumerable<Plot>> GetAllAsync();
         Task<Plot?> GetByIdAsync(Guid id);
+        Task<Plot?> GetByIdLightAsync(Guid id);
         System.Threading.Tasks.Task AddAsync(Plot plot);
         void Update(Plot plot);
         void Delete(Plot plot);
