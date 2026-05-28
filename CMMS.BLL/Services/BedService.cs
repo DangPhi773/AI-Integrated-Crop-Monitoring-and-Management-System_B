@@ -175,36 +175,35 @@ namespace CMMS.BLL.Services
         {
             try
             {
-                var plot = await _plotRepo.GetByIdAsync(request.PlotId);
-                if (plot == null)
+                var plotExists = await _plotRepo.GetByIdLightAsync(request.PlotId);
+                if (plotExists == null)
                     return new ApiResponse<string> { Success = false, Message = "Plot không tồn tại" };
-                if (plot.Beds != null && plot.Beds.Any())
+                if (await _bedRepo.AnyByPlotIdAsync(request.PlotId))
                     return new ApiResponse<string> { Success = false, Message = "Plot đã có beds" };
                 if (request.Beds == null || request.Beds.Count == 0)
                     return new ApiResponse<string> { Success = false, Message = "Danh sách beds rỗng" };
 
                 var now = DateTimeHelper.VnNow();
-                foreach (var b in request.Beds)
+                var beds = request.Beds.Select(b => new Bed
                 {
-                    await _bedRepo.AddAsync(new Bed
-                    {
-                        BedId = Guid.NewGuid(),
-                        PlotId = request.PlotId,
-                        BedName = b.BedName,
-                        BedArea = (decimal)b.BedArea,
-                        BedLength = b.BedLength,
-                        BedWidth = b.BedWidth,
-                        PathWidth = b.PathWidth,
-                        RowCount = b.RowCount,
-                        PlantCount = b.PlantCount,
-                        CropQuantities = b.PlantCount,
-                        BedStatus = "Active",
-                        BedCreatedAt = now
-                    });
-                }
+                    BedId = Guid.NewGuid(),
+                    PlotId = request.PlotId,
+                    BedName = b.BedName,
+                    BedArea = (decimal)b.BedArea,
+                    BedLength = b.BedLength,
+                    BedWidth = b.BedWidth,
+                    PathWidth = b.PathWidth,
+                    RowCount = b.RowCount,
+                    PlantCount = b.PlantCount,
+                    CropQuantities = b.PlantCount,
+                    BedStatus = "Active",
+                    BedCreatedAt = now
+                }).ToList();
+
+                await _bedRepo.AddRangeAsync(beds);
 
                 return await _bedRepo.SaveChangesAsync()
-                    ? new ApiResponse<string> { Success = true, Message = $"Đã tạo {request.Beds.Count} luống" }
+                    ? new ApiResponse<string> { Success = true, Message = $"Đã tạo {beds.Count} luống" }
                     : new ApiResponse<string> { Success = false, Message = "Lưu thất bại" };
             }
             catch (Exception ex)
@@ -215,7 +214,7 @@ namespace CMMS.BLL.Services
 
         private async Task<(BedSplitPreview? preview, string? error)> BuildSplitAsync(BedSplitRequest request)
         {
-            var plot = await _plotRepo.GetByIdAsync(request.PlotId);
+            var plot = await _plotRepo.GetByIdLightAsync(request.PlotId);
             if (plot == null) return (null, "Plot không tồn tại");
             if (!plot.PlotLength.HasValue || plot.PlotLength <= 0) return (null, "Plot thiếu plot_length");
             if (!plot.PlotWidth.HasValue || plot.PlotWidth <= 0) return (null, "Plot thiếu plot_width");
