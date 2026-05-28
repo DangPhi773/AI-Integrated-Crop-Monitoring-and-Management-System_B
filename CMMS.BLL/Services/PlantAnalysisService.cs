@@ -251,7 +251,7 @@ namespace CMMS.BLL.Services
             Each array item max 60 characters.
             If uncertain, set possibleDisease to ""Chưa xác định rõ"".
             confidence must be 0 to 1.
-            severity must be one of: low, medium, high.
+            severity must be one of: low, medium, high .
 
             Required JSON format:
             {{""possibleDisease"":""Sâu ăn lá bắp cải"",""confidence"":0.9,""description"":""Lá bị sâu cắn tạo nhiều lỗ thủng."",""symptomsDetected"":[""Lá có lỗ thủng"",""Mép lá bị cắn phá""],""careSuggestions"":[""Kiểm tra cây thường xuyên"",""Loại bỏ lá bị hại""],""treatmentSteps"":[""Bắt sâu bằng tay"",""Dùng chế phẩm sinh học phù hợp""],""severity"":""medium""}}";

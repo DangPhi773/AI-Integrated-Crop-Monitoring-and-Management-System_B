@@ -174,7 +174,7 @@ namespace CMMS.WebAPI.Controllers
                 { "Use copper-based bactericide if appropriate", "Sử dụng thuốc diệt khuẩn gốc đồng nếu phù hợp" },
                 { "Apply copper-based bactericides", "Sử dụng thuốc diệt khuẩn gốc đồng theo hướng dẫn" },
                 { "Apply fungicide", "Sử dụng thuốc nấm phù hợp" },
-                { "Take a clearer close-up photo if symptoms spread", "Chụp ảnh cận cảnh rõ hơn nếu triệu chứng lan rộng" }
+                { "Take a clearer close-up photo if symptoms spread", "Chụp ảnh cận cảnh rõ hơn nếu triệu chứng lan rộng!" }
             };
 
             var result = text.Trim();
