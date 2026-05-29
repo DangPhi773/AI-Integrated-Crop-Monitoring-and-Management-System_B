@@ -1,6 +1,7 @@
 using CMMS.BLL.Interfaces;
 using CMMS.BLL.Mappings;
 using CMMS.BLL.Realtime;
+using CMMS.BLL.Helpers;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Tasks;
 using CMMS.DAL.Entities;
@@ -119,6 +120,9 @@ namespace CMMS.BLL.Services
                 var validationResult = await ValidateWorkersAsync(workerIds);
                 if (validationResult != null) return validationResult;
 
+                var pastResult = ValidateNotPast(request.StartDate);
+                if (pastResult != null) return pastResult;
+
                 var scheduleResult = await ValidateScheduleAsync(null, workerIds, request.StartDate, request.EndDate);
                 if (scheduleResult != null) return scheduleResult;
 
@@ -167,6 +171,9 @@ namespace CMMS.BLL.Services
                     var validationResult = await ValidateWorkersAsync(newWorkerIds);
                     if (validationResult != null) return validationResult;
                 }
+
+                var pastResult = ValidateNotPast(request.StartDate);
+                if (pastResult != null) return pastResult;
 
                 var effectiveWorkerIds = newWorkerIds ?? oldWorkerIds;
                 var effectiveStart = request.StartDate ?? entity.StartDate;
@@ -323,6 +330,13 @@ namespace CMMS.BLL.Services
                     Message = $"Worker không hợp lệ: {string.Join(", ", invalidIds)}"
                 };
 
+            return null;
+        }
+
+        private static ApiResponse<string>? ValidateNotPast(DateTime? start)
+        {
+            if (start.HasValue && start.Value.Date < DateTimeHelper.VnNow().Date)
+                return new ApiResponse<string> { Success = false, Message = "Không thể giao việc trong quá khứ" };
             return null;
         }
 
