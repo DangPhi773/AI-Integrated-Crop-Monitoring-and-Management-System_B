@@ -218,6 +218,8 @@ public class DiagnosisBillingService : IDiagnosisBillingService
                 && (specialistId == null || dr.DiagnosedBy == specialistId)
             select new
             {
+                DiagnosisResultId = dr.DiagnosisResultId,
+                ContractStartDate = c.StartDate,
                 SpecialistId = dr.DiagnosedBy,
                 SpecialistName = u.Fullname,
                 Year = dr.CreatedAt.Year,
@@ -231,6 +233,8 @@ public class DiagnosisBillingService : IDiagnosisBillingService
         ).ToListAsync();
 
         var grouped = raw
+            .GroupBy(x => x.DiagnosisResultId)
+            .Select(g => g.OrderByDescending(x => x.ContractStartDate).First())
             .GroupBy(x => new { x.SpecialistId, x.Year, x.MonthNum })
             .Select(g =>
             {
@@ -305,8 +309,9 @@ public class DiagnosisBillingService : IDiagnosisBillingService
                 && dr.CreatedAt >= c.StartDate
                 && (c.EndDate == null || dr.CreatedAt <= c.EndDate)
                 && !_db.DiagnosisPaymentItems.Any(pi => pi.DiagnosisResultId == dr.DiagnosisResultId)
-            select new BillItemResponse
+            select new
             {
+                ContractStartDate = c.StartDate,
                 DiagnosisResultId = dr.DiagnosisResultId,
                 DiseaseName = dr.DiseaseName,
                 DiagnosedAt = dr.CreatedAt,
@@ -320,7 +325,23 @@ public class DiagnosisBillingService : IDiagnosisBillingService
             }
         ).ToListAsync();
 
-        return raw;
+        return raw
+            .GroupBy(x => x.DiagnosisResultId)
+            .Select(g => g.OrderByDescending(x => x.ContractStartDate).First())
+            .Select(x => new BillItemResponse
+            {
+                DiagnosisResultId = x.DiagnosisResultId,
+                DiseaseName = x.DiseaseName,
+                DiagnosedAt = x.DiagnosedAt,
+                ReportId = x.ReportId,
+                ReportNo = x.ReportNo,
+                ContractId = x.ContractId,
+                ContractCode = x.ContractCode,
+                UnitPrice = x.UnitPrice,
+                FarmId = x.FarmId,
+                FarmName = x.FarmName
+            })
+            .ToList();
     }
 
     private async Task<PaymentResponse> BuildPaymentResponse(Guid paymentId)
