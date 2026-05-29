@@ -87,6 +87,9 @@ public class DiagnosisBillingService : IDiagnosisBillingService
 
         var monthStart = new DateTime(request.Month.Year, request.Month.Month, 1);
 
+        if (monthStart.AddMonths(1) > DateTimeHelper.VnNow().Date)
+            return new ApiResponse<PaymentResponse> { Success = false, Message = "Chỉ thanh toán cho tháng đã kết thúc" };
+
         var specialist = await _db.Users.FirstOrDefaultAsync(u => u.UserId == request.SpecialistId);
         if (specialist == null)
             return new ApiResponse<PaymentResponse> { Success = false, Message = "Không tìm thấy chuyên gia" };
