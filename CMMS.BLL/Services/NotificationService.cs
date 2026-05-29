@@ -1,6 +1,8 @@
 using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
 using CMMS.BLL.Realtime;
+using CMMS.DAL.DTOs.Auth;
+using CMMS.DAL.DTOs.Notifications;
 using CMMS.DAL.Entities;
 using CMMS.DAL.Interfaces;
 
@@ -46,7 +48,7 @@ namespace CMMS.BLL.Services
                 NoteType = "email_welcome",
                 NoteTitle = subject,
                 NoteMessage = $"Welcome email sent to {worker.Email}",
-                NoteStatus = "sent",
+                NoteStatus = "unread",
                 NoteCreatedAt = DateTimeHelper.VnNow()
             };
             await _notificationRepo.AddAsync(notification);
@@ -91,7 +93,7 @@ namespace CMMS.BLL.Services
                 NoteType = "email_new_report",
                 NoteTitle = subject,
                 NoteMessage = $"New report notification sent to {r.Email}",
-                NoteStatus = "sent",
+                NoteStatus = "unread",
                 NoteCreatedAt = now
             }).ToList();
 
@@ -110,6 +112,44 @@ namespace CMMS.BLL.Services
                     createdAt = n.NoteCreatedAt
                 });
             }
+        }
+
+        public async Task<ApiResponse<List<NotificationResponse>>> GetMyNotificationsAsync(Guid userId, bool unreadOnly, int page, int pageSize)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1 || pageSize > 100) pageSize = 20;
+
+            var items = await _notificationRepo.GetByUserIdAsync(userId, unreadOnly, (page - 1) * pageSize, pageSize);
+            var data = items.Select(n => new NotificationResponse
+            {
+                NoteId = n.NoteId,
+                ReportId = n.ReportId,
+                DiagnosisId = n.DiagnosisId,
+                NoteType = n.NoteType,
+                NoteTitle = n.NoteTitle,
+                NoteMessage = n.NoteMessage,
+                NoteStatus = n.NoteStatus,
+                NoteCreatedAt = n.NoteCreatedAt
+            }).ToList();
+
+            return new ApiResponse<List<NotificationResponse>> { Success = true, Data = data };
+        }
+
+        public async Task<ApiResponse<int>> GetUnreadCountAsync(Guid userId)
+            => new() { Success = true, Data = await _notificationRepo.CountUnreadAsync(userId) };
+
+        public async Task<ApiResponse<string>> MarkAsReadAsync(Guid noteId, Guid userId)
+        {
+            var affected = await _notificationRepo.MarkAsReadAsync(noteId, userId);
+            return affected > 0
+                ? new ApiResponse<string> { Success = true, Message = "Đã đánh dấu đã đọc" }
+                : new ApiResponse<string> { Success = false, Message = "Không tìm thấy thông báo" };
+        }
+
+        public async Task<ApiResponse<string>> MarkAllAsReadAsync(Guid userId)
+        {
+            var affected = await _notificationRepo.MarkAllAsReadAsync(userId);
+            return new ApiResponse<string> { Success = true, Message = $"Đã đánh dấu {affected} thông báo" };
         }
     }
 }
