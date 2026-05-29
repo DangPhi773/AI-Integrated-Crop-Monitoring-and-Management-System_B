@@ -10,10 +10,9 @@ namespace CMMS.BLL.Helpers
 
         private static readonly HashSet<string> CommonPasswords = new(System.StringComparer.OrdinalIgnoreCase)
         {
-            "password", "password1", "password123", "12345678", "123456789", "1234567890",
-            "qwerty", "qwerty123", "abc12345", "admin", "admin123", "letmein", "welcome",
-            "welcome1", "iloveyou", "monkey", "dragon", "sunshine", "princess", "matkhau",
-            "matkhau123"
+            "P@ssw0rd", "P@ssw0rd1", "Passw0rd!", "Passw0rd@123", "Admin@123",
+            "Admin@1234", "Welcome@1", "Welcome@123", "Qwerty@123", "Iloveyou@1",
+            "Abc@12345", "Matkhau@123"
         };
 
         public static List<string> Validate(string? password)
@@ -37,6 +36,9 @@ namespace CMMS.BLL.Helpers
 
             if (!password.Any(char.IsDigit))
                 errors.Add("Mật khẩu phải chứa ít nhất 1 chữ số.");
+
+            if (!password.Any(c => !char.IsLetterOrDigit(c) && !char.IsWhiteSpace(c)))
+                errors.Add("Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt (ví dụ: !@#$%^&*).");
 
             if (password.Any(char.IsWhiteSpace))
                 errors.Add("Mật khẩu không được chứa khoảng trắng.");

@@ -126,6 +126,41 @@ namespace CMMS.BLL.Services
             }
         }
 
+        public async Task<ApiResponse<string>> ChangePasswordAsync(Guid userId, ChangePasswordRequest request)
+        {
+            try
+            {
+                var user = await _userRepo.GetByIdAsync(userId);
+                if (user == null)
+                    return new ApiResponse<string> { Success = false, Message = "Không tìm thấy người dùng." };
+
+                if (!PasswordHelper.VerifyPassword(request.CurrentPassword, user.HashPassword))
+                    return new ApiResponse<string> { Success = false, Message = "Mật khẩu hiện tại không đúng." };
+
+                var passwordErrors = PasswordPolicy.Validate(request.NewPassword);
+                if (passwordErrors.Count > 0)
+                    return new ApiResponse<string>
+                    {
+                        Success = false,
+                        Message = "Mật khẩu mới không đạt yêu cầu",
+                        Errors = passwordErrors
+                    };
+
+                if (PasswordHelper.VerifyPassword(request.NewPassword, user.HashPassword))
+                    return new ApiResponse<string> { Success = false, Message = "Mật khẩu mới không được trùng mật khẩu hiện tại." };
+
+                var newHash = PasswordHelper.HashPassword(request.NewPassword);
+                if (await _userRepo.UpdatePasswordAsync(userId, newHash))
+                    return new ApiResponse<string> { Success = true, Message = "Đổi mật khẩu thành công." };
+
+                return new ApiResponse<string> { Success = false, Message = "Lỗi lưu dữ liệu." };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<string> { Success = false, Message = "Lỗi BLL", Errors = new List<string> { ex.Message } };
+            }
+        }
+
         public async Task<ApiResponse<object>> GetRolesAsync()
         {
             var roles = await _userRepo.GetAllRolesAsync();
