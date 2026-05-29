@@ -12,6 +12,7 @@ namespace CMMS.DAL.Interfaces
         System.Threading.Tasks.Task<IEnumerable<TaskDetail>> GetByWorkerIdAsync(Guid workerId);
         System.Threading.Tasks.Task<IEnumerable<TaskDetail>> GetByBedIdAsync(Guid bedId);
         System.Threading.Tasks.Task<IEnumerable<TaskDetail>> GetByTaskIdAsync(Guid taskId);
+        System.Threading.Tasks.Task<List<TaskDetail>> GetActiveOverlappingAsync(DateTime start, DateTime end, Guid? excludeTaskDetailId);
         System.Threading.Tasks.Task AddAsync(TaskDetail entity);
         void Update(TaskDetail entity);
         void Delete(TaskDetail entity);

@@ -37,6 +37,15 @@ namespace CMMS.DAL.Repositories
         public async Task<IEnumerable<TaskDetail>> GetByBedIdAsync(Guid bedId)
             => await BaseQuery().Where(d => d.BedIds.Contains(bedId)).AsNoTracking().ToListAsync();
 
+        public async Task<List<TaskDetail>> GetActiveOverlappingAsync(DateTime start, DateTime end, Guid? excludeTaskDetailId)
+            => await _context.TaskDetails
+                .AsNoTracking()
+                .Where(d => d.StartDate != null && d.EndDate != null
+                    && d.Status != "Cancelled"
+                    && (excludeTaskDetailId == null || d.TaskDetailId != excludeTaskDetailId)
+                    && d.StartDate < end && start < d.EndDate)
+                .ToListAsync();
+
         public async System.Threading.Tasks.Task AddAsync(TaskDetail entity)
             => await _context.TaskDetails.AddAsync(entity);
 

@@ -64,6 +64,37 @@ namespace CMMS.BLL.Services
             });
         }
 
+        public async System.Threading.Tasks.Task NotifyAccountApprovedAsync(Guid userId, string roleName)
+        {
+            var user = await _userRepo.GetByIdAsync(userId);
+            if (user == null || string.IsNullOrWhiteSpace(user.Email)) return;
+
+            var (subject, htmlBody) = _templateService.BuildAccountApprovedEmail(user.Fullname ?? user.Email, roleName, user.Email);
+            await _emailService.SendEmailAsync(user.Email, subject, htmlBody);
+
+            var notification = new Notification
+            {
+                NoteId = Guid.NewGuid(),
+                UserId = userId,
+                NoteType = "account_approved",
+                NoteTitle = subject,
+                NoteMessage = $"Tài khoản của bạn đã được phê duyệt với vai trò {roleName}.",
+                NoteStatus = "unread",
+                NoteCreatedAt = DateTimeHelper.VnNow()
+            };
+            await _notificationRepo.AddAsync(notification);
+            await _notificationRepo.SaveChangesAsync();
+
+            await _realtime.PushToUserAsync(userId, new
+            {
+                noteId = notification.NoteId,
+                noteType = notification.NoteType,
+                noteTitle = notification.NoteTitle,
+                noteMessage = notification.NoteMessage,
+                createdAt = notification.NoteCreatedAt
+            });
+        }
+
         public async System.Threading.Tasks.Task NotifyNewReportAsync(Guid reportId)
         {
             var report = await _reportRepo.GetByIdAsync(reportId);
