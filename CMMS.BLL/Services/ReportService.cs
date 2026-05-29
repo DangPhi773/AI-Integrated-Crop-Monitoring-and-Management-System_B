@@ -1,6 +1,7 @@
 using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
 using CMMS.BLL.Mappings;
+using CMMS.BLL.Realtime;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Reports.Requests;
 using CMMS.DAL.DTOs.Reports.Responses;
@@ -23,6 +24,7 @@ namespace CMMS.BLL.Services
         private readonly IAttachmentService _attachmentService;
         private readonly IAttachmentRepository _attachmentRepo;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly INotificationRealtime _realtime;
 
         public ReportService(
             IReportRepository reportRepo,
@@ -34,7 +36,8 @@ namespace CMMS.BLL.Services
             INotificationRepository notificationRepo,
             IAttachmentService attachmentService,
             IAttachmentRepository attachmentRepo,
-            IServiceScopeFactory scopeFactory)
+            IServiceScopeFactory scopeFactory,
+            INotificationRealtime realtime)
         {
             _reportRepo = reportRepo;
             _userRepo = userRepo;
@@ -46,6 +49,7 @@ namespace CMMS.BLL.Services
             _attachmentService = attachmentService;
             _attachmentRepo = attachmentRepo;
             _scopeFactory = scopeFactory;
+            _realtime = realtime;
         }
 
         public async Task<ApiResponse<IEnumerable<ReportResponse>>> GetAllReportsAsync()
@@ -193,7 +197,7 @@ namespace CMMS.BLL.Services
             report.UpdatedAt = now;
             _reportRepo.Update(report);
 
-            await _notificationRepo.AddAsync(new Notification
+            var notification = new Notification
             {
                 NoteId = Guid.NewGuid(),
                 UserId = request.AssignedTo,
@@ -203,9 +207,21 @@ namespace CMMS.BLL.Services
                 NoteMessage = request.Note,
                 NoteStatus = "unread",
                 NoteCreatedAt = now
-            });
+            };
+            await _notificationRepo.AddAsync(notification);
 
             await _reportRepo.SaveChangesAsync();
+
+            await _realtime.PushToUserAsync(request.AssignedTo, new
+            {
+                noteId = notification.NoteId,
+                noteType = notification.NoteType,
+                noteTitle = notification.NoteTitle,
+                noteMessage = notification.NoteMessage,
+                reportId = reportId,
+                createdAt = notification.NoteCreatedAt
+            });
+
             return new ApiResponse<string> { Success = true, Message = "Phân công thành công" };
         }
 
@@ -242,9 +258,10 @@ namespace CMMS.BLL.Services
                 latestAssignment.UpdatedAt = now;
             }
 
+            Notification? ownerNotification = null;
             if (report.OwnerId.HasValue)
             {
-                await _notificationRepo.AddAsync(new Notification
+                ownerNotification = new Notification
                 {
                     NoteId = Guid.NewGuid(),
                     UserId = report.OwnerId.Value,
@@ -255,10 +272,25 @@ namespace CMMS.BLL.Services
                     NoteMessage = $"Bệnh: {request.DiseaseName} - Mức độ: {request.SeverityLevel}",
                     NoteStatus = "unread",
                     NoteCreatedAt = now
-                });
+                };
+                await _notificationRepo.AddAsync(ownerNotification);
             }
 
             await _reportRepo.SaveChangesAsync();
+
+            if (ownerNotification != null)
+            {
+                await _realtime.PushToUserAsync(ownerNotification.UserId!.Value, new
+                {
+                    noteId = ownerNotification.NoteId,
+                    noteType = ownerNotification.NoteType,
+                    noteTitle = ownerNotification.NoteTitle,
+                    noteMessage = ownerNotification.NoteMessage,
+                    reportId = reportId,
+                    diagnosisId = ownerNotification.DiagnosisId,
+                    createdAt = ownerNotification.NoteCreatedAt
+                });
+            }
 
             var diagnoser = await _userRepo.GetByIdAsync(diagnosedByUserId);
 

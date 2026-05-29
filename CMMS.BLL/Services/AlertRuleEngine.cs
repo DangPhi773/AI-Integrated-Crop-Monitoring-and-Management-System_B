@@ -82,7 +82,7 @@ namespace CMMS.BLL.Services
                         NoteType = "sensor_alert",
                         NoteTitle = alert.Title,
                         NoteMessage = $"{deviceLabel}: {alert.Message}",
-                        NoteStatus = "sent",
+                        NoteStatus = "unread",
                         NoteCreatedAt = createdAt
                     };
                     pending.Add((note, alert));

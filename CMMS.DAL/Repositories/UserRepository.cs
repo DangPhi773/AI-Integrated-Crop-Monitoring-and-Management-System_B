@@ -38,6 +38,11 @@ namespace CMMS.DAL.Repositories
             await _context.Users.AddAsync(user);
         }
 
+        public async Task<bool> UpdatePasswordAsync(Guid userId, string hashedPassword)
+            => await _context.Users
+                .Where(u => u.UserId == userId)
+                .ExecuteUpdateAsync(s => s.SetProperty(u => u.HashPassword, hashedPassword)) > 0;
+
         public async Task<bool> SaveChangesAsync()
         {
             return await _context.SaveChangesAsync() > 0;

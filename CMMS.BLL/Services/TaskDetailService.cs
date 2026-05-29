@@ -119,6 +119,9 @@ namespace CMMS.BLL.Services
                 var validationResult = await ValidateWorkersAsync(workerIds);
                 if (validationResult != null) return validationResult;
 
+                var scheduleResult = await ValidateScheduleAsync(null, workerIds, request.StartDate, request.EndDate);
+                if (scheduleResult != null) return scheduleResult;
+
                 var entity = new TaskDetail
                 {
                     TaskDetailId = Guid.NewGuid(),
@@ -164,6 +167,12 @@ namespace CMMS.BLL.Services
                     var validationResult = await ValidateWorkersAsync(newWorkerIds);
                     if (validationResult != null) return validationResult;
                 }
+
+                var effectiveWorkerIds = newWorkerIds ?? oldWorkerIds;
+                var effectiveStart = request.StartDate ?? entity.StartDate;
+                var effectiveEnd = request.EndDate ?? entity.EndDate;
+                var scheduleResult = await ValidateScheduleAsync(entity.TaskDetailId, effectiveWorkerIds, effectiveStart, effectiveEnd);
+                if (scheduleResult != null) return scheduleResult;
 
                 entity.TaskId = request.TaskId ?? entity.TaskId;
                 entity.SeasonId = request.SeasonId ?? entity.SeasonId;
@@ -312,6 +321,31 @@ namespace CMMS.BLL.Services
                 {
                     Success = false,
                     Message = $"Worker không hợp lệ: {string.Join(", ", invalidIds)}"
+                };
+
+            return null;
+        }
+
+        private async Task<ApiResponse<string>?> ValidateScheduleAsync(Guid? selfId, List<Guid> workerIds, DateTime? start, DateTime? end)
+        {
+            if (start.HasValue && end.HasValue && start.Value > end.Value)
+                return new ApiResponse<string> { Success = false, Message = "Giờ bắt đầu không được sau giờ kết thúc" };
+
+            if (!start.HasValue || !end.HasValue || workerIds.Count == 0)
+                return null;
+
+            var overlapping = await _repo.GetActiveOverlappingAsync(start.Value, end.Value, selfId);
+            var conflictWorkerIds = overlapping
+                .SelectMany(d => d.AssignedToWorkerIds)
+                .Where(workerIds.Contains)
+                .Distinct()
+                .ToList();
+
+            if (conflictWorkerIds.Count > 0)
+                return new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = $"Worker bị trùng lịch trong khung giờ này: {string.Join(", ", conflictWorkerIds)}"
                 };
 
             return null;

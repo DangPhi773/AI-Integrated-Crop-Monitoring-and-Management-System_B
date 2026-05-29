@@ -11,6 +11,7 @@ namespace CMMS.BLL.Interfaces
     {
         System.Threading.Tasks.Task<ApiResponse<string>> RegisterAsync(RegisterRequest request);
         System.Threading.Tasks.Task<ApiResponse<object>> LoginAsync(LoginRequest request);
+        Task<ApiResponse<string>> ChangePasswordAsync(Guid userId, ChangePasswordRequest request);
         Task<ApiResponse<object>> GetRolesAsync();
     }
 }
