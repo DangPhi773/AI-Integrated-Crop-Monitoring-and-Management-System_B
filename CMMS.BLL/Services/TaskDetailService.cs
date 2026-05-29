@@ -342,11 +342,16 @@ namespace CMMS.BLL.Services
                 .ToList();
 
             if (conflictWorkerIds.Count > 0)
+            {
+                var workers = await _userRepo.GetByRoleNamesAsync("Worker");
+                var nameById = workers.ToDictionary(w => w.UserId, w => w.Fullname ?? w.Email ?? w.UserId.ToString());
+                var names = conflictWorkerIds.Select(id => nameById.TryGetValue(id, out var n) ? n : id.ToString());
                 return new ApiResponse<string>
                 {
                     Success = false,
-                    Message = $"Worker bị trùng lịch trong khung giờ này: {string.Join(", ", conflictWorkerIds)}"
+                    Message = $"Worker bị trùng lịch trong khung giờ này: {string.Join(", ", names)}"
                 };
+            }
 
             return null;
         }
