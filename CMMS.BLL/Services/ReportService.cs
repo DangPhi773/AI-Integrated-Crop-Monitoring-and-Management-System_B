@@ -230,6 +230,10 @@ namespace CMMS.BLL.Services
             var report = await _reportRepo.GetByIdAsync(reportId);
             if (report == null) return new ApiResponse<DiagnosisResponse> { Success = false, Message = "Không tìm thấy báo cáo" };
 
+            var latestAssignment = await _assignmentRepo.GetLatestByReportAndUserAsync(reportId, diagnosedByUserId);
+            if (latestAssignment == null || latestAssignment.Status != "ASSIGNED")
+                return new ApiResponse<DiagnosisResponse> { Success = false, Message = "Bạn không được phân công chẩn đoán báo cáo này" };
+
             var now = DateTimeHelper.VnNow();
 
             var diagnosis = new DiagnosisResult
@@ -251,12 +255,8 @@ namespace CMMS.BLL.Services
             report.UpdatedAt = now;
             _reportRepo.Update(report);
 
-            var latestAssignment = await _assignmentRepo.GetLatestByReportAndUserAsync(reportId, diagnosedByUserId);
-            if (latestAssignment != null)
-            {
-                latestAssignment.Status = "DONE";
-                latestAssignment.UpdatedAt = now;
-            }
+            latestAssignment.Status = "DONE";
+            latestAssignment.UpdatedAt = now;
 
             Notification? ownerNotification = null;
             if (report.OwnerId.HasValue)
@@ -301,23 +301,29 @@ namespace CMMS.BLL.Services
             };
         }
 
-        public async Task<ApiResponse<IEnumerable<DiagnosisResponse>>> GetAllDiagnosisAsync()
+        public async Task<ApiResponse<IEnumerable<DiagnosisResponse>>> GetAllDiagnosisAsync(Guid userId, string role)
         {
             var list = await _diagnosisRepo.GetAllWithDetailsAsync();
+            if (role == "Specialist")
+                list = list.Where(d => d.DiagnosedBy == userId).ToList();
             var data = list.Select(d => ReportMapper.ToDiagnosisResponse(d)).ToList();
             return new ApiResponse<IEnumerable<DiagnosisResponse>> { Success = true, Data = data };
         }
 
-        public async Task<ApiResponse<DiagnosisResponse>> GetDiagnosisByIdAsync(Guid diagnosisId)
+        public async Task<ApiResponse<DiagnosisResponse>> GetDiagnosisByIdAsync(Guid diagnosisId, Guid userId, string role)
         {
             var d = await _diagnosisRepo.GetByIdWithDetailsAsync(diagnosisId);
             if (d == null) return new ApiResponse<DiagnosisResponse> { Success = false, Message = "Không tìm thấy kết quả chẩn đoán" };
+            if (role == "Specialist" && d.DiagnosedBy != userId)
+                return new ApiResponse<DiagnosisResponse> { Success = false, Message = "Không tìm thấy kết quả chẩn đoán" };
             return new ApiResponse<DiagnosisResponse> { Success = true, Data = ReportMapper.ToDiagnosisResponse(d) };
         }
 
-        public async Task<ApiResponse<IEnumerable<DiagnosisResponse>>> GetDiagnosisByReportIdAsync(Guid reportId)
+        public async Task<ApiResponse<IEnumerable<DiagnosisResponse>>> GetDiagnosisByReportIdAsync(Guid reportId, Guid userId, string role)
         {
             var list = await _diagnosisRepo.GetByReportIdAsync(reportId);
+            if (role == "Specialist")
+                list = list.Where(d => d.DiagnosedBy == userId).ToList();
             var data = list.Select(d => ReportMapper.ToDiagnosisResponse(d)).ToList();
             return new ApiResponse<IEnumerable<DiagnosisResponse>> { Success = true, Data = data };
         }
