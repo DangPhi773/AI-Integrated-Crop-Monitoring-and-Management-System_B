@@ -39,7 +39,6 @@ namespace CMMS.BLL.Services
             if (worker == null || string.IsNullOrWhiteSpace(worker.Email)) return;
 
             var (subject, htmlBody) = _templateService.BuildWelcomeWorkerEmail(worker.Fullname ?? "Worker", worker.Email);
-            await _emailService.SendEmailAsync(worker.Email, subject, htmlBody);
 
             var notification = new Notification
             {
@@ -62,6 +61,9 @@ namespace CMMS.BLL.Services
                 noteMessage = notification.NoteMessage,
                 createdAt = notification.NoteCreatedAt
             });
+
+            try { await _emailService.SendEmailAsync(worker.Email, subject, htmlBody); }
+            catch { }
         }
 
         public async System.Threading.Tasks.Task NotifyAccountApprovedAsync(Guid userId, string roleName)
@@ -70,7 +72,6 @@ namespace CMMS.BLL.Services
             if (user == null || string.IsNullOrWhiteSpace(user.Email)) return;
 
             var (subject, htmlBody) = _templateService.BuildAccountApprovedEmail(user.Fullname ?? user.Email, roleName, user.Email);
-            await _emailService.SendEmailAsync(user.Email, subject, htmlBody);
 
             var notification = new Notification
             {
@@ -93,6 +94,9 @@ namespace CMMS.BLL.Services
                 noteMessage = notification.NoteMessage,
                 createdAt = notification.NoteCreatedAt
             });
+
+            try { await _emailService.SendEmailAsync(user.Email, subject, htmlBody); }
+            catch { }
         }
 
         public async System.Threading.Tasks.Task NotifyNewReportAsync(Guid reportId)
@@ -113,8 +117,6 @@ namespace CMMS.BLL.Services
             var emails = recipients.Select(r => r.Email!).Distinct().ToList();
             var submitDateStr = (report.SubmitDate ?? report.CreatedAt ?? DateTimeHelper.VnNow()).ToString("dd/MM/yyyy HH:mm");
             var (subject, htmlBody) = _templateService.BuildNewReportEmail(report.Title ?? "(Không tiêu đề)", workerName, submitDateStr);
-
-            await _emailService.SendEmailAsync(emails, subject, htmlBody);
 
             var now = DateTimeHelper.VnNow();
             var notifications = recipients.Select(r => new Notification
@@ -143,6 +145,9 @@ namespace CMMS.BLL.Services
                     createdAt = n.NoteCreatedAt
                 });
             }
+
+            try { await _emailService.SendEmailAsync(emails, subject, htmlBody); }
+            catch { }
         }
 
         public async Task<ApiResponse<List<NotificationResponse>>> GetMyNotificationsAsync(Guid userId, bool unreadOnly, int page, int pageSize)
