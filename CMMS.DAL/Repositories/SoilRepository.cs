@@ -18,8 +18,9 @@ namespace CMMS.DAL.Repositories
         public async Task<IEnumerable<Soil>> GetAllAsync()
         => await _context.Soils
             .Include(s => s.SoilCropCompatibilities)
-                .ThenInclude(sc => sc.Crop) 
+                .ThenInclude(sc => sc.Crop)
             .Include(s => s.Plots)
+            .OrderBy(s => s.Name)
             .AsNoTracking()
             .ToListAsync();
 
