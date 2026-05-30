@@ -30,6 +30,16 @@ namespace CMMS.DAL.Repositories
                     .ThenInclude(sc => sc.Soil)
                 .FirstOrDefaultAsync(c => c.CropId == id);
 
+        public async System.Threading.Tasks.Task<bool> ExistsByNameAsync(string name, Guid? excludeId = null)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return false;
+            var normalized = name.Trim().ToLower();
+            return await _context.Crops
+                .AsNoTracking()
+                .AnyAsync(c => c.CropName.Trim().ToLower() == normalized
+                            && (excludeId == null || c.CropId != excludeId));
+        }
+
         public async System.Threading.Tasks.Task AddAsync(Crop crop) => await _context.Crops.AddAsync(crop);
 
         public void Update(Crop crop) => _context.Crops.Update(crop);
