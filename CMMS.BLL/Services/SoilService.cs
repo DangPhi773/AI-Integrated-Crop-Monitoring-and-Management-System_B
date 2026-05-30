@@ -1,3 +1,4 @@
+using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Soils;
@@ -53,7 +54,8 @@ namespace CMMS.BLL.Services
                 {
                     SoilId = Guid.NewGuid(),
                     Name = request.Name,
-                    ScienceName = request.ScienceName
+                    ScienceName = request.ScienceName,
+                    CreatedAt = DateTimeHelper.VnNow()
                 };
 
                 await _soilRepo.AddAsync(entity);

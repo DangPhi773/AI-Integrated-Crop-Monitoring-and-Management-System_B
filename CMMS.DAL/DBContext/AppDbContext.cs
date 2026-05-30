@@ -150,6 +150,10 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CropQuantities).HasColumnName("crop_quantities");
             entity.Property(e => e.CropScientificName).HasColumnName("crop_scientific_name");
             entity.Property(e => e.CropStatus).HasColumnName("crop_status");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasColumnType("timestamp")
+                .HasDefaultValueSql("now()");
         });
 
         modelBuilder.Entity<Farm>(entity =>
@@ -506,6 +510,10 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("soil_id");
             entity.Property(e => e.Name).HasColumnName("name");
             entity.Property(e => e.ScienceName).HasColumnName("science_name");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasColumnType("timestamp")
+                .HasDefaultValueSql("now()");
         });
 
         modelBuilder.Entity<Task>(entity =>

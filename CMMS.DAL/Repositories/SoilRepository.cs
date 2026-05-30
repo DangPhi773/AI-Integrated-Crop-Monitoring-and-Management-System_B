@@ -20,7 +20,8 @@ namespace CMMS.DAL.Repositories
             .Include(s => s.SoilCropCompatibilities)
                 .ThenInclude(sc => sc.Crop)
             .Include(s => s.Plots)
-            .OrderBy(s => s.Name)
+            .OrderByDescending(s => s.CreatedAt)
+            .ThenBy(s => s.Name)
             .AsNoTracking()
             .ToListAsync();
 
