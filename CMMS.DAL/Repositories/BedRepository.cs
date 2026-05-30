@@ -25,6 +25,10 @@ namespace CMMS.DAL.Repositories
 
         public async System.Threading.Tasks.Task AddAsync(Bed bed) => await _context.Beds.AddAsync(bed);
 
+        public async System.Threading.Tasks.Task AddRangeAsync(IEnumerable<Bed> beds) => await _context.Beds.AddRangeAsync(beds);
+
+        public Task<bool> AnyByPlotIdAsync(Guid plotId) => _context.Beds.AnyAsync(b => b.PlotId == plotId);
+
         public void Update(Bed bed) => _context.Beds.Update(bed);
 
         public void Delete(Bed bed) => _context.Beds.Remove(bed);

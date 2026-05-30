@@ -22,17 +22,20 @@ namespace CMMS.BLL.Services
         private readonly IIotDeviceRepository _deviceRepo;
         private readonly ISeasonRepository _seasonRepo;
         private readonly IIotRealtime _realtime;
+        private readonly IAlertRuleEngine _alertEngine;
 
         public SensorDataService(
             IIotDataRepository dataRepo,
             IIotDeviceRepository deviceRepo,
             ISeasonRepository seasonRepo,
-            IIotRealtime realtime)
+            IIotRealtime realtime,
+            IAlertRuleEngine alertEngine)
         {
             _dataRepo = dataRepo;
             _deviceRepo = deviceRepo;
             _seasonRepo = seasonRepo;
             _realtime = realtime;
+            _alertEngine = alertEngine;
         }
 
         public async Task<SensorDataResponse> ProcessSensorDataAsync(IotDevice device, SensorDataRequest request)
@@ -105,6 +108,8 @@ namespace CMMS.BLL.Services
                     persisted
                 });
             }
+
+            await _alertEngine.EvaluateAndNotifyAsync(device, request, persistedId, recordedAt);
 
             return new SensorDataResponse
             {

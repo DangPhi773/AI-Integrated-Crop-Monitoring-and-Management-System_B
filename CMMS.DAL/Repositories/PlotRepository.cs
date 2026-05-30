@@ -30,6 +30,11 @@ namespace CMMS.DAL.Repositories
                 .Include(p => p.Beds)
                 .FirstOrDefaultAsync(p => p.PlotId == id);
 
+        public Task<Plot?> GetByIdLightAsync(Guid id)
+            => _context.Plots
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.PlotId == id);
+
         public async System.Threading.Tasks.Task AddAsync(Plot plot) => await _context.Plots.AddAsync(plot);
 
         public void Update(Plot plot) => _context.Plots.Update(plot);

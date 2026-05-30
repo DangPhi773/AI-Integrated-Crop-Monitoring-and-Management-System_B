@@ -11,6 +11,7 @@ namespace CMMS.DAL.Interfaces
     {
         Task<IEnumerable<Farm>> GetAllAsync();
         Task<Farm?> GetByIdAsync(Guid id);
+        Task<bool> ExistsByNameAsync(string name, Guid? excludeId = null);
         System.Threading.Tasks.Task AddAsync(Farm farm);
         void Update(Farm farm);
         void Delete(Farm farm);

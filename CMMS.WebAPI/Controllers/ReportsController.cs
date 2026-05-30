@@ -74,7 +74,9 @@ namespace CMMS.WebAPI.Controllers
         [HttpGet("diagnosis")]
         public async Task<IActionResult> GetAllDiagnosis()
         {
-            var result = await _reportService.GetAllDiagnosisAsync();
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var role = User.FindFirstValue(ClaimTypes.Role) ?? "";
+            var result = await _reportService.GetAllDiagnosisAsync(userId, role);
             return Ok(result);
         }
 
@@ -82,7 +84,9 @@ namespace CMMS.WebAPI.Controllers
         [HttpGet("diagnosis/{diagnosisId:guid}")]
         public async Task<IActionResult> GetDiagnosisById(Guid diagnosisId)
         {
-            var result = await _reportService.GetDiagnosisByIdAsync(diagnosisId);
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var role = User.FindFirstValue(ClaimTypes.Role) ?? "";
+            var result = await _reportService.GetDiagnosisByIdAsync(diagnosisId, userId, role);
             return result.Success ? Ok(result) : NotFound(result);
         }
 
@@ -90,7 +94,9 @@ namespace CMMS.WebAPI.Controllers
         [HttpGet("{reportId:guid}/diagnosis")]
         public async Task<IActionResult> GetDiagnosisByReportId(Guid reportId)
         {
-            var result = await _reportService.GetDiagnosisByReportIdAsync(reportId);
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var role = User.FindFirstValue(ClaimTypes.Role) ?? "";
+            var result = await _reportService.GetDiagnosisByReportIdAsync(reportId, userId, role);
             return Ok(result);
         }
 

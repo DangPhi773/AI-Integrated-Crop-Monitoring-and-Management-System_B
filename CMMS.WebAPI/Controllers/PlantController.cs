@@ -50,13 +50,13 @@ namespace CMMS.WebAPI.Controllers
 
                 return Ok(new
                 {
-                    disease = TranslateDisease(result.PossibleDisease),
+                    disease = result.PossibleDisease,
                     confidence = result.Confidence,
                     severity = TranslateSeverity(result.Severity),
-                    description = TranslateText(result.Description),
-                    symptoms = result.SymptomsDetected.Select(TranslateText).ToList(),
-                    solutions = result.CareSuggestions.Select(TranslateText).ToList(),
-                    treatmentSteps = result.TreatmentSteps.Select(TranslateText).ToList(),
+                    description = result.Description,
+                    symptoms = result.SymptomsDetected,
+                    solutions = result.CareSuggestions,
+                    treatmentSteps = result.TreatmentSteps,
                     contextUsed = new
                     {
                         farmId = request.FarmId,
@@ -81,31 +81,35 @@ namespace CMMS.WebAPI.Controllers
             }
         }
 
-        private string TranslateDisease(string disease)
+        private string TranslateDisease(string? disease)
         {
             if (string.IsNullOrWhiteSpace(disease))
                 return "Chưa xác định rõ";
 
-            return disease.Trim() switch
+            var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                "Bacterial Soft Rot" => "Thối nhũn do vi khuẩn",
-                "Soft Rot" => "Thối nhũn",
-                "Black Rot" => "Thối đen",
-                "Head Rot" => "Thối bắp",
-                "Downy Mildew" => "Sương mai",
-                "Powdery Mildew" => "Phấn trắng",
-                "Leaf Spot" => "Đốm lá",
-                "Root Rot" => "Thối rễ",
-                "Fusarium Wilt" => "Héo rũ Fusarium",
-                "Anthracnose" => "Thán thư",
-                "Early Blight" => "Bệnh cháy lá sớm",
-                "Late Blight" => "Bệnh cháy lá muộn",
-                "Unclear" => "Chưa xác định rõ",
-                _ => disease
+                { "Bacterial Soft Rot", "Thối nhũn do vi khuẩn" },
+                { "Soft Rot", "Thối nhũn" },
+                { "Black Rot", "Thối đen" },
+                { "Head Rot", "Thối bắp" },
+                { "Downy Mildew", "Sương mai" },
+                { "Powdery Mildew", "Phấn trắng" },
+                { "Leaf Spot", "Đốm lá" },
+                { "Alternaria Leaf Spot", "Đốm lá Alternaria" },
+                { "Root Rot", "Thối rễ" },
+                { "Fusarium Wilt", "Héo rũ Fusarium" },
+                { "Anthracnose", "Bệnh thán thư" },
+                { "Early Blight", "Cháy lá sớm" },
+                { "Late Blight", "Cháy lá muộn" },
+                { "Unclear", "Chưa xác định rõ" }
             };
+
+            return map.TryGetValue(disease.Trim(), out var translated)
+                ? translated
+                : TranslateText(disease);
         }
 
-        private string TranslateSeverity(string severity)
+        private string TranslateSeverity(string? severity)
         {
             if (string.IsNullOrWhiteSpace(severity))
                 return "Thấp";
@@ -119,66 +123,68 @@ namespace CMMS.WebAPI.Controllers
             };
         }
 
-        private string TranslateText(string text)
+        private string TranslateText(string? text)
         {
             if (string.IsNullOrWhiteSpace(text))
-                return text;
+                return string.Empty;
 
-            return text
-                .Replace("Cabbage head shows extensive brown, water-soaked, soft decay, primarily affecting the head.",
-                    "Phần bắp cải có dấu hiệu thối mềm, màu nâu và úng nước, chủ yếu ảnh hưởng ở phần bắp.")
-                .Replace("Brown, soft, watery decay on the cabbage head.",
-                    "Phần bắp cải bị thối mềm, màu nâu và có dấu hiệu úng nước.")
-                .Replace("Brown soft decay on cabbage head.",
-                    "Phần bắp cải có dấu hiệu thối mềm màu nâu.")
-                .Replace("No clear disease symptoms detected.",
-                    "Chưa phát hiện triệu chứng bệnh rõ ràng.")
-                .Replace("Short symptom description.",
-                    "Mô tả ngắn triệu chứng quan sát được.")
-                .Replace("Brown lesions",
-                    "Vết bệnh màu nâu")
-                .Replace("Soft decay",
-                    "Mô mềm bị thối")
-                .Replace("Water-soaked appearance on head",
-                    "Phần bắp có biểu hiện úng nước")
-                .Replace("Water-soaked appearance",
-                    "Biểu hiện úng nước")
-                .Replace("Water-soaked tissue",
-                    "Mô cây bị úng nước")
-                .Replace("Yellow leaves",
-                    "Lá vàng")
-                .Replace("Brown spots",
-                    "Đốm nâu")
-                .Replace("No clear symptoms",
-                    "Chưa có triệu chứng rõ ràng")
-                .Replace("Improve air circulation",
-                    "Tăng độ thông thoáng không khí")
-                .Replace("Avoid overhead irrigation",
-                    "Tránh tưới nước trực tiếp lên lá hoặc phần bắp")
-                .Replace("Ensure good drainage",
-                    "Đảm bảo đất thoát nước tốt")
-                .Replace("Remove infected plants",
-                    "Loại bỏ cây bị nhiễm bệnh")
-                .Replace("Remove and destroy infected plants",
-                    "Loại bỏ và tiêu hủy cây bị bệnh")
-                .Replace("Remove infected tissue",
-                    "Loại bỏ phần mô bị nhiễm bệnh")
-                .Replace("Apply copper-based bactericides",
-                    "Sử dụng thuốc diệt khuẩn gốc đồng theo hướng dẫn")
-                .Replace("Use copper-based bactericide if appropriate",
-                    "Sử dụng thuốc diệt khuẩn gốc đồng nếu phù hợp")
-                .Replace("Sanitize tools",
-                    "Vệ sinh dụng cụ sau khi xử lý cây bệnh")
-                .Replace("Practice crop rotation",
-                    "Luân canh cây trồng để hạn chế mầm bệnh")
-                .Replace("Monitor the plant for 2 days",
-                    "Theo dõi cây trong 2 ngày")
-                .Replace("Take a clearer close-up photo if symptoms spread",
-                    "Chụp ảnh cận cảnh rõ hơn nếu triệu chứng lan rộng")
-                .Replace("Avoid watering leaves",
-                    "Tránh tưới nước lên lá")
-                .Replace("Unclear",
-                    "Chưa xác định rõ");
+            var translations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "Unclear", "Chưa xác định rõ" },
+
+                { "Gemini returned invalid JSON. Please try again with a clearer image.", "Gemini trả về dữ liệu không hợp lệ. Vui lòng thử lại với ảnh rõ hơn." },
+                { "Upload a clearer plant image", "Tải lên ảnh cây rõ hơn" },
+                { "Take photo in good lighting", "Chụp ảnh ở nơi có ánh sáng tốt" },
+                { "Avoid blurry or cropped leaves", "Tránh ảnh bị mờ hoặc lá bị cắt mất" },
+
+                { "Brown lesions", "Vết bệnh màu nâu" },
+                { "Soft decay", "Mô mềm bị thối" },
+                { "Water-soaked tissue", "Mô cây bị úng nước" },
+                { "Water-soaked appearance", "Biểu hiện úng nước" },
+                { "Yellow leaves", "Lá vàng" },
+                { "Brown spots", "Đốm nâu" },
+                { "Dark spots", "Đốm đen" },
+                { "Leaf spots", "Đốm lá" },
+                { "Chewing damage", "Dấu hiệu bị cắn phá" },
+                { "Significant chewing damage", "Dấu hiệu bị cắn phá nghiêm trọng" },
+                { "Leaf holes", "Lá bị thủng" },
+                { "Holes in leaves", "Lá có lỗ thủng" },
+                { "Wilting leaves", "Lá bị héo" },
+                { "Rotten tissue", "Mô cây bị thối" },
+
+                { "Dark spots on leaves", "Lá xuất hiện đốm đen" },
+                { "Dark spots on inner leaves", "Lá bên trong xuất hiện đốm đen" },
+                { "Brown soft decay on cabbage head", "Bắp cải bị thối mềm màu nâu" },
+                { "Brown, soft, watery decay on the cabbage head.", "Phần bắp cải bị thối mềm, màu nâu và có dấu hiệu úng nước." },
+                { "No clear disease symptoms detected.", "Chưa phát hiện triệu chứng bệnh rõ ràng." },
+
+                { "Improve air circulation", "Tăng độ thông thoáng không khí" },
+                { "Avoid overhead irrigation", "Tránh tưới nước trực tiếp lên lá" },
+                { "Ensure good drainage", "Đảm bảo đất thoát nước tốt" },
+                { "Remove infected plants", "Loại bỏ cây bị nhiễm bệnh" },
+                { "Remove and destroy infected plants", "Loại bỏ và tiêu hủy cây bị bệnh" },
+                { "Sanitize tools", "Vệ sinh dụng cụ sau khi xử lý" },
+                { "Practice crop rotation", "Luân canh cây trồng" },
+                { "Monitor the plant", "Theo dõi tình trạng cây" },
+                { "Monitor the plant for 2 days", "Theo dõi cây trong 2 ngày" },
+                { "Avoid watering leaves", "Tránh tưới nước lên lá" },
+
+                { "Remove infected tissue", "Loại bỏ phần cây bị bệnh" },
+                { "Use copper-based bactericide", "Sử dụng thuốc diệt khuẩn gốc đồng" },
+                { "Use copper-based bactericide if appropriate", "Sử dụng thuốc diệt khuẩn gốc đồng nếu phù hợp" },
+                { "Apply copper-based bactericides", "Sử dụng thuốc diệt khuẩn gốc đồng theo hướng dẫn" },
+                { "Apply fungicide", "Sử dụng thuốc nấm phù hợp" },
+                { "Take a clearer close-up photo if symptoms spread", "Chụp ảnh cận cảnh rõ hơn nếu triệu chứng lan rộng!" }
+            };
+
+            var result = text.Trim();
+
+            foreach (var item in translations)
+            {
+                result = result.Replace(item.Key, item.Value, StringComparison.OrdinalIgnoreCase);
+            }
+
+            return result;
         }
     }
 }

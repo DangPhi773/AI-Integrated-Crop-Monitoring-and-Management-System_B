@@ -59,6 +59,7 @@ builder.Services.AddScoped<ISoilCropCompatibilityRepository, SoilCropCompatibili
 builder.Services.AddScoped<IRecommendationTaskRepository, RecommendationTaskRepository>();
 builder.Services.AddScoped<IRecommendationTaskDetailRepository, RecommendationTaskDetailRepository>();
 builder.Services.AddScoped<IGrowthTrackingRepository, GrowthTrackingRepository>();
+builder.Services.AddScoped<IStatisticsRepository, StatisticsRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICropService, CropService>();
@@ -76,6 +77,7 @@ builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IIotDeviceService, IotDeviceService>();
 builder.Services.AddScoped<IIotDataService, IotDataService>();
 builder.Services.AddScoped<ISensorDataService, SensorDataService>();
+builder.Services.AddScoped<IAlertRuleEngine, AlertRuleEngine>();
 builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddScoped<ICropGrowthTaskService, CropGrowthTaskService>();
 builder.Services.AddScoped<IWorkerScheduleService, WorkerScheduleService>();
@@ -84,11 +86,14 @@ builder.Services.AddScoped<ISoilCropCompatibilityService, SoilCropCompatibilityS
 builder.Services.AddScoped<IRecommendationTaskService, RecommendationTaskService>();
 builder.Services.AddScoped<IRecommendationTaskDetailService, RecommendationTaskDetailService>();
 builder.Services.AddScoped<IGrowthTrackingService, GrowthTrackingService>();
+builder.Services.AddScoped<IStatisticsService, StatisticsService>();
+builder.Services.AddScoped<IExpenseService, ExpenseService>();
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("Cloudinary"));
 builder.Services.Configure<GoogleMapsSettings>(builder.Configuration.GetSection("GoogleMaps"));
 builder.Services.Configure<WeatherSettings>(builder.Configuration.GetSection("Weather"));
+builder.Services.Configure<SensorAlertSettings>(builder.Configuration.GetSection("SensorAlerts"));
 builder.Services.AddHttpClient<IPlantAnalysisService, PlantAnalysisService>();
 builder.Services.AddHttpClient<IGoogleMapsService, GoogleMapsService>();
 builder.Services.AddHttpClient<IWeatherService, WeatherService>();

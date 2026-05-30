@@ -18,8 +18,10 @@ namespace CMMS.DAL.Repositories
         public async Task<IEnumerable<Soil>> GetAllAsync()
         => await _context.Soils
             .Include(s => s.SoilCropCompatibilities)
-                .ThenInclude(sc => sc.Crop) 
+                .ThenInclude(sc => sc.Crop)
             .Include(s => s.Plots)
+            .OrderByDescending(s => s.CreatedAt)
+            .ThenBy(s => s.Name)
             .AsNoTracking()
             .ToListAsync();
 
@@ -29,6 +31,16 @@ namespace CMMS.DAL.Repositories
                 .ThenInclude(sc => sc.Crop)
             .Include(s => s.Plots)
             .FirstOrDefaultAsync(s => s.SoilId == id);
+
+        public async Task<bool> ExistsByNameAsync(string name, Guid? excludeId = null)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return false;
+            var normalized = name.Trim().ToLower();
+            return await _context.Soils
+                .AsNoTracking()
+                .AnyAsync(s => s.Name.Trim().ToLower() == normalized
+                            && (excludeId == null || s.SoilId != excludeId));
+        }
 
         public async System.Threading.Tasks.Task AddAsync(Soil soil) => await _context.Soils.AddAsync(soil);
 

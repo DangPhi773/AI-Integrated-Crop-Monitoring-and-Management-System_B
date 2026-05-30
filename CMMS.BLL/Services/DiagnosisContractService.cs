@@ -45,27 +45,41 @@ public class DiagnosisContractService : IDiagnosisContractService
         var now = DateTimeHelper.VnNow();
         var prefix = $"HD-{now:yyyyMM}";
         var seq = await _db.DiagnosisContracts.CountAsync(c => c.ContractCode.StartsWith(prefix)) + 1;
-        var code = $"{prefix}-{seq:D3}";
 
-        var contract = new DiagnosisContract
+        DiagnosisContract contract;
+        const int maxAttempts = 5;
+        for (int attempt = 0; ; attempt++)
         {
-            DiagnosisContractId = Guid.NewGuid(),
-            ContractCode = code,
-            ExpertId = request.ExpertId,
-            BankAccount = request.BankAccount,
-            BankName = request.BankName,
-            AccountHolder = request.AccountHolder,
-            PricePerDiagnosis = request.PricePerDiagnosis,
-            StartDate = request.StartDate.Date,
-            EndDate = request.EndDate?.Date,
-            Status = "active",
-            Notes = request.Notes,
-            CreatedBy = ownerId,
-            CreatedAt = now
-        };
+            contract = new DiagnosisContract
+            {
+                DiagnosisContractId = Guid.NewGuid(),
+                ContractCode = $"{prefix}-{seq:D3}",
+                ExpertId = request.ExpertId,
+                BankAccount = request.BankAccount,
+                BankName = request.BankName,
+                BankBin = request.BankBin,
+                AccountHolder = request.AccountHolder,
+                PricePerDiagnosis = request.PricePerDiagnosis,
+                StartDate = request.StartDate.Date,
+                EndDate = request.EndDate?.Date,
+                Status = "active",
+                Notes = request.Notes,
+                CreatedBy = ownerId,
+                CreatedAt = now
+            };
 
-        _db.DiagnosisContracts.Add(contract);
-        await _db.SaveChangesAsync();
+            _db.DiagnosisContracts.Add(contract);
+            try
+            {
+                await _db.SaveChangesAsync();
+                break;
+            }
+            catch (DbUpdateException ex) when (IsContractCodeConflict(ex) && attempt < maxAttempts)
+            {
+                _db.DiagnosisContracts.Remove(contract);
+                seq++;
+            }
+        }
 
         var response = await BuildResponse(contract.DiagnosisContractId);
         return new ApiResponse<ContractResponse>
@@ -141,6 +155,7 @@ public class DiagnosisContractService : IDiagnosisContractService
 
         contract.BankAccount = request.BankAccount;
         contract.BankName = request.BankName;
+        contract.BankBin = request.BankBin;
         contract.AccountHolder = request.AccountHolder;
         contract.EndDate = request.EndDate?.Date;
         contract.Notes = request.Notes;
@@ -188,6 +203,7 @@ public class DiagnosisContractService : IDiagnosisContractService
         ExpertName = c.Expert?.Fullname ?? "",
         BankAccount = c.BankAccount,
         BankName = c.BankName,
+        BankBin = c.BankBin,
         AccountHolder = c.AccountHolder,
         PricePerDiagnosis = c.PricePerDiagnosis,
         StartDate = c.StartDate,
@@ -206,4 +222,7 @@ public class DiagnosisContractService : IDiagnosisContractService
         "Specialist" => c.ExpertId == userId,
         _ => false
     };
+
+    private static bool IsContractCodeConflict(DbUpdateException ex)
+        => ex.InnerException?.Message?.Contains("diagnosis_contract_code_unique", StringComparison.OrdinalIgnoreCase) ?? false;
 }

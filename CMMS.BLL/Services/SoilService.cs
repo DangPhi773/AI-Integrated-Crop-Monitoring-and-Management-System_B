@@ -1,3 +1,4 @@
+using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Soils;
@@ -49,11 +50,18 @@ namespace CMMS.BLL.Services
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(request.Name))
+                    return new ApiResponse<string> { Success = false, Message = "Tên loại đất là bắt buộc" };
+
+                if (await _soilRepo.ExistsByNameAsync(request.Name))
+                    return new ApiResponse<string> { Success = false, Message = "Tên loại đất đã tồn tại" };
+
                 var entity = new Soil
                 {
                     SoilId = Guid.NewGuid(),
                     Name = request.Name,
-                    ScienceName = request.ScienceName
+                    ScienceName = request.ScienceName,
+                    CreatedAt = DateTimeHelper.VnNow()
                 };
 
                 await _soilRepo.AddAsync(entity);
@@ -74,6 +82,11 @@ namespace CMMS.BLL.Services
             {
                 var entity = await _soilRepo.GetByIdAsync(id);
                 if (entity == null) return new ApiResponse<string> { Success = false, Message = "Soil not found" };
+
+                if (!string.IsNullOrWhiteSpace(request.Name)
+                    && !string.Equals(request.Name.Trim(), entity.Name?.Trim(), StringComparison.OrdinalIgnoreCase)
+                    && await _soilRepo.ExistsByNameAsync(request.Name, id))
+                    return new ApiResponse<string> { Success = false, Message = "Tên loại đất đã tồn tại" };
 
                 entity.Name = request.Name ?? entity.Name;
                 entity.ScienceName = request.ScienceName ?? entity.ScienceName;

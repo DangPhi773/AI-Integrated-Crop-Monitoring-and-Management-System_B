@@ -28,6 +28,17 @@ namespace CMMS.DAL.Repositories
                 .Include(s => s.TaskDetails)
                 .FirstOrDefaultAsync(s => s.SeasonId == id);
 
+        public async Task<bool> ExistsByNameAsync(string name, Guid? excludeId = null)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return false;
+            var normalized = name.Trim().ToLower();
+            return await _context.Seasons
+                .AsNoTracking()
+                .AnyAsync(s => s.SeasonName != null
+                            && s.SeasonName.Trim().ToLower() == normalized
+                            && (excludeId == null || s.SeasonId != excludeId));
+        }
+
         public async System.Threading.Tasks.Task AddAsync(Season season) => await _context.Seasons.AddAsync(season);
 
         public void Update(Season season) => _context.Seasons.Update(season);

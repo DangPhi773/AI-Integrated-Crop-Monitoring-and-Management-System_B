@@ -68,6 +68,7 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<DiagnosisContract> DiagnosisContracts { get; set; }
     public virtual DbSet<DiagnosisPayment> DiagnosisPayments { get; set; }
     public virtual DbSet<DiagnosisPaymentItem> DiagnosisPaymentItems { get; set; }
+    public virtual DbSet<Expense> Expenses { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -150,6 +151,10 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CropQuantities).HasColumnName("crop_quantities");
             entity.Property(e => e.CropScientificName).HasColumnName("crop_scientific_name");
             entity.Property(e => e.CropStatus).HasColumnName("crop_status");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasColumnType("timestamp")
+                .HasDefaultValueSql("now()");
         });
 
         modelBuilder.Entity<Farm>(entity =>
@@ -506,6 +511,10 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("soil_id");
             entity.Property(e => e.Name).HasColumnName("name");
             entity.Property(e => e.ScienceName).HasColumnName("science_name");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasColumnType("timestamp")
+                .HasDefaultValueSql("now()");
         });
 
         modelBuilder.Entity<Task>(entity =>
@@ -1034,6 +1043,38 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(d => d.ContractId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("diagnosis_payment_item_contract_fkey");
+        });
+
+        modelBuilder.Entity<Expense>(entity =>
+        {
+            entity.ToTable("expense");
+            entity.HasKey(e => e.ExpenseId).HasName("expense_pkey");
+
+            entity.Property(e => e.ExpenseId)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("expense_id");
+            entity.Property(e => e.SeasonId).HasColumnName("season_id");
+            entity.Property(e => e.Category).HasColumnName("category").HasMaxLength(50);
+            entity.Property(e => e.Description).HasColumnName("description").HasMaxLength(255);
+            entity.Property(e => e.Amount).HasColumnName("amount");
+            entity.Property(e => e.SpentAt).HasColumnName("spent_at").HasColumnType("date");
+            entity.Property(e => e.Notes).HasColumnName("notes");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+
+            entity.HasIndex(e => e.SeasonId).HasDatabaseName("idx_expense_season");
+            entity.HasIndex(e => new { e.SeasonId, e.Category }).HasDatabaseName("idx_expense_season_category");
+
+            entity.HasOne(d => d.Season).WithMany()
+                .HasForeignKey(d => d.SeasonId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("expense_season_fkey");
+
+            entity.HasOne(d => d.Creator).WithMany()
+                .HasForeignKey(d => d.CreatedBy)
+                .HasConstraintName("expense_created_by_fkey");
         });
 
         OnModelCreatingPartial(modelBuilder);

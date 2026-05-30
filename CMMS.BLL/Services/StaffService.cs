@@ -58,9 +58,27 @@ namespace CMMS.BLL.Services
                 var role = await _staffRepo.GetRoleByNameAsync(roleName);
                 if (role == null) return new ApiResponse<string> { Success = false, Message = $"Role '{roleName}' không tồn tại trong hệ thống." };
 
+                var isFirstApproval = user.RoleId == null;
+
                 user.RoleId = role.RoleId;
                 _staffRepo.UpdateUser(user);
                 await _staffRepo.SaveChangesAsync();
+
+                if (isFirstApproval)
+                {
+                    var approvedUserId = user.UserId;
+                    var approvedRoleName = role.RoleName;
+                    _ = System.Threading.Tasks.Task.Run(async () =>
+                    {
+                        try
+                        {
+                            using var scope = _scopeFactory.CreateScope();
+                            var notify = scope.ServiceProvider.GetRequiredService<INotificationService>();
+                            await notify.NotifyAccountApprovedAsync(approvedUserId, approvedRoleName);
+                        }
+                        catch { }
+                    });
+                }
 
                 return new ApiResponse<string> { Success = true, Message = $"Đã cấp quyền '{roleName}' cho tài khoản {user.Email}." };
             }

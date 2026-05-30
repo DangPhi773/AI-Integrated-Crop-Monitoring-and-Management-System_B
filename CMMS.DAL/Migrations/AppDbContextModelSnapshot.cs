@@ -188,6 +188,12 @@ namespace CMMS.DAL.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("bed_width_default");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
                     b.Property<int?>("CropDefaultGrowthDays")
                         .HasColumnType("integer")
                         .HasColumnName("crop_default_growth_days");
@@ -386,6 +392,10 @@ namespace CMMS.DAL.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("bank_account");
+
+                    b.Property<string>("BankBin")
+                        .HasMaxLength(6)
+                        .HasColumnType("character varying(6)");
 
                     b.Property<string>("BankName")
                         .IsRequired()
@@ -612,6 +622,66 @@ namespace CMMS.DAL.Migrations
                     b.HasIndex("ReportId");
 
                     b.ToTable("diagnosis_result", "public");
+                });
+
+            modelBuilder.Entity("CMMS.DAL.Entities.Expense", b =>
+                {
+                    b.Property<Guid>("ExpenseId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("expense_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(14,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("category");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("season_id");
+
+                    b.Property<DateOnly>("SpentAt")
+                        .HasColumnType("date")
+                        .HasColumnName("spent_at");
+
+                    b.HasKey("ExpenseId")
+                        .HasName("expense_pkey");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("SeasonId")
+                        .HasDatabaseName("idx_expense_season");
+
+                    b.HasIndex("SeasonId", "Category")
+                        .HasDatabaseName("idx_expense_season_category");
+
+                    b.ToTable("expense", "public");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.Farm", b =>
@@ -1496,6 +1566,12 @@ namespace CMMS.DAL.Migrations
                         .HasColumnName("soil_id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -1975,6 +2051,25 @@ namespace CMMS.DAL.Migrations
                     b.Navigation("Diagnoser");
 
                     b.Navigation("Report");
+                });
+
+            modelBuilder.Entity("CMMS.DAL.Entities.Expense", b =>
+                {
+                    b.HasOne("CMMS.DAL.Entities.User", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .HasConstraintName("expense_created_by_fkey");
+
+                    b.HasOne("CMMS.DAL.Entities.Season", "Season")
+                        .WithMany()
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("expense_season_fkey");
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Season");
                 });
 
             modelBuilder.Entity("CMMS.DAL.Entities.GrowthTracking", b =>

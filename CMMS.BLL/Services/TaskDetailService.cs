@@ -1,6 +1,7 @@
 using CMMS.BLL.Interfaces;
 using CMMS.BLL.Mappings;
 using CMMS.BLL.Realtime;
+using CMMS.BLL.Helpers;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Tasks;
 using CMMS.DAL.Entities;
@@ -119,6 +120,12 @@ namespace CMMS.BLL.Services
                 var validationResult = await ValidateWorkersAsync(workerIds);
                 if (validationResult != null) return validationResult;
 
+                var pastResult = ValidateNotPast(request.StartDate);
+                if (pastResult != null) return pastResult;
+
+                var scheduleResult = await ValidateScheduleAsync(null, workerIds, request.StartDate, request.EndDate);
+                if (scheduleResult != null) return scheduleResult;
+
                 var entity = new TaskDetail
                 {
                     TaskDetailId = Guid.NewGuid(),
@@ -164,6 +171,15 @@ namespace CMMS.BLL.Services
                     var validationResult = await ValidateWorkersAsync(newWorkerIds);
                     if (validationResult != null) return validationResult;
                 }
+
+                var pastResult = ValidateNotPast(request.StartDate);
+                if (pastResult != null) return pastResult;
+
+                var effectiveWorkerIds = newWorkerIds ?? oldWorkerIds;
+                var effectiveStart = request.StartDate ?? entity.StartDate;
+                var effectiveEnd = request.EndDate ?? entity.EndDate;
+                var scheduleResult = await ValidateScheduleAsync(entity.TaskDetailId, effectiveWorkerIds, effectiveStart, effectiveEnd);
+                if (scheduleResult != null) return scheduleResult;
 
                 entity.TaskId = request.TaskId ?? entity.TaskId;
                 entity.SeasonId = request.SeasonId ?? entity.SeasonId;
@@ -313,6 +329,43 @@ namespace CMMS.BLL.Services
                     Success = false,
                     Message = $"Worker không hợp lệ: {string.Join(", ", invalidIds)}"
                 };
+
+            return null;
+        }
+
+        private static ApiResponse<string>? ValidateNotPast(DateTime? start)
+        {
+            if (start.HasValue && start.Value.Date < DateTimeHelper.VnNow().Date)
+                return new ApiResponse<string> { Success = false, Message = "Không thể giao việc trong quá khứ" };
+            return null;
+        }
+
+        private async Task<ApiResponse<string>?> ValidateScheduleAsync(Guid? selfId, List<Guid> workerIds, DateTime? start, DateTime? end)
+        {
+            if (start.HasValue && end.HasValue && start.Value > end.Value)
+                return new ApiResponse<string> { Success = false, Message = "Giờ bắt đầu không được sau giờ kết thúc" };
+
+            if (!start.HasValue || !end.HasValue || workerIds.Count == 0)
+                return null;
+
+            var overlapping = await _repo.GetActiveOverlappingAsync(start.Value, end.Value, selfId);
+            var conflictWorkerIds = overlapping
+                .SelectMany(d => d.AssignedToWorkerIds)
+                .Where(workerIds.Contains)
+                .Distinct()
+                .ToList();
+
+            if (conflictWorkerIds.Count > 0)
+            {
+                var workers = await _userRepo.GetByRoleNamesAsync("Worker");
+                var nameById = workers.ToDictionary(w => w.UserId, w => w.Fullname ?? w.Email ?? w.UserId.ToString());
+                var names = conflictWorkerIds.Select(id => nameById.TryGetValue(id, out var n) ? n : id.ToString());
+                return new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = $"Worker bị trùng lịch trong khung giờ này: {string.Join(", ", names)}"
+                };
+            }
 
             return null;
         }

@@ -9,4 +9,5 @@ public interface IDiagnosisBillingService
     Task<ApiResponse<PaymentResponse>> UploadPaymentAsync(UploadPaymentRequest request, Guid ownerId);
     Task<ApiResponse<IEnumerable<PaymentResponse>>> GetMyPaymentsAsync(Guid userId, string role);
     Task<ApiResponse<PaymentResponse>> GetPaymentByIdAsync(Guid paymentId, Guid userId, string role);
+    Task<ApiResponse<IEnumerable<PendingBillResponse>>> GetPendingBillsAsync(Guid userId, string role, Guid? specialistId, bool dueOnly);
 }

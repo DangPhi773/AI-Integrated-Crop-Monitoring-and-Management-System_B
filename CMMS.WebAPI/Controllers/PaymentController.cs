@@ -46,6 +46,16 @@ public class PaymentController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("pending")]
+    [Authorize(Policy = "SpecialistOnly")]
+    public async Task<IActionResult> GetPending([FromQuery] Guid? specialistId, [FromQuery] bool dueOnly = false)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var role = User.FindFirstValue(ClaimTypes.Role) ?? "";
+        var result = await _billingService.GetPendingBillsAsync(userId, role, specialistId, dueOnly);
+        return Ok(result);
+    }
+
     [HttpGet("{id:guid}")]
     [Authorize(Policy = "SpecialistOnly")]
     public async Task<IActionResult> GetById(Guid id)

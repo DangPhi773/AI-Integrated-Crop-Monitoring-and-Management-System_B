@@ -1,3 +1,4 @@
+using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
 using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
@@ -55,6 +56,12 @@ namespace CMMS.BLL.Services
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(request.CropName))
+                    return new ApiResponse<string> { Success = false, Message = "Tên cây trồng là bắt buộc" };
+
+                if (await _cropRepo.ExistsByNameAsync(request.CropName))
+                    return new ApiResponse<string> { Success = false, Message = "Tên cây trồng đã tồn tại" };
+
                 var crop = new Crop
                 {
                     CropId = Guid.NewGuid(),
@@ -67,7 +74,8 @@ namespace CMMS.BLL.Services
                     RowsPerBed = request.RowsPerBed,
                     RowSpacing = request.RowSpacing,
                     CropQuantities = request.CropQuantities,
-                    CropStatus = request.CropStatus ?? "Active"
+                    CropStatus = request.CropStatus ?? "Active",
+                    CreatedAt = DateTimeHelper.VnNow()
                 };
                 await _cropRepo.AddAsync(crop);
                 await _cropRepo.SaveChangesAsync();
@@ -85,6 +93,11 @@ namespace CMMS.BLL.Services
             {
                 var crop = await _cropRepo.GetByIdAsync(id);
                 if (crop == null) return new ApiResponse<string> { Success = false, Message = "Không tồn tại" };
+
+                if (!string.IsNullOrWhiteSpace(request.CropName)
+                    && !string.Equals(request.CropName.Trim(), crop.CropName?.Trim(), StringComparison.OrdinalIgnoreCase)
+                    && await _cropRepo.ExistsByNameAsync(request.CropName, id))
+                    return new ApiResponse<string> { Success = false, Message = "Tên cây trồng đã tồn tại" };
 
                 crop.CropName = !string.IsNullOrWhiteSpace(request.CropName) ? request.CropName : crop.CropName;
                 crop.CropScientificName = request.CropScientificName ?? crop.CropScientificName;

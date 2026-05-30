@@ -35,6 +35,8 @@ public partial class Crop
     [MaxLength(50)]
     public string? CropStatus { get; set; }
 
+    public DateTime CreatedAt { get; set; }
+
     public virtual ICollection<SoilCropCompatibility> SoilCropCompatibilities { get; set; } = new List<SoilCropCompatibility>();
 
     public virtual ICollection<Harvest> Harvests { get; set; } = new List<Harvest>();

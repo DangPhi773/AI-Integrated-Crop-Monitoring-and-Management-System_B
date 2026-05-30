@@ -12,6 +12,7 @@ namespace CMMS.BLL.Interfaces
     {
         Task<ApiResponse<IEnumerable<RecommendationResponse>>> GetListAsync();
         Task<ApiResponse<RecommendationResponse>> GetDetailAsync(Guid id);
+        Task<ApiResponse<IEnumerable<RecommendationResponse>>> GetByDiagnosisIdAsync(Guid diagnosisId);
         Task<ApiResponse<string>> CreateAsync(RecommendationRequest request);
         Task<ApiResponse<string>> UpdateAsync(Guid id, RecommendationRequest request);
         Task<ApiResponse<string>> DeleteAsync(Guid id);

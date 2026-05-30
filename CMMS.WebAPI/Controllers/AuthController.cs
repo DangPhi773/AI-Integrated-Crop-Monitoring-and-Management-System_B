@@ -2,6 +2,7 @@
 using CMMS.DAL.DTOs.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CMMS.WebAPI.Controllers
 {
@@ -28,6 +29,15 @@ namespace CMMS.WebAPI.Controllers
         {
             var result = await _authService.LoginAsync(request);
             return result.Success ? Ok(result) : Unauthorized(result);
+        }
+
+        [Authorize]
+        [HttpPut("change-password")]
+        public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _authService.ChangePasswordAsync(userId, request);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
 
         [HttpGet("roles")]

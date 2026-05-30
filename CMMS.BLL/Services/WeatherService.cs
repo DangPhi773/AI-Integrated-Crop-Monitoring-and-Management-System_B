@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using CMMS.BLL.Configuration;
 using CMMS.BLL.Interfaces;
 using CMMS.DAL.DTOs.Weather;
@@ -28,9 +27,9 @@ namespace CMMS.BLL.Services
             EnsureApiKey();
             ValidateCoordinates(latitude, longitude);
 
-            var url = BuildUrl("current.json", latitude, longitude);
-            var raw = await _httpClient.GetFromJsonAsync<WeatherApiCurrentResponse>(url, JsonOpts)
-                ?? throw new Exception("Phản hồi WeatherAPI không hợp lệ.");
+            var url = BuildUrl("weather", latitude, longitude);
+            var raw = await _httpClient.GetFromJsonAsync<OwCurrentResponse>(url, JsonOpts)
+                ?? throw new Exception("Phản hồi OpenWeather không hợp lệ.");
 
             return MapCurrent(raw);
         }
@@ -41,17 +40,23 @@ namespace CMMS.BLL.Services
             ValidateCoordinates(latitude, longitude);
 
             if (days <= 0) days = _settings.DefaultForecastDays;
-            if (days > 14) days = 14;
+            if (days > 5) days = 5;
 
-            var url = BuildUrl("forecast.json", latitude, longitude, $"&days={days}&aqi=no&alerts=no");
-            var raw = await _httpClient.GetFromJsonAsync<WeatherApiForecastResponse>(url, JsonOpts)
-                ?? throw new Exception("Phản hồi WeatherAPI không hợp lệ.");
+            var currentUrl = BuildUrl("weather", latitude, longitude);
+            var forecastUrl = BuildUrl("forecast", latitude, longitude);
+
+            var currentTask = _httpClient.GetFromJsonAsync<OwCurrentResponse>(currentUrl, JsonOpts);
+            var forecastTask = _httpClient.GetFromJsonAsync<OwForecastResponse>(forecastUrl, JsonOpts);
+            await Task.WhenAll(currentTask, forecastTask);
+
+            var current = currentTask.Result ?? throw new Exception("Phản hồi OpenWeather không hợp lệ.");
+            var forecast = forecastTask.Result ?? throw new Exception("Phản hồi OpenWeather không hợp lệ.");
 
             return new WeatherForecastDto
             {
-                Location = MapLocation(raw.Location),
-                Current = MapCurrent(new WeatherApiCurrentResponse { Location = raw.Location, Current = raw.Current }),
-                Forecast = raw.Forecast?.ForecastDay?.Select(MapForecastDay).ToList() ?? new List<WeatherForecastDayDto>()
+                Location = MapLocationFromCurrent(current),
+                Current = MapCurrent(current),
+                Forecast = AggregateForecast(forecast, days)
             };
         }
 
@@ -78,22 +83,22 @@ namespace CMMS.BLL.Services
             return (farm.Latitude.Value, farm.Longitude.Value);
         }
 
-        private string BuildUrl(string endpoint, decimal latitude, decimal longitude, string? extra = null)
+        private string BuildUrl(string endpoint, decimal latitude, decimal longitude)
         {
             var lat = latitude.ToString(CultureInfo.InvariantCulture);
-            var lng = longitude.ToString(CultureInfo.InvariantCulture);
+            var lon = longitude.ToString(CultureInfo.InvariantCulture);
 
             return $"{_settings.BaseUrl.TrimEnd('/')}/{endpoint}" +
-                   $"?key={_settings.ApiKey}" +
-                   $"&q={lat},{lng}" +
-                   $"&lang={_settings.Language}" +
-                   (extra ?? string.Empty);
+                   $"?lat={lat}&lon={lon}" +
+                   $"&appid={_settings.ApiKey}" +
+                   $"&units={_settings.Units}" +
+                   $"&lang={_settings.Language}";
         }
 
         private void EnsureApiKey()
         {
             if (string.IsNullOrWhiteSpace(_settings.ApiKey))
-                throw new Exception("Thiếu WeatherAPI key.");
+                throw new Exception("Thiếu OpenWeather API key.");
         }
 
         private static void ValidateCoordinates(decimal latitude, decimal longitude)
@@ -109,144 +114,126 @@ namespace CMMS.BLL.Services
             PropertyNameCaseInsensitive = true
         };
 
-        private static WeatherLocationDto MapLocation(WeatherApiLocation? loc) => new()
+        private static WeatherLocationDto MapLocationFromCurrent(OwCurrentResponse raw) => new()
         {
-            Name = loc?.Name,
-            Region = loc?.Region,
-            Country = loc?.Country,
-            Latitude = (decimal)(loc?.Lat ?? 0),
-            Longitude = (decimal)(loc?.Lon ?? 0),
-            LocalTime = loc?.Localtime
+            Name = raw.Name,
+            Region = null,
+            Country = raw.Sys?.Country,
+            Latitude = (decimal)(raw.Coord?.Lat ?? 0),
+            Longitude = (decimal)(raw.Coord?.Lon ?? 0),
+            LocalTime = ToLocalTimeString(raw.Dt, raw.Timezone)
         };
 
-        private static WeatherCurrentDto MapCurrent(WeatherApiCurrentResponse raw)
+        private static WeatherCurrentDto MapCurrent(OwCurrentResponse raw)
         {
-            var c = raw.Current ?? new WeatherApiCurrent();
+            var m = raw.Main ?? new OwMain();
+            var w = raw.Weather?.FirstOrDefault();
+            var wind = raw.Wind ?? new OwWind();
+            var precipMm = raw.Rain?.OneHour ?? raw.Snow?.OneHour ?? 0;
+
             return new WeatherCurrentDto
             {
-                Location = MapLocation(raw.Location),
-                LastUpdated = c.LastUpdatedEpoch > 0
-                    ? DateTimeOffset.FromUnixTimeSeconds(c.LastUpdatedEpoch).UtcDateTime
+                Location = MapLocationFromCurrent(raw),
+                LastUpdated = raw.Dt > 0
+                    ? DateTimeOffset.FromUnixTimeSeconds(raw.Dt).UtcDateTime
                     : DateTime.UtcNow,
-                TempC = c.TempC,
-                FeelsLikeC = c.FeelslikeC,
-                Humidity = c.Humidity,
-                WindKph = c.WindKph,
-                WindDir = c.WindDir,
-                GustKph = c.GustKph,
-                PrecipMm = c.PrecipMm,
-                PressureMb = c.PressureMb,
-                Cloud = c.Cloud,
-                Uv = c.Uv,
-                VisKm = c.VisKm,
-                IsDay = c.IsDay == 1,
+                TempC = m.Temp,
+                FeelsLikeC = m.FeelsLike,
+                Humidity = m.Humidity,
+                WindKph = Math.Round(wind.Speed * 3.6, 2),
+                WindDir = DegToCompass(wind.Deg),
+                GustKph = wind.Gust.HasValue ? Math.Round(wind.Gust.Value * 3.6, 2) : 0,
+                PrecipMm = precipMm,
+                PressureMb = m.Pressure,
+                Cloud = raw.Clouds?.All ?? 0,
+                Uv = 0,
+                VisKm = (raw.Visibility ?? 0) / 1000.0,
+                IsDay = IsDay(raw.Dt, raw.Sys?.Sunrise, raw.Sys?.Sunset),
                 Condition = new WeatherConditionDto
                 {
-                    Text = c.Condition?.Text,
-                    Icon = c.Condition?.Icon,
-                    Code = c.Condition?.Code ?? 0
+                    Text = w?.Description,
+                    Icon = w?.Icon,
+                    Code = w?.Id ?? 0
                 }
             };
         }
 
-        private static WeatherForecastDayDto MapForecastDay(WeatherApiForecastDay d) => new()
+        private static List<WeatherForecastDayDto> AggregateForecast(OwForecastResponse raw, int days)
         {
-            Date = DateTime.TryParse(d.Date, out var date) ? date : DateTime.MinValue,
-            MaxTempC = d.Day?.MaxtempC ?? 0,
-            MinTempC = d.Day?.MintempC ?? 0,
-            AvgTempC = d.Day?.AvgtempC ?? 0,
-            TotalPrecipMm = d.Day?.TotalprecipMm ?? 0,
-            AvgHumidity = d.Day?.Avghumidity ?? 0,
-            MaxWindKph = d.Day?.MaxwindKph ?? 0,
-            Uv = d.Day?.Uv ?? 0,
-            ChanceOfRain = d.Day?.DailyChanceOfRain ?? 0,
-            Condition = new WeatherConditionDto
+            if (raw.List == null || raw.List.Count == 0)
+                return new List<WeatherForecastDayDto>();
+
+            var tz = raw.City?.Timezone ?? 0;
+            var citySunrise = raw.City?.Sunrise;
+            var citySunset = raw.City?.Sunset;
+
+            var groups = raw.List
+                .GroupBy(slot => DateTimeOffset.FromUnixTimeSeconds(slot.Dt + tz).UtcDateTime.Date)
+                .OrderBy(g => g.Key)
+                .Take(days)
+                .ToList();
+
+            var result = new List<WeatherForecastDayDto>();
+            DateTime? firstDay = groups.FirstOrDefault()?.Key;
+
+            foreach (var g in groups)
             {
-                Text = d.Day?.Condition?.Text,
-                Icon = d.Day?.Condition?.Icon,
-                Code = d.Day?.Condition?.Code ?? 0
-            },
-            Sunrise = d.Astro?.Sunrise,
-            Sunset = d.Astro?.Sunset
-        };
+                var slots = g.ToList();
+                var noon = slots.OrderBy(s => Math.Abs(((s.Dt + tz) % 86400) - 43200)).First();
+                var cond = noon.Weather?.FirstOrDefault();
 
-        private class WeatherApiLocation
-        {
-            public string? Name { get; set; }
-            public string? Region { get; set; }
-            public string? Country { get; set; }
-            public double Lat { get; set; }
-            public double Lon { get; set; }
-            public string? Localtime { get; set; }
+                var totalPrecip = slots.Sum(s => (s.Rain?.ThreeHour ?? 0) + (s.Snow?.ThreeHour ?? 0));
+                var maxPop = slots.Max(s => s.Pop);
+                bool isFirstDay = firstDay.HasValue && g.Key == firstDay.Value;
+
+                result.Add(new WeatherForecastDayDto
+                {
+                    Date = g.Key,
+                    MaxTempC = slots.Max(s => s.Main?.TempMax ?? s.Main?.Temp ?? 0),
+                    MinTempC = slots.Min(s => s.Main?.TempMin ?? s.Main?.Temp ?? 0),
+                    AvgTempC = Math.Round(slots.Average(s => s.Main?.Temp ?? 0), 2),
+                    TotalPrecipMm = Math.Round(totalPrecip, 2),
+                    AvgHumidity = (int)Math.Round(slots.Average(s => s.Main?.Humidity ?? 0)),
+                    MaxWindKph = Math.Round(slots.Max(s => (s.Wind?.Speed ?? 0) * 3.6), 2),
+                    Uv = 0,
+                    ChanceOfRain = (int)Math.Round(maxPop * 100),
+                    Condition = new WeatherConditionDto
+                    {
+                        Text = cond?.Description,
+                        Icon = cond?.Icon,
+                        Code = cond?.Id ?? 0
+                    },
+                    Sunrise = isFirstDay && citySunrise.HasValue
+                        ? ToLocalTimeString(citySunrise.Value, tz, "HH:mm")
+                        : null,
+                    Sunset = isFirstDay && citySunset.HasValue
+                        ? ToLocalTimeString(citySunset.Value, tz, "HH:mm")
+                        : null
+                });
+            }
+
+            return result;
         }
 
-        private class WeatherApiCondition
+        private static string DegToCompass(double deg)
         {
-            public string? Text { get; set; }
-            public string? Icon { get; set; }
-            public int Code { get; set; }
+            string[] dirs = { "N", "NE", "E", "SE", "S", "SW", "W", "NW" };
+            int idx = (int)Math.Floor((deg / 45.0) + 0.5) % 8;
+            if (idx < 0) idx += 8;
+            return dirs[idx];
         }
 
-        private class WeatherApiCurrent
+        private static bool IsDay(long dt, long? sunrise, long? sunset)
         {
-            [JsonPropertyName("last_updated_epoch")] public long LastUpdatedEpoch { get; set; }
-            [JsonPropertyName("temp_c")] public double TempC { get; set; }
-            [JsonPropertyName("feelslike_c")] public double FeelslikeC { get; set; }
-            public int Humidity { get; set; }
-            [JsonPropertyName("wind_kph")] public double WindKph { get; set; }
-            [JsonPropertyName("wind_dir")] public string? WindDir { get; set; }
-            [JsonPropertyName("gust_kph")] public double GustKph { get; set; }
-            [JsonPropertyName("precip_mm")] public double PrecipMm { get; set; }
-            [JsonPropertyName("pressure_mb")] public double PressureMb { get; set; }
-            public int Cloud { get; set; }
-            public double Uv { get; set; }
-            [JsonPropertyName("vis_km")] public double VisKm { get; set; }
-            [JsonPropertyName("is_day")] public int IsDay { get; set; }
-            public WeatherApiCondition? Condition { get; set; }
+            if (!sunrise.HasValue || !sunset.HasValue) return true;
+            return dt >= sunrise.Value && dt < sunset.Value;
         }
 
-        private class WeatherApiCurrentResponse
+        private static string? ToLocalTimeString(long epoch, int tzOffset, string? format = null)
         {
-            public WeatherApiLocation? Location { get; set; }
-            public WeatherApiCurrent? Current { get; set; }
-        }
-
-        private class WeatherApiForecastResponse
-        {
-            public WeatherApiLocation? Location { get; set; }
-            public WeatherApiCurrent? Current { get; set; }
-            public WeatherApiForecast? Forecast { get; set; }
-        }
-
-        private class WeatherApiForecast
-        {
-            [JsonPropertyName("forecastday")] public List<WeatherApiForecastDay>? ForecastDay { get; set; }
-        }
-
-        private class WeatherApiForecastDay
-        {
-            public string? Date { get; set; }
-            public WeatherApiDay? Day { get; set; }
-            public WeatherApiAstro? Astro { get; set; }
-        }
-
-        private class WeatherApiDay
-        {
-            [JsonPropertyName("maxtemp_c")] public double MaxtempC { get; set; }
-            [JsonPropertyName("mintemp_c")] public double MintempC { get; set; }
-            [JsonPropertyName("avgtemp_c")] public double AvgtempC { get; set; }
-            [JsonPropertyName("totalprecip_mm")] public double TotalprecipMm { get; set; }
-            public int Avghumidity { get; set; }
-            [JsonPropertyName("maxwind_kph")] public double MaxwindKph { get; set; }
-            public double Uv { get; set; }
-            [JsonPropertyName("daily_chance_of_rain")] public int DailyChanceOfRain { get; set; }
-            public WeatherApiCondition? Condition { get; set; }
-        }
-
-        private class WeatherApiAstro
-        {
-            public string? Sunrise { get; set; }
-            public string? Sunset { get; set; }
+            if (epoch <= 0) return null;
+            var local = DateTimeOffset.FromUnixTimeSeconds(epoch + tzOffset).UtcDateTime;
+            return local.ToString(format ?? "yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
         }
     }
 }

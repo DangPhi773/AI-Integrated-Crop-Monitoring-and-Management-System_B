@@ -1,6 +1,7 @@
 using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
 using CMMS.BLL.Mappings;
+using CMMS.BLL.Realtime;
 using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Reports.Requests;
 using CMMS.DAL.DTOs.Reports.Responses;
@@ -23,6 +24,7 @@ namespace CMMS.BLL.Services
         private readonly IAttachmentService _attachmentService;
         private readonly IAttachmentRepository _attachmentRepo;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly INotificationRealtime _realtime;
 
         public ReportService(
             IReportRepository reportRepo,
@@ -34,7 +36,8 @@ namespace CMMS.BLL.Services
             INotificationRepository notificationRepo,
             IAttachmentService attachmentService,
             IAttachmentRepository attachmentRepo,
-            IServiceScopeFactory scopeFactory)
+            IServiceScopeFactory scopeFactory,
+            INotificationRealtime realtime)
         {
             _reportRepo = reportRepo;
             _userRepo = userRepo;
@@ -46,6 +49,7 @@ namespace CMMS.BLL.Services
             _attachmentService = attachmentService;
             _attachmentRepo = attachmentRepo;
             _scopeFactory = scopeFactory;
+            _realtime = realtime;
         }
 
         public async Task<ApiResponse<IEnumerable<ReportResponse>>> GetAllReportsAsync()
@@ -193,7 +197,7 @@ namespace CMMS.BLL.Services
             report.UpdatedAt = now;
             _reportRepo.Update(report);
 
-            await _notificationRepo.AddAsync(new Notification
+            var notification = new Notification
             {
                 NoteId = Guid.NewGuid(),
                 UserId = request.AssignedTo,
@@ -203,9 +207,21 @@ namespace CMMS.BLL.Services
                 NoteMessage = request.Note,
                 NoteStatus = "unread",
                 NoteCreatedAt = now
-            });
+            };
+            await _notificationRepo.AddAsync(notification);
 
             await _reportRepo.SaveChangesAsync();
+
+            await _realtime.PushToUserAsync(request.AssignedTo, new
+            {
+                noteId = notification.NoteId,
+                noteType = notification.NoteType,
+                noteTitle = notification.NoteTitle,
+                noteMessage = notification.NoteMessage,
+                reportId = reportId,
+                createdAt = notification.NoteCreatedAt
+            });
+
             return new ApiResponse<string> { Success = true, Message = "Phân công thành công" };
         }
 
@@ -213,6 +229,10 @@ namespace CMMS.BLL.Services
         {
             var report = await _reportRepo.GetByIdAsync(reportId);
             if (report == null) return new ApiResponse<DiagnosisResponse> { Success = false, Message = "Không tìm thấy báo cáo" };
+
+            var latestAssignment = await _assignmentRepo.GetLatestByReportAndUserAsync(reportId, diagnosedByUserId);
+            if (latestAssignment == null || latestAssignment.Status != "ASSIGNED")
+                return new ApiResponse<DiagnosisResponse> { Success = false, Message = "Bạn không được phân công chẩn đoán báo cáo này" };
 
             var now = DateTimeHelper.VnNow();
 
@@ -235,16 +255,13 @@ namespace CMMS.BLL.Services
             report.UpdatedAt = now;
             _reportRepo.Update(report);
 
-            var latestAssignment = await _assignmentRepo.GetLatestByReportAndUserAsync(reportId, diagnosedByUserId);
-            if (latestAssignment != null)
-            {
-                latestAssignment.Status = "DONE";
-                latestAssignment.UpdatedAt = now;
-            }
+            latestAssignment.Status = "DONE";
+            latestAssignment.UpdatedAt = now;
 
+            Notification? ownerNotification = null;
             if (report.OwnerId.HasValue)
             {
-                await _notificationRepo.AddAsync(new Notification
+                ownerNotification = new Notification
                 {
                     NoteId = Guid.NewGuid(),
                     UserId = report.OwnerId.Value,
@@ -255,10 +272,25 @@ namespace CMMS.BLL.Services
                     NoteMessage = $"Bệnh: {request.DiseaseName} - Mức độ: {request.SeverityLevel}",
                     NoteStatus = "unread",
                     NoteCreatedAt = now
-                });
+                };
+                await _notificationRepo.AddAsync(ownerNotification);
             }
 
             await _reportRepo.SaveChangesAsync();
+
+            if (ownerNotification != null)
+            {
+                await _realtime.PushToUserAsync(ownerNotification.UserId!.Value, new
+                {
+                    noteId = ownerNotification.NoteId,
+                    noteType = ownerNotification.NoteType,
+                    noteTitle = ownerNotification.NoteTitle,
+                    noteMessage = ownerNotification.NoteMessage,
+                    reportId = reportId,
+                    diagnosisId = ownerNotification.DiagnosisId,
+                    createdAt = ownerNotification.NoteCreatedAt
+                });
+            }
 
             var diagnoser = await _userRepo.GetByIdAsync(diagnosedByUserId);
 
@@ -269,23 +301,29 @@ namespace CMMS.BLL.Services
             };
         }
 
-        public async Task<ApiResponse<IEnumerable<DiagnosisResponse>>> GetAllDiagnosisAsync()
+        public async Task<ApiResponse<IEnumerable<DiagnosisResponse>>> GetAllDiagnosisAsync(Guid userId, string role)
         {
             var list = await _diagnosisRepo.GetAllWithDetailsAsync();
+            if (role == "Specialist")
+                list = list.Where(d => d.DiagnosedBy == userId).ToList();
             var data = list.Select(d => ReportMapper.ToDiagnosisResponse(d)).ToList();
             return new ApiResponse<IEnumerable<DiagnosisResponse>> { Success = true, Data = data };
         }
 
-        public async Task<ApiResponse<DiagnosisResponse>> GetDiagnosisByIdAsync(Guid diagnosisId)
+        public async Task<ApiResponse<DiagnosisResponse>> GetDiagnosisByIdAsync(Guid diagnosisId, Guid userId, string role)
         {
             var d = await _diagnosisRepo.GetByIdWithDetailsAsync(diagnosisId);
             if (d == null) return new ApiResponse<DiagnosisResponse> { Success = false, Message = "Không tìm thấy kết quả chẩn đoán" };
+            if (role == "Specialist" && d.DiagnosedBy != userId)
+                return new ApiResponse<DiagnosisResponse> { Success = false, Message = "Không tìm thấy kết quả chẩn đoán" };
             return new ApiResponse<DiagnosisResponse> { Success = true, Data = ReportMapper.ToDiagnosisResponse(d) };
         }
 
-        public async Task<ApiResponse<IEnumerable<DiagnosisResponse>>> GetDiagnosisByReportIdAsync(Guid reportId)
+        public async Task<ApiResponse<IEnumerable<DiagnosisResponse>>> GetDiagnosisByReportIdAsync(Guid reportId, Guid userId, string role)
         {
             var list = await _diagnosisRepo.GetByReportIdAsync(reportId);
+            if (role == "Specialist")
+                list = list.Where(d => d.DiagnosedBy == userId).ToList();
             var data = list.Select(d => ReportMapper.ToDiagnosisResponse(d)).ToList();
             return new ApiResponse<IEnumerable<DiagnosisResponse>> { Success = true, Data = data };
         }
