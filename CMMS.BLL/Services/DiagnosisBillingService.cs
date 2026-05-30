@@ -133,7 +133,19 @@ public class DiagnosisBillingService : IDiagnosisBillingService
             });
         }
 
-        await _db.SaveChangesAsync();
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            await _cloudinary.DeleteFileAsync(upload.PublicId);
+            if (IsPaymentMonthConflict(ex))
+                return new ApiResponse<PaymentResponse> { Success = false, Message = "Tháng này đã thanh toán" };
+            if (IsDiagnosisResultPaidConflict(ex))
+                return new ApiResponse<PaymentResponse> { Success = false, Message = "Có chẩn đoán đã được thanh toán ở giao dịch khác" };
+            throw;
+        }
 
         await _realtime.PushPaymentStatusAsync(request.SpecialistId, new
         {
@@ -437,4 +449,10 @@ public class DiagnosisBillingService : IDiagnosisBillingService
         "Specialist" => specialistId == userId,
         _ => false
     };
+
+    private static bool IsPaymentMonthConflict(DbUpdateException ex)
+        => ex.InnerException?.Message?.Contains("diagnosis_payment_specialist_month_unique", StringComparison.OrdinalIgnoreCase) ?? false;
+
+    private static bool IsDiagnosisResultPaidConflict(DbUpdateException ex)
+        => ex.InnerException?.Message?.Contains("diagnosis_payment_item_result_unique", StringComparison.OrdinalIgnoreCase) ?? false;
 }
