@@ -32,6 +32,16 @@ namespace CMMS.DAL.Repositories
             .Include(s => s.Plots)
             .FirstOrDefaultAsync(s => s.SoilId == id);
 
+        public async Task<bool> ExistsByNameAsync(string name, Guid? excludeId = null)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return false;
+            var normalized = name.Trim().ToLower();
+            return await _context.Soils
+                .AsNoTracking()
+                .AnyAsync(s => s.Name.Trim().ToLower() == normalized
+                            && (excludeId == null || s.SoilId != excludeId));
+        }
+
         public async System.Threading.Tasks.Task AddAsync(Soil soil) => await _context.Soils.AddAsync(soil);
 
         public void Update(Soil soil) => _context.Soils.Update(soil);

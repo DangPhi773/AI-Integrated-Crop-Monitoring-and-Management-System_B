@@ -56,6 +56,12 @@ namespace CMMS.BLL.Services
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(request.CropName))
+                    return new ApiResponse<string> { Success = false, Message = "Tên cây trồng là bắt buộc" };
+
+                if (await _cropRepo.ExistsByNameAsync(request.CropName))
+                    return new ApiResponse<string> { Success = false, Message = "Tên cây trồng đã tồn tại" };
+
                 var crop = new Crop
                 {
                     CropId = Guid.NewGuid(),
@@ -87,6 +93,11 @@ namespace CMMS.BLL.Services
             {
                 var crop = await _cropRepo.GetByIdAsync(id);
                 if (crop == null) return new ApiResponse<string> { Success = false, Message = "Không tồn tại" };
+
+                if (!string.IsNullOrWhiteSpace(request.CropName)
+                    && !string.Equals(request.CropName.Trim(), crop.CropName?.Trim(), StringComparison.OrdinalIgnoreCase)
+                    && await _cropRepo.ExistsByNameAsync(request.CropName, id))
+                    return new ApiResponse<string> { Success = false, Message = "Tên cây trồng đã tồn tại" };
 
                 crop.CropName = !string.IsNullOrWhiteSpace(request.CropName) ? request.CropName : crop.CropName;
                 crop.CropScientificName = request.CropScientificName ?? crop.CropScientificName;

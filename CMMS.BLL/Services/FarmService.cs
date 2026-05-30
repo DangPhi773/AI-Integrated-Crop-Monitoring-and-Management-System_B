@@ -51,6 +51,12 @@ namespace CMMS.BLL.Services
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(request.FarmName))
+                    return new ApiResponse<string> { Success = false, Message = "Tên trang trại là bắt buộc" };
+
+                if (await _farmRepo.ExistsByNameAsync(request.FarmName))
+                    return new ApiResponse<string> { Success = false, Message = "Tên trang trại đã tồn tại" };
+
                 var entity = new Farm
                 {
                     FarmId = Guid.NewGuid(),
@@ -81,6 +87,11 @@ namespace CMMS.BLL.Services
             {
                 var entity = await _farmRepo.GetByIdAsync(id);
                 if (entity == null) return new ApiResponse<string> { Success = false, Message = "Farm not found" };
+
+                if (!string.IsNullOrWhiteSpace(request.FarmName)
+                    && !string.Equals(request.FarmName.Trim(), entity.FarmName?.Trim(), StringComparison.OrdinalIgnoreCase)
+                    && await _farmRepo.ExistsByNameAsync(request.FarmName, id))
+                    return new ApiResponse<string> { Success = false, Message = "Tên trang trại đã tồn tại" };
 
                 entity.FarmName = request.FarmName ?? entity.FarmName;
                 entity.FarmLocation = request.FarmLocation ?? entity.FarmLocation;
