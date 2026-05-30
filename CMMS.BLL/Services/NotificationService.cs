@@ -5,6 +5,7 @@ using CMMS.DAL.DTOs.Auth;
 using CMMS.DAL.DTOs.Notifications;
 using CMMS.DAL.Entities;
 using CMMS.DAL.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace CMMS.BLL.Services
 {
@@ -16,6 +17,7 @@ namespace CMMS.BLL.Services
         private readonly IEmailService _emailService;
         private readonly IEmailTemplateService _templateService;
         private readonly INotificationRealtime _realtime;
+        private readonly ILogger<NotificationService> _logger;
 
         public NotificationService(
             IUserRepository userRepo,
@@ -23,7 +25,8 @@ namespace CMMS.BLL.Services
             INotificationRepository notificationRepo,
             IEmailService emailService,
             IEmailTemplateService templateService,
-            INotificationRealtime realtime)
+            INotificationRealtime realtime,
+            ILogger<NotificationService> logger)
         {
             _userRepo = userRepo;
             _reportRepo = reportRepo;
@@ -31,6 +34,7 @@ namespace CMMS.BLL.Services
             _emailService = emailService;
             _templateService = templateService;
             _realtime = realtime;
+            _logger = logger;
         }
 
         public async System.Threading.Tasks.Task NotifyNewWorkerAsync(Guid workerId)
@@ -63,7 +67,7 @@ namespace CMMS.BLL.Services
             });
 
             try { await _emailService.SendEmailAsync(worker.Email, subject, htmlBody); }
-            catch { }
+            catch (Exception ex) { _logger.LogWarning(ex, "Failed to send welcome email to worker {WorkerId} ({Email})", workerId, worker.Email); }
         }
 
         public async System.Threading.Tasks.Task NotifyAccountApprovedAsync(Guid userId, string roleName)
@@ -96,7 +100,7 @@ namespace CMMS.BLL.Services
             });
 
             try { await _emailService.SendEmailAsync(user.Email, subject, htmlBody); }
-            catch { }
+            catch (Exception ex) { _logger.LogWarning(ex, "Failed to send account-approved email to user {UserId} ({Email})", userId, user.Email); }
         }
 
         public async System.Threading.Tasks.Task NotifyNewReportAsync(Guid reportId)
@@ -147,28 +151,34 @@ namespace CMMS.BLL.Services
             }
 
             try { await _emailService.SendEmailAsync(emails, subject, htmlBody); }
-            catch { }
+            catch (Exception ex) { _logger.LogWarning(ex, "Failed to send new-report email for report {ReportId} to {RecipientCount} recipients", reportId, emails.Count); }
         }
 
-        public async Task<ApiResponse<List<NotificationResponse>>> GetMyNotificationsAsync(Guid userId, bool unreadOnly, int page, int pageSize)
+        public async Task<ApiResponse<NotificationListResponse>> GetMyNotificationsAsync(Guid userId, bool unreadOnly, int page, int pageSize)
         {
             if (page < 1) page = 1;
             if (pageSize < 1 || pageSize > 100) pageSize = 20;
 
-            var items = await _notificationRepo.GetByUserIdAsync(userId, unreadOnly, (page - 1) * pageSize, pageSize);
-            var data = items.Select(n => new NotificationResponse
+            var (items, total) = await _notificationRepo.GetByUserIdAsync(userId, unreadOnly, (page - 1) * pageSize, pageSize);
+            var data = new NotificationListResponse
             {
-                NoteId = n.NoteId,
-                ReportId = n.ReportId,
-                DiagnosisId = n.DiagnosisId,
-                NoteType = n.NoteType,
-                NoteTitle = n.NoteTitle,
-                NoteMessage = n.NoteMessage,
-                NoteStatus = n.NoteStatus,
-                NoteCreatedAt = n.NoteCreatedAt
-            }).ToList();
+                Items = items.Select(n => new NotificationResponse
+                {
+                    NoteId = n.NoteId,
+                    ReportId = n.ReportId,
+                    DiagnosisId = n.DiagnosisId,
+                    NoteType = n.NoteType,
+                    NoteTitle = n.NoteTitle,
+                    NoteMessage = n.NoteMessage,
+                    NoteStatus = n.NoteStatus,
+                    NoteCreatedAt = n.NoteCreatedAt
+                }).ToList(),
+                Total = total,
+                Page = page,
+                PageSize = pageSize
+            };
 
-            return new ApiResponse<List<NotificationResponse>> { Success = true, Data = data };
+            return new ApiResponse<NotificationListResponse> { Success = true, Data = data };
         }
 
         public async Task<ApiResponse<int>> GetUnreadCountAsync(Guid userId)

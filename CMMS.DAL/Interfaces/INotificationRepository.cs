@@ -6,7 +6,7 @@ namespace CMMS.DAL.Interfaces
     {
         System.Threading.Tasks.Task AddAsync(Notification entity);
         System.Threading.Tasks.Task AddRangeAsync(IEnumerable<Notification> entities);
-        Task<List<Notification>> GetByUserIdAsync(Guid userId, bool unreadOnly, int skip, int take);
+        Task<(List<Notification> Items, int Total)> GetByUserIdAsync(Guid userId, bool unreadOnly, int skip, int take);
         Task<int> CountUnreadAsync(Guid userId);
         Task<int> MarkAsReadAsync(Guid noteId, Guid userId);
         Task<int> MarkAllAsReadAsync(Guid userId);

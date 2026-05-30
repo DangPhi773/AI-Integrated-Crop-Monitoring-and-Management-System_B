@@ -18,6 +18,8 @@ public partial class Soil
     [MaxLength(500)]
     public string? ScienceName { get; set; }
 
+    public DateTime CreatedAt { get; set; }
+
     public virtual ICollection<SoilCropCompatibility> SoilCropCompatibilities { get; set; } = new List<SoilCropCompatibility>();
     public virtual ICollection<Plot> Plots { get; set; } = new List<Plot>();
 }

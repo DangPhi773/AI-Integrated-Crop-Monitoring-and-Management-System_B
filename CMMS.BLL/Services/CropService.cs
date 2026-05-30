@@ -1,3 +1,4 @@
+using CMMS.BLL.Helpers;
 using CMMS.BLL.Interfaces;
 using CMMS.BLL.Mappings;
 using CMMS.DAL.DTOs.Auth;
@@ -67,7 +68,8 @@ namespace CMMS.BLL.Services
                     RowsPerBed = request.RowsPerBed,
                     RowSpacing = request.RowSpacing,
                     CropQuantities = request.CropQuantities,
-                    CropStatus = request.CropStatus ?? "Active"
+                    CropStatus = request.CropStatus ?? "Active",
+                    CreatedAt = DateTimeHelper.VnNow()
                 };
                 await _cropRepo.AddAsync(crop);
                 await _cropRepo.SaveChangesAsync();

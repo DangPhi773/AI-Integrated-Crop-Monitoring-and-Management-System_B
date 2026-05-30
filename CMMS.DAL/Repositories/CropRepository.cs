@@ -19,7 +19,8 @@ namespace CMMS.DAL.Repositories
             => await _context.Crops
                 .Include(c => c.SoilCropCompatibilities)
                     .ThenInclude(sc => sc.Soil)
-                .OrderBy(c => c.CropName)
+                .OrderByDescending(c => c.CreatedAt)
+                .ThenBy(c => c.CropName)
                 .AsNoTracking()
                 .ToListAsync();
 

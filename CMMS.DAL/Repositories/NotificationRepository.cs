@@ -15,11 +15,13 @@ namespace CMMS.DAL.Repositories
 
         public async System.Threading.Tasks.Task AddRangeAsync(IEnumerable<Notification> entities) => await _context.Notifications.AddRangeAsync(entities);
 
-        public async Task<List<Notification>> GetByUserIdAsync(Guid userId, bool unreadOnly, int skip, int take)
+        public async Task<(List<Notification> Items, int Total)> GetByUserIdAsync(Guid userId, bool unreadOnly, int skip, int take)
         {
             var query = _context.Notifications.AsNoTracking().Where(n => n.UserId == userId);
             if (unreadOnly) query = query.Where(n => n.NoteStatus == "unread");
-            return await query.OrderByDescending(n => n.NoteCreatedAt).Skip(skip).Take(take).ToListAsync();
+            var total = await query.CountAsync();
+            var items = await query.OrderByDescending(n => n.NoteCreatedAt).Skip(skip).Take(take).ToListAsync();
+            return (items, total);
         }
 
         public async Task<int> CountUnreadAsync(Guid userId)
