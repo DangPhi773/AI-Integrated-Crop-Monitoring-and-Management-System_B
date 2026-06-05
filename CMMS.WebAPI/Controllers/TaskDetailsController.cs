@@ -95,7 +95,7 @@ namespace CMMS.WebAPI.Controllers
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var isOwner = User.IsInRole("Owner");
-            var result = await _service.UpdateStatusAsync(id, request.Status, userId, isOwner);
+            var result = await _service.UpdateStatusAsync(id, request.Status, userId, isOwner, request.Notes);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
