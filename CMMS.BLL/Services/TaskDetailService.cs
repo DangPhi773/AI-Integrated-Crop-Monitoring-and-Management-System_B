@@ -214,20 +214,33 @@ namespace CMMS.BLL.Services
             }
         }
 
-        public async Task<ApiResponse<string>> UpdateStatusAsync(Guid id, string status, Guid workerId)
+        public async Task<ApiResponse<string>> UpdateStatusAsync(Guid id, string status, Guid userId, bool isOwner)
         {
             try
             {
-                var validStatuses = new[] { "Pending", "Assigned", "InProgress", "Completed", "Failed", "Cancelled" };
-                if (!validStatuses.Contains(status))
-                    return new ApiResponse<string> { Success = false, Message = $"Trạng thái không hợp lệ. Chỉ chấp nhận: {string.Join(", ", validStatuses)}" };
+                var ownerStatuses = new[] { "Cancelled" };
+                var workerStatuses = new[] { "InProgress", "Completed", "Failed" };
+                var allValid = ownerStatuses.Concat(workerStatuses).ToArray();
+
+                if (!allValid.Contains(status))
+                    return new ApiResponse<string> { Success = false, Message = $"Trạng thái không hợp lệ. Chỉ chấp nhận: {string.Join(", ", allValid)}" };
 
                 var entity = await _repo.GetByIdAsync(id);
                 if (entity == null)
                     return new ApiResponse<string> { Success = false, Message = "Không tìm thấy task detail" };
 
-                if (!entity.AssignedToWorkerIds.Contains(workerId))
-                    return new ApiResponse<string> { Success = false, Message = "Bạn không được phân công cho công việc này" };
+                if (ownerStatuses.Contains(status))
+                {
+                    if (!isOwner)
+                        return new ApiResponse<string> { Success = false, Message = $"Chỉ Owner mới có quyền đặt trạng thái '{status}'" };
+                }
+                else
+                {
+                    if (isOwner)
+                        return new ApiResponse<string> { Success = false, Message = $"Owner không thể tự cập nhật trạng thái '{status}', việc này thuộc Worker được phân công" };
+                    if (!entity.AssignedToWorkerIds.Contains(userId))
+                        return new ApiResponse<string> { Success = false, Message = "Bạn không được phân công cho công việc này" };
+                }
 
                 entity.Status = status;
                 _repo.Update(entity);

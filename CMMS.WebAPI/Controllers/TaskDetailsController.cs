@@ -89,12 +89,13 @@ namespace CMMS.WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [Authorize(Roles = "Worker")]
+        [Authorize(Roles = "Owner,Worker")]
         [HttpPatch("{id:guid}/status")]
         public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateTaskDetailStatusRequest request)
         {
-            var workerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var result = await _service.UpdateStatusAsync(id, request.Status, workerId);
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var isOwner = User.IsInRole("Owner");
+            var result = await _service.UpdateStatusAsync(id, request.Status, userId, isOwner);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
