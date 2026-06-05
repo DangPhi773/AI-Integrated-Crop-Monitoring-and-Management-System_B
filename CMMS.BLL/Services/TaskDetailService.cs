@@ -214,13 +214,14 @@ namespace CMMS.BLL.Services
             }
         }
 
-        public async Task<ApiResponse<string>> UpdateStatusAsync(Guid id, string status, Guid userId, bool isOwner)
+        public async Task<ApiResponse<string>> UpdateStatusAsync(Guid id, string status, Guid userId, bool isOwner, string? notes = null)
         {
             try
             {
                 var ownerStatuses = new[] { "Cancelled" };
                 var workerStatuses = new[] { "InProgress", "Completed", "Failed" };
                 var allValid = ownerStatuses.Concat(workerStatuses).ToArray();
+                var requireNotesStatuses = new[] { "Failed", "Cancelled" };
 
                 if (!allValid.Contains(status))
                     return new ApiResponse<string> { Success = false, Message = $"Trạng thái không hợp lệ. Chỉ chấp nhận: {string.Join(", ", allValid)}" };
@@ -242,7 +243,12 @@ namespace CMMS.BLL.Services
                         return new ApiResponse<string> { Success = false, Message = "Bạn không được phân công cho công việc này" };
                 }
 
+                if (requireNotesStatuses.Contains(status) && string.IsNullOrWhiteSpace(notes))
+                    return new ApiResponse<string> { Success = false, Message = $"Vui lòng nhập lý do khi đặt trạng thái '{status}'" };
+
                 entity.Status = status;
+                if (!string.IsNullOrWhiteSpace(notes))
+                    entity.Notes = notes;
                 _repo.Update(entity);
                 await _repo.SaveChangesAsync();
 

@@ -70,5 +70,8 @@ namespace CMMS.DAL.DTOs.Tasks
         [Required(ErrorMessage = "Status là bắt buộc")]
         [StringLength(50, MinimumLength = 1, ErrorMessage = "Status phải từ 1 đến 50 ký tự")]
         public string Status { get; set; } = null!;
+
+        [StringLength(1000, ErrorMessage = "Notes tối đa 1000 ký tự")]
+        public string? Notes { get; set; }
     }
 }
