@@ -13,10 +13,9 @@ namespace CMMS.BLL.Mappings
             WorkerName = ws.Worker?.Fullname,
             TaskTitle = ws.TaskDetail?.Task?.TaskTitle,
             Description = ws.Description,
-            Status = ws.Status,
+            Status = ws.TaskDetail?.Status,
             StartDate = ws.TaskDetail?.StartDate,
-            EndDate = ws.TaskDetail?.EndDate,
-            TaskDetailStatus = ws.TaskDetail?.Status
+            EndDate = ws.TaskDetail?.EndDate
         };
     }
 }

@@ -7,6 +7,7 @@ namespace CMMS.BLL.Interfaces
     {
         System.Threading.Tasks.Task EvaluateAndNotifyAsync(
             IotDevice device,
+            CropGrowthStage stage,
             SensorDataRequest reading,
             Guid? sensorDataId,
             DateTime recordedAt);

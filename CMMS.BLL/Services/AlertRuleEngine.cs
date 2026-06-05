@@ -33,13 +33,14 @@ namespace CMMS.BLL.Services
 
         public async System.Threading.Tasks.Task EvaluateAndNotifyAsync(
             IotDevice device,
+            CropGrowthStage stage,
             SensorDataRequest reading,
             Guid? sensorDataId,
             DateTime recordedAt)
         {
             if (!_settings.Enabled) return;
 
-            var alerts = BuildAlerts(reading);
+            var alerts = BuildAlerts(reading, stage);
             if (alerts.Count == 0) return;
 
             var nowUtc = DateTime.UtcNow;
@@ -110,6 +111,8 @@ namespace CMMS.BLL.Services
                         farmId,
                         sensorDataId,
                         recordedAt,
+                        stageId = stage.StageId,
+                        stageName = stage.StageName,
                         alertType = alert.Type,
                         severity = alert.Severity,
                         metric = alert.Metric,
@@ -120,93 +123,57 @@ namespace CMMS.BLL.Services
             }
         }
 
-        private List<SensorAlert> BuildAlerts(SensorDataRequest r)
+        private static List<SensorAlert> BuildAlerts(SensorDataRequest r, CropGrowthStage stage)
         {
             var list = new List<SensorAlert>();
 
-            if (r.Humidity.HasValue && r.Humidity.Value < _settings.LowHumidityPct)
-                list.Add(new SensorAlert
-                {
-                    Type = "low_humidity",
-                    Title = "Cảnh báo độ ẩm không khí thấp",
-                    Message = $"Độ ẩm không khí {r.Humidity.Value:F1}% (ngưỡng {_settings.LowHumidityPct:F0}%) — cần tăng cường giữ ẩm cho cây.",
-                    Severity = "warning",
-                    Metric = "humidity",
-                    Value = r.Humidity.Value,
-                    Threshold = _settings.LowHumidityPct
-                });
-
-            if (r.Humidity.HasValue && r.Humidity.Value > _settings.HighHumidityPct)
-                list.Add(new SensorAlert
-                {
-                    Type = "high_humidity",
-                    Title = "Cảnh báo độ ẩm không khí cao",
-                    Message = $"Độ ẩm không khí {r.Humidity.Value:F1}% (ngưỡng {_settings.HighHumidityPct:F0}%) — nguy cơ phát sinh nấm bệnh.",
-                    Severity = "warning",
-                    Metric = "humidity",
-                    Value = r.Humidity.Value,
-                    Threshold = _settings.HighHumidityPct
-                });
-
-            if (r.Temperature.HasValue && r.Temperature.Value > _settings.HighTemperatureC)
+            if (stage.TemperatureMax.HasValue
+                && r.Temperature.HasValue
+                && r.Temperature.Value > stage.TemperatureMax.Value)
+            {
                 list.Add(new SensorAlert
                 {
                     Type = "high_temperature",
-                    Title = "Cảnh báo nhiệt độ cao",
-                    Message = $"Nhiệt độ {r.Temperature.Value:F1}°C (ngưỡng {_settings.HighTemperatureC:F0}°C) — cần tưới mát hoặc che chắn.",
+                    Title = "Cảnh báo nhiệt độ vượt ngưỡng",
+                    Message = $"Nhiệt độ {r.Temperature.Value:F1}°C vượt ngưỡng {stage.TemperatureMax.Value:F0}°C của giai đoạn '{stage.StageName}'.",
                     Severity = "high",
                     Metric = "temperature",
                     Value = r.Temperature.Value,
-                    Threshold = _settings.HighTemperatureC
+                    Threshold = stage.TemperatureMax.Value
                 });
+            }
 
-            if (r.Temperature.HasValue && r.Temperature.Value < _settings.LowTemperatureC)
+            if (stage.HumidityMax.HasValue
+                && r.Humidity.HasValue
+                && r.Humidity.Value > stage.HumidityMax.Value)
+            {
                 list.Add(new SensorAlert
                 {
-                    Type = "low_temperature",
-                    Title = "Cảnh báo nhiệt độ thấp",
-                    Message = $"Nhiệt độ {r.Temperature.Value:F1}°C (ngưỡng {_settings.LowTemperatureC:F0}°C) — nguy cơ rét hại cây trồng.",
+                    Type = "high_humidity",
+                    Title = "Cảnh báo độ ẩm không khí vượt ngưỡng",
+                    Message = $"Độ ẩm không khí {r.Humidity.Value:F1}% vượt ngưỡng {stage.HumidityMax.Value:F0}% của giai đoạn '{stage.StageName}'.",
                     Severity = "warning",
-                    Metric = "temperature",
-                    Value = r.Temperature.Value,
-                    Threshold = _settings.LowTemperatureC
+                    Metric = "humidity",
+                    Value = r.Humidity.Value,
+                    Threshold = stage.HumidityMax.Value
                 });
+            }
 
-            if (r.SoilMoisture.HasValue && r.SoilMoisture.Value < _settings.LowSoilMoisturePct)
-                list.Add(new SensorAlert
-                {
-                    Type = "low_soil_moisture",
-                    Title = "Cảnh báo độ ẩm đất thấp",
-                    Message = $"Độ ẩm đất {r.SoilMoisture.Value:F1}% (ngưỡng {_settings.LowSoilMoisturePct:F0}%) — cần tưới nước ngay.",
-                    Severity = "high",
-                    Metric = "soilMoisture",
-                    Value = r.SoilMoisture.Value,
-                    Threshold = _settings.LowSoilMoisturePct
-                });
-
-            if (r.SoilMoisture.HasValue && r.SoilMoisture.Value > _settings.HighSoilMoisturePct)
+            if (stage.SoilMoistureMax.HasValue
+                && r.SoilMoisture.HasValue
+                && r.SoilMoisture.Value > stage.SoilMoistureMax.Value)
+            {
                 list.Add(new SensorAlert
                 {
                     Type = "high_soil_moisture",
-                    Title = "Cảnh báo đất quá ẩm",
-                    Message = $"Độ ẩm đất {r.SoilMoisture.Value:F1}% (ngưỡng {_settings.HighSoilMoisturePct:F0}%) — nguy cơ úng rễ, ngừng tưới.",
-                    Severity = "warning",
+                    Title = "Cảnh báo độ ẩm đất vượt ngưỡng",
+                    Message = $"Độ ẩm đất {r.SoilMoisture.Value:F1}% vượt ngưỡng {stage.SoilMoistureMax.Value:F0}% của giai đoạn '{stage.StageName}'.",
+                    Severity = "high",
                     Metric = "soilMoisture",
                     Value = r.SoilMoisture.Value,
-                    Threshold = _settings.HighSoilMoisturePct
+                    Threshold = stage.SoilMoistureMax.Value
                 });
-
-            if (r.Light.HasValue && r.Light.Value > _settings.HighLightLux)
-                list.Add(new SensorAlert
-                {
-                    Type = "high_light",
-                    Title = "Cảnh báo cường độ ánh sáng cao",
-                    Message = $"Cường độ ánh sáng {r.Light.Value:F0} lux (ngưỡng {_settings.HighLightLux:F0} lux) — cần che chắn cho cây.",
-                    Severity = "warning",
-                    Metric = "light",
-                    Value = r.Light.Value,
-                    Threshold = _settings.HighLightLux
-                });
+            }
 
             return list;
         }

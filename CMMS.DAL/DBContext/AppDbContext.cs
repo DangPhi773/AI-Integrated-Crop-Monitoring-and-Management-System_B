@@ -728,9 +728,9 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CropId).HasColumnName("crop_id");
             entity.Property(e => e.StageName).HasColumnName("stage_name");
             entity.Property(e => e.StageDescription).HasColumnName("stage_description");
-            entity.Property(e => e.TemperatureMin).HasColumnName("temperature_min");
-            entity.Property(e => e.HumidityMin).HasColumnName("humidity_min");
-            entity.Property(e => e.SoilMoistureMin).HasColumnName("soil_moisture_min");
+            entity.Property(e => e.TemperatureMax).HasColumnName("temperature_max");
+            entity.Property(e => e.HumidityMax).HasColumnName("humidity_max");
+            entity.Property(e => e.SoilMoistureMax).HasColumnName("soil_moisture_max");
             entity.Property(e => e.GrowthIndicators).HasColumnName("growth_indicators");
             entity.Property(e => e.CommonDiseases).HasColumnName("common_diseases");
             entity.Property(e => e.Notes).HasColumnName("notes");

@@ -19,9 +19,9 @@ namespace CMMS.DAL.Entities
         [MaxLength(200)]
         public string StageName { get; set; }
         public string? StageDescription { get; set; }
-        public double? TemperatureMin { get; set; }
-        public double? HumidityMin { get; set; }
-        public double? SoilMoistureMin { get; set; }
+        public double? TemperatureMax { get; set; }
+        public double? HumidityMax { get; set; }
+        public double? SoilMoistureMax { get; set; }
         public string? GrowthIndicators { get; set; }
         public string? CommonDiseases { get; set; }
         public string? Notes { get; set; }

@@ -1,0 +1,1607 @@
+{
+  "info": {
+    "name": "CMMS API Tests",
+    "_postman_id": "6f2b8c10-cmms-0000-0000-000000000001",
+    "description": "Integration test suite for CMMS Web API. Covers modules missing from the Excel UnitTest file: Plant AI, Contract, Payment, Expense, IoT, Sensor, Notification, Disease Report, Recommendation Task, Statistics, Weather, Maps. Run folders in order — `00_Auth` must run first to populate token variables.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.environment.get('baseUrl')) {",
+          "  pm.environment.set('baseUrl', 'http://localhost:8080');",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "00_Auth",
+      "description": "Login as 3 roles and save tokens to env. Run this folder FIRST.",
+      "item": [
+        {
+          "name": "Login Owner",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/Auth/login", "host": ["{{baseUrl}}"], "path": ["api", "Auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailOwner}}\",\n  \"password\": \"{{passwordOwner}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Success=true', () => pm.expect(json.success).to.eql(true));",
+                  "pm.test('Has token', () => pm.expect(json.data && json.data.token).to.be.a('string'));",
+                  "if (json.data && json.data.token) pm.environment.set('tokenOwner', json.data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Worker",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/Auth/login", "host": ["{{baseUrl}}"], "path": ["api", "Auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailWorker}}\",\n  \"password\": \"{{passwordWorker}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.token) pm.environment.set('tokenWorker', json.data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Specialist",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/Auth/login", "host": ["{{baseUrl}}"], "path": ["api", "Auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailSpecialist}}\",\n  \"password\": \"{{passwordSpecialist}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.token) pm.environment.set('tokenSpecialist', json.data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Wrong Password (Abnormal)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/Auth/login", "host": ["{{baseUrl}}"], "path": ["api", "Auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailOwner}}\",\n  \"password\": \"wrong_password_xxx\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "const json = pm.response.json();",
+                  "pm.test('Success=false', () => pm.expect(json.success).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Invalid Email (Boundary)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/Auth/login", "host": ["{{baseUrl}}"], "path": ["api", "Auth", "login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"not-an-email\",\n  \"password\": \"123456@Aa\"\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400 (model validation)', () => pm.expect([400, 401]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register New Worker",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/Auth/register", "host": ["{{baseUrl}}"], "path": ["api", "Auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newworker_{{$timestamp}}@cmms.test\",\n  \"password\": \"Pass1234\",\n  \"fullname\": \"Test Worker\",\n  \"phoneNumber\": \"0987654321\",\n  \"targetRole\": \"Worker\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 or 400 (if email collision)', () => pm.expect([200, 400]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register Weak Password (Abnormal)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/Auth/register", "host": ["{{baseUrl}}"], "path": ["api", "Auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"weak_{{$timestamp}}@cmms.test\",\n  \"password\": \"123\",\n  \"fullname\": \"Test\",\n  \"targetRole\": \"Worker\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Roles (Public)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/Auth/roles", "host": ["{{baseUrl}}"], "path": ["api", "Auth", "roles"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01_Plant_AI",
+      "description": "Plant disease diagnosis via Gemini/n8n.",
+      "item": [
+        {
+          "name": "Analyze Plant Image (Normal)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenWorker}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Plant/analyze", "host": ["{{baseUrl}}"], "path": ["api", "Plant", "analyze"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "Image", "type": "file", "src": [], "description": "Pick a leaf .jpg/.png from disk" },
+                { "key": "PlantName", "type": "text", "value": "Cabbage" },
+                { "key": "GrowthStage", "type": "text", "value": "Vegetative" },
+                { "key": "Temperature", "type": "text", "value": "28" },
+                { "key": "AirHumidity", "type": "text", "value": "70" },
+                { "key": "SoilMoisture", "type": "text", "value": "55" },
+                { "key": "LightIntensity", "type": "text", "value": "30000" },
+                { "key": "WeatherCondition", "type": "text", "value": "Cloudy" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Has disease field', () => pm.expect(j).to.have.property('disease'));",
+                  "pm.test('Has confidence field', () => pm.expect(j).to.have.property('confidence'));",
+                  "pm.test('Has severity Vietnamese', () => pm.expect(['Thấp','Trung bình','Cao']).to.include(j.severity));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Analyze Plant Image - Missing Image (Abnormal)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenWorker}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Plant/analyze", "host": ["{{baseUrl}}"], "path": ["api", "Plant", "analyze"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "PlantName", "type": "text", "value": "Cabbage" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Message mentions ảnh', () => pm.expect(pm.response.text()).to.match(/ảnh|image/i));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Analyze Plant - No Auth (Abnormal)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/Plant/analyze", "host": ["{{baseUrl}}"], "path": ["api", "Plant", "analyze"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 401', () => pm.response.to.have.status(401));"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02_Contract",
+      "description": "Diagnosis service contracts (Owner ↔ Specialist).",
+      "item": [
+        {
+          "name": "Create Contract (Owner)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenOwner}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/contract", "host": ["{{baseUrl}}"], "path": ["api", "contract"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expertId\": \"{{specialistUserId}}\",\n  \"bankAccount\": \"1234567890\",\n  \"bankName\": \"Vietcombank\",\n  \"bankBin\": \"970436\",\n  \"accountHolder\": \"NGUYEN VAN A\",\n  \"pricePerDiagnosis\": 50000,\n  \"startDate\": \"2026-06-01T00:00:00Z\",\n  \"endDate\": \"2026-12-31T00:00:00Z\",\n  \"notes\": \"Test contract\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const id = j.data && (j.data.id || j.data.contractId);",
+                  "if (id) pm.environment.set('contractId', id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Duplicate Active Contract (Abnormal)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenOwner}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/contract", "host": ["{{baseUrl}}"], "path": ["api", "contract"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expertId\": \"{{specialistUserId}}\",\n  \"bankAccount\": \"1234567890\",\n  \"bankName\": \"Vietcombank\",\n  \"bankBin\": \"970436\",\n  \"accountHolder\": \"NGUYEN VAN A\",\n  \"pricePerDiagnosis\": 60000,\n  \"startDate\": \"2026-06-01T00:00:00Z\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.test('Duplicate rejected', () => pm.expect(j.success).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Contract - Invalid BankBin (Boundary)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenOwner}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/contract", "host": ["{{baseUrl}}"], "path": ["api", "contract"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expertId\": \"{{specialistUserId}}\",\n  \"bankAccount\": \"1\",\n  \"bankName\": \"VCB\",\n  \"bankBin\": \"12345\",\n  \"accountHolder\": \"X\",\n  \"pricePerDiagnosis\": 1000,\n  \"startDate\": \"2026-06-01T00:00:00Z\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Contracts (Owner)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/contract/all", "host": ["{{baseUrl}}"], "path": ["api", "contract", "all"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get My Contracts (Specialist)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenSpecialist}}" }],
+            "url": { "raw": "{{baseUrl}}/api/contract/my", "host": ["{{baseUrl}}"], "path": ["api", "contract", "my"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Contract By Id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenSpecialist}}" }],
+            "url": { "raw": "{{baseUrl}}/api/contract/{{contractId}}", "host": ["{{baseUrl}}"], "path": ["api", "contract", "{{contractId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Contract",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenOwner}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/contract/{{contractId}}", "host": ["{{baseUrl}}"], "path": ["api", "contract", "{{contractId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bankAccount\": \"9999999999\",\n  \"bankName\": \"BIDV\",\n  \"bankBin\": \"970418\",\n  \"accountHolder\": \"NGUYEN VAN A UPDATED\",\n  \"endDate\": \"2027-06-30T00:00:00Z\",\n  \"notes\": \"Updated\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Terminate Contract",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/contract/{{contractId}}/terminate", "host": ["{{baseUrl}}"], "path": ["api", "contract", "{{contractId}}", "terminate"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Contract as Worker (Forbidden)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenWorker}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/contract", "host": ["{{baseUrl}}"], "path": ["api", "contract"] },
+            "body": { "mode": "raw", "raw": "{}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 403', () => pm.response.to.have.status(403));"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03_Payment",
+      "item": [
+        {
+          "name": "Get Pending Bills (Specialist)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenSpecialist}}" }],
+            "url": { "raw": "{{baseUrl}}/api/payment/pending?dueOnly=false", "host": ["{{baseUrl}}"], "path": ["api", "payment", "pending"], "query": [{ "key": "dueOnly", "value": "false" }] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Bill For Month",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenSpecialist}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/payment/bill?specialistId={{specialistUserId}}&month=2026-06-01",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payment", "bill"],
+              "query": [
+                { "key": "specialistId", "value": "{{specialistUserId}}" },
+                { "key": "month", "value": "2026-06-01" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload Payment (Owner)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/payment/upload", "host": ["{{baseUrl}}"], "path": ["api", "payment", "upload"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "SpecialistId", "type": "text", "value": "{{specialistUserId}}" },
+                { "key": "Month", "type": "text", "value": "2026-06-01" },
+                { "key": "BillFile", "type": "file", "src": [], "description": "Bill image/pdf" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const id = j.data && (j.data.id || j.data.paymentId);",
+                  "if (id) pm.environment.set('paymentId', id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get My Payments (Specialist)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenSpecialist}}" }],
+            "url": { "raw": "{{baseUrl}}/api/payment/my", "host": ["{{baseUrl}}"], "path": ["api", "payment", "my"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Payment By Id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenSpecialist}}" }],
+            "url": { "raw": "{{baseUrl}}/api/payment/{{paymentId}}", "host": ["{{baseUrl}}"], "path": ["api", "payment", "{{paymentId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200 or 404', () => pm.expect([200, 404]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04_Expense",
+      "item": [
+        {
+          "name": "Create Expense (Owner)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenOwner}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"seasonId\": \"{{seasonId}}\",\n  \"category\": \"Seeds\",\n  \"description\": \"Mua hạt giống cải bắp\",\n  \"amount\": 500000,\n  \"spentAt\": \"2026-06-01\",\n  \"notes\": \"Lô đầu mùa\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const id = j.data && (j.data.id || j.data.expenseId);",
+                  "if (id) pm.environment.set('expenseId', id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Expense - Zero Amount (Boundary)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenOwner}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"seasonId\": \"{{seasonId}}\",\n  \"category\": \"Seeds\",\n  \"description\": \"Zero\",\n  \"amount\": 0,\n  \"spentAt\": \"2026-06-01\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get By Season",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses?seasonId={{seasonId}}", "host": ["{{baseUrl}}"], "path": ["api", "expenses"], "query": [{ "key": "seasonId", "value": "{{seasonId}}" }] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Expense By Id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses/{{expenseId}}", "host": ["{{baseUrl}}"], "path": ["api", "expenses", "{{expenseId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200 or 404', () => pm.expect([200, 404]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Expense",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenOwner}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/expenses/{{expenseId}}", "host": ["{{baseUrl}}"], "path": ["api", "expenses", "{{expenseId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"Seeds\",\n  \"description\": \"Updated\",\n  \"amount\": 700000,\n  \"spentAt\": \"2026-06-02\",\n  \"notes\": \"Adjusted\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200 or 400', () => pm.expect([200, 400]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses/summary?seasonId={{seasonId}}", "host": ["{{baseUrl}}"], "path": ["api", "expenses", "summary"], "query": [{ "key": "seasonId", "value": "{{seasonId}}" }] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Expense",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses/{{expenseId}}", "host": ["{{baseUrl}}"], "path": ["api", "expenses", "{{expenseId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200 or 404', () => pm.expect([200, 404]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05_IoT_Devices",
+      "item": [
+        {
+          "name": "Create IoT Device (Owner)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenOwner}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/IotDevices", "host": ["{{baseUrl}}"], "path": ["api", "IotDevices"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bedId\": \"{{bedId}}\",\n  \"deviceCode\": \"DEV-{{$timestamp}}\",\n  \"name\": \"Soil sensor 01\",\n  \"type\": \"SOIL\",\n  \"status\": \"Active\",\n  \"installationDate\": \"2026-06-01T00:00:00Z\",\n  \"latitude\": 10.762622,\n  \"longitude\": 106.660172\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const id = j.data && (j.data.deviceId || j.data.id);",
+                  "const key = j.data && j.data.apiKey;",
+                  "if (id) pm.environment.set('deviceId', id);",
+                  "if (key) pm.environment.set('deviceApiKey', key);",
+                  "pm.test('Has apiKey on create', () => pm.expect(j.data && j.data.apiKey).to.be.a('string'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Device - Invalid Latitude (Boundary)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenOwner}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/IotDevices", "host": ["{{baseUrl}}"], "path": ["api", "IotDevices"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceCode\": \"DEV-BAD\",\n  \"name\": \"Bad\",\n  \"latitude\": 999,\n  \"longitude\": 0\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Devices",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/IotDevices", "host": ["{{baseUrl}}"], "path": ["api", "IotDevices"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Device By Id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/IotDevices/{{deviceId}}", "host": ["{{baseUrl}}"], "path": ["api", "IotDevices", "{{deviceId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Device",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenOwner}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/IotDevices/{{deviceId}}", "host": ["{{baseUrl}}"], "path": ["api", "IotDevices", "{{deviceId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Soil sensor 01 (renamed)\",\n  \"status\": \"Active\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rotate Device API Key",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/IotDevices/{{deviceId}}/rotate-key", "host": ["{{baseUrl}}"], "path": ["api", "IotDevices", "{{deviceId}}", "rotate-key"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const key = j.data && j.data.apiKey;",
+                  "if (key) pm.environment.set('deviceApiKey', key);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06_IoT_Data_and_Sensor",
+      "item": [
+        {
+          "name": "Receive Sensor Data (Normal, with key)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Device-Key", "value": "{{deviceApiKey}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/sensors", "host": ["{{baseUrl}}"], "path": ["api", "sensors"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"temperature\": 28,\n  \"humidity\": 70,\n  \"soilMoisture\": 55,\n  \"light\": 30000,\n  \"isRaining\": false,\n  \"timestamp\": \"2026-06-05T08:00:00Z\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.test('Has isAlert flag', () => pm.expect(j).to.have.property('isAlert'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Receive Sensor - Missing X-Device-Key (Abnormal)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/sensors", "host": ["{{baseUrl}}"], "path": ["api", "sensors"] },
+            "body": { "mode": "raw", "raw": "{\n  \"temperature\": 28\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 401', () => pm.response.to.have.status(401));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Receive Sensor - High Temperature (Boundary -> Alert)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Device-Key", "value": "{{deviceApiKey}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/sensors", "host": ["{{baseUrl}}"], "path": ["api", "sensors"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"temperature\": 40,\n  \"humidity\": 30,\n  \"soilMoisture\": 20,\n  \"light\": 90000,\n  \"timestamp\": \"2026-06-05T13:00:00Z\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.test('Alert triggered', () => pm.expect(j.isAlert).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Receive Sensor - Out of range temp (Abnormal)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Device-Key", "value": "{{deviceApiKey}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/sensors", "host": ["{{baseUrl}}"], "path": ["api", "sensors"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"temperature\": 500,\n  \"timestamp\": \"2026-06-05T13:00:00Z\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 400 (validation)', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Latest Sensor",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/sensors/latest?deviceCode={{deviceCode}}", "host": ["{{baseUrl}}"], "path": ["api", "sensors", "latest"], "query": [{ "key": "deviceCode", "value": "{{deviceCode}}" }] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200 or 404', () => pm.expect([200, 404]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Sensor History",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/sensors/history?deviceCode={{deviceCode}}&from=2026-06-01&to=2026-06-30",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sensors", "history"],
+              "query": [
+                { "key": "deviceCode", "value": "{{deviceCode}}" },
+                { "key": "from", "value": "2026-06-01" },
+                { "key": "to", "value": "2026-06-30" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200 or 404', () => pm.expect([200, 404]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All IoT Data",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/IotDatas", "host": ["{{baseUrl}}"], "path": ["api", "IotDatas"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get IoT Data By Device",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/IotDatas/device/{{deviceId}}", "host": ["{{baseUrl}}"], "path": ["api", "IotDatas", "device", "{{deviceId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07_Notification",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenWorker}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Notifications?page=1&pageSize=20", "host": ["{{baseUrl}}"], "path": ["api", "Notifications"], "query": [{ "key": "page", "value": "1" }, { "key": "pageSize", "value": "20" }] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "if (j.data && Array.isArray(j.data) && j.data[0]) pm.environment.set('notificationId', j.data[0].id || j.data[0].notificationId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenWorker}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Notifications/unread-count", "host": ["{{baseUrl}}"], "path": ["api", "Notifications", "unread-count"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mark Read",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenWorker}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Notifications/{{notificationId}}/read", "host": ["{{baseUrl}}"], "path": ["api", "Notifications", "{{notificationId}}", "read"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200 or 404', () => pm.expect([200, 404]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mark All Read",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenWorker}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Notifications/read-all", "host": ["{{baseUrl}}"], "path": ["api", "Notifications", "read-all"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08_Disease_Reports",
+      "item": [
+        {
+          "name": "Worker Create Report (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenWorker}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Reports", "host": ["{{baseUrl}}"], "path": ["api", "Reports"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "Title", "type": "text", "value": "Lá cải bị đốm đen" },
+                { "key": "Description", "type": "text", "value": "Phát hiện đốm đen lan rộng trên lá ngoài" },
+                { "key": "ReportType", "type": "text", "value": "Disease" },
+                { "key": "PlotId", "type": "text", "value": "{{plotId}}" },
+                { "key": "BedId", "type": "text", "value": "{{bedId}}" },
+                { "key": "SeasonId", "type": "text", "value": "{{seasonId}}" },
+                { "key": "OwnerId", "type": "text", "value": "{{ownerUserId}}" },
+                { "key": "images", "type": "file", "src": [] }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "const id = j.data && (j.data.id || j.data.reportId);",
+                  "if (id) pm.environment.set('reportId', id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Reports",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Reports", "host": ["{{baseUrl}}"], "path": ["api", "Reports"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filter Reports by Status",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Reports/filter?status=open", "host": ["{{baseUrl}}"], "path": ["api", "Reports", "filter"], "query": [{ "key": "status", "value": "open" }] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Report By Id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Reports/{{reportId}}", "host": ["{{baseUrl}}"], "path": ["api", "Reports", "{{reportId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Owner Assign Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenOwner}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/Reports/{{reportId}}/assign", "host": ["{{baseUrl}}"], "path": ["api", "Reports", "{{reportId}}", "assign"] },
+            "body": { "mode": "raw", "raw": "{\n  \"assignedTo\": \"{{specialistUserId}}\",\n  \"note\": \"Vui lòng xử lý gấp\"\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Specialist Create Diagnosis",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenSpecialist}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/Reports/{{reportId}}/diagnosis", "host": ["{{baseUrl}}"], "path": ["api", "Reports", "{{reportId}}", "diagnosis"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diseaseName\": \"Black Rot\",\n  \"conclusion\": \"Cây bị thối đen do nấm Alternaria\",\n  \"recommendedAction\": \"Phun thuốc gốc đồng, cải thiện thông thoáng\",\n  \"severityLevel\": \"Medium\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "const id = j.data && (j.data.id || j.data.diagnosisId);",
+                  "if (id) pm.environment.set('diagnosisId', id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Diagnosis By Id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Reports/diagnosis/{{diagnosisId}}", "host": ["{{baseUrl}}"], "path": ["api", "Reports", "diagnosis", "{{diagnosisId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Diagnosis By Report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenWorker}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Reports/{{reportId}}/diagnosis", "host": ["{{baseUrl}}"], "path": ["api", "Reports", "{{reportId}}", "diagnosis"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Owner Delete Report",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Reports/{{reportId}}", "host": ["{{baseUrl}}"], "path": ["api", "Reports", "{{reportId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200 or 400', () => pm.expect([200, 400]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "09_Recommendation_Tasks",
+      "item": [
+        {
+          "name": "Create Recommendation Task (Specialist)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenSpecialist}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/RecommendationTasks", "host": ["{{baseUrl}}"], "path": ["api", "RecommendationTasks"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Phun thuốc gốc đồng\",\n  \"description\": \"Theo khuyến nghị từ diagnosis\",\n  \"priority\": \"High\",\n  \"dueDate\": \"2026-06-10T00:00:00Z\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const id = j.data && (j.data.id || j.data.recommendationTaskId);",
+                  "if (id) pm.environment.set('recommendationTaskId', id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Recommendation Tasks",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenWorker}}" }],
+            "url": { "raw": "{{baseUrl}}/api/RecommendationTasks", "host": ["{{baseUrl}}"], "path": ["api", "RecommendationTasks"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "10_Statistics",
+      "item": [
+        {
+          "name": "Yield By Crop",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/statistics/yield/by-crop?farmId={{farmId}}", "host": ["{{baseUrl}}"], "path": ["api", "statistics", "yield", "by-crop"], "query": [{ "key": "farmId", "value": "{{farmId}}" }] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200 or 400', () => pm.expect([200, 400]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Yield By Season",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/statistics/yield/by-season?farmId={{farmId}}", "host": ["{{baseUrl}}"], "path": ["api", "statistics", "yield", "by-season"], "query": [{ "key": "farmId", "value": "{{farmId}}" }] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200 or 400', () => pm.expect([200, 400]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Yield By Plot",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/statistics/yield/by-plot?farmId={{farmId}}", "host": ["{{baseUrl}}"], "path": ["api", "statistics", "yield", "by-plot"], "query": [{ "key": "farmId", "value": "{{farmId}}" }] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200 or 400', () => pm.expect([200, 400]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Yield Summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/statistics/yield/summary?farmId={{farmId}}", "host": ["{{baseUrl}}"], "path": ["api", "statistics", "yield", "summary"], "query": [{ "key": "farmId", "value": "{{farmId}}" }] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200 or 400', () => pm.expect([200, 400]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "11_Weather",
+      "item": [
+        {
+          "name": "Get Current Weather",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenWorker}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Weather/current?lat=10.762622&lng=106.660172", "host": ["{{baseUrl}}"], "path": ["api", "Weather", "current"], "query": [{ "key": "lat", "value": "10.762622" }, { "key": "lng", "value": "106.660172" }] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200 or 400', () => pm.expect([200, 400]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Forecast (5 days)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenWorker}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Weather/forecast?lat=10.762622&lng=106.660172&days=5", "host": ["{{baseUrl}}"], "path": ["api", "Weather", "forecast"], "query": [{ "key": "lat", "value": "10.762622" }, { "key": "lng", "value": "106.660172" }, { "key": "days", "value": "5" }] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200 or 400', () => pm.expect([200, 400]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Weather By Farm",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenWorker}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Weather/farm/{{farmId}}/current", "host": ["{{baseUrl}}"], "path": ["api", "Weather", "farm", "{{farmId}}", "current"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200, 400 or 404', () => pm.expect([200, 400, 404]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "12_Maps",
+      "item": [
+        {
+          "name": "Geocode Address",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Maps/geocode?address=Hà Nội", "host": ["{{baseUrl}}"], "path": ["api", "Maps", "geocode"], "query": [{ "key": "address", "value": "Hà Nội" }] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200 or 400', () => pm.expect([200, 400]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reverse Geocode",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/Maps/reverse?lat=10.762622&lng=106.660172", "host": ["{{baseUrl}}"], "path": ["api", "Maps", "reverse"], "query": [{ "key": "lat", "value": "10.762622" }, { "key": "lng", "value": "106.660172" }] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200 or 400', () => pm.expect([200, 400]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Farm Coordinates",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenOwner}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/Maps/farm/{{farmId}}/coordinates", "host": ["{{baseUrl}}"], "path": ["api", "Maps", "farm", "{{farmId}}", "coordinates"] },
+            "body": { "mode": "raw", "raw": "{\n  \"latitude\": 10.762622,\n  \"longitude\": 106.660172\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200, 400 or 404', () => pm.expect([200, 400, 404]).to.include(pm.response.code));"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "13_Cleanup_IoT_Device",
+      "description": "Run last to clean test data created above.",
+      "item": [
+        {
+          "name": "Delete IoT Device",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": { "raw": "{{baseUrl}}/api/IotDevices/{{deviceId}}", "host": ["{{baseUrl}}"], "path": ["api", "IotDevices", "{{deviceId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
