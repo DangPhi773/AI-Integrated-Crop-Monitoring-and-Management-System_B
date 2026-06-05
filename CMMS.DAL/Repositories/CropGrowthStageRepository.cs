@@ -25,8 +25,21 @@ namespace CMMS.DAL.Repositories
     await _context.CropGrowthStages
         .Include(s => s.Crop)
         .Where(s => s.CropId == cropId)
-        .OrderBy(s => s.CreatedAt) 
+        .OrderBy(s => s.CreatedAt)
         .ToListAsync();
+
+        public async Task<CropGrowthStage?> GetActiveStageByBedIdAsync(Guid bedId)
+        {
+            return await (from gt in _context.GrowthTrackings
+                          join hd in _context.HarvestDetails on gt.HarvestDetailId equals hd.HarvestDetailId
+                          join s in _context.CropGrowthStages on gt.StageId equals s.StageId
+                          where hd.BedId == bedId
+                                && gt.TrackingStatus == "In-Progress"
+                          orderby gt.StartDate descending
+                          select s)
+                          .AsNoTracking()
+                          .FirstOrDefaultAsync();
+        }
 
         public async System.Threading.Tasks.Task AddAsync(CropGrowthStage stage) => await _context.CropGrowthStages.AddAsync(stage);
         public void Update(CropGrowthStage stage) => _context.CropGrowthStages.Update(stage);

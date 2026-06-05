@@ -15,14 +15,14 @@ namespace CMMS.DAL.DTOs.Crops
         [StringLength(1000, ErrorMessage = "Mô tả tối đa 1000 ký tự")]
         public string? StageDescription { get; set; }
 
-        [Range(-50, 100, ErrorMessage = "Nhiệt độ tối thiểu phải từ -50 đến 100 °C")]
-        public double? TemperatureMin { get; set; }
+        [Range(-50, 100, ErrorMessage = "Nhiệt độ tối đa phải từ -50 đến 100 °C")]
+        public double? TemperatureMax { get; set; }
 
-        [Range(0, 100, ErrorMessage = "Độ ẩm tối thiểu phải từ 0 đến 100 %")]
-        public double? HumidityMin { get; set; }
+        [Range(0, 100, ErrorMessage = "Độ ẩm tối đa phải từ 0 đến 100 %")]
+        public double? HumidityMax { get; set; }
 
-        [Range(0, 100, ErrorMessage = "Độ ẩm đất tối thiểu phải từ 0 đến 100 %")]
-        public double? SoilMoistureMin { get; set; }
+        [Range(0, 100, ErrorMessage = "Độ ẩm đất tối đa phải từ 0 đến 100 %")]
+        public double? SoilMoistureMax { get; set; }
 
         [StringLength(1000, ErrorMessage = "GrowthIndicators tối đa 1000 ký tự")]
         public string? GrowthIndicators { get; set; }
@@ -41,9 +41,9 @@ namespace CMMS.DAL.DTOs.Crops
         public string? CropName { get; set; }
         public string StageName { get; set; } = null!;
         public string? StageDescription { get; set; }
-        public double? TemperatureMin { get; set; }
-        public double? HumidityMin { get; set; }
-        public double? SoilMoistureMin { get; set; }
+        public double? TemperatureMax { get; set; }
+        public double? HumidityMax { get; set; }
+        public double? SoilMoistureMax { get; set; }
         public string? GrowthIndicators { get; set; }
         public string? CommonDiseases { get; set; }
         public string? Notes { get; set; }

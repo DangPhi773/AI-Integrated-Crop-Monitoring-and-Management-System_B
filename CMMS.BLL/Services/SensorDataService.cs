@@ -21,6 +21,7 @@ namespace CMMS.BLL.Services
         private readonly IIotDataRepository _dataRepo;
         private readonly IIotDeviceRepository _deviceRepo;
         private readonly ISeasonRepository _seasonRepo;
+        private readonly ICropGrowthStageRepository _stageRepo;
         private readonly IIotRealtime _realtime;
         private readonly IAlertRuleEngine _alertEngine;
 
@@ -28,12 +29,14 @@ namespace CMMS.BLL.Services
             IIotDataRepository dataRepo,
             IIotDeviceRepository deviceRepo,
             ISeasonRepository seasonRepo,
+            ICropGrowthStageRepository stageRepo,
             IIotRealtime realtime,
             IAlertRuleEngine alertEngine)
         {
             _dataRepo = dataRepo;
             _deviceRepo = deviceRepo;
             _seasonRepo = seasonRepo;
+            _stageRepo = stageRepo;
             _realtime = realtime;
             _alertEngine = alertEngine;
         }
@@ -109,7 +112,12 @@ namespace CMMS.BLL.Services
                 });
             }
 
-            await _alertEngine.EvaluateAndNotifyAsync(device, request, persistedId, recordedAt);
+            var stage = device.BedId.HasValue
+                ? await _stageRepo.GetActiveStageByBedIdAsync(device.BedId.Value)
+                : null;
+
+            if (stage != null)
+                await _alertEngine.EvaluateAndNotifyAsync(device, stage, request, persistedId, recordedAt);
 
             return new SensorDataResponse
             {

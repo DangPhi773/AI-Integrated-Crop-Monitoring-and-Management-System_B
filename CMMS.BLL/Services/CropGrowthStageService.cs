@@ -39,9 +39,9 @@ namespace CMMS.BLL.Services
                 CropId = request.CropId,
                 StageName = request.StageName,
                 StageDescription = request.StageDescription,
-                TemperatureMin = request.TemperatureMin,
-                HumidityMin = request.HumidityMin,
-                SoilMoistureMin = request.SoilMoistureMin,
+                TemperatureMax = request.TemperatureMax,
+                HumidityMax = request.HumidityMax,
+                SoilMoistureMax = request.SoilMoistureMax,
                 GrowthIndicators = request.GrowthIndicators,
                 CommonDiseases = request.CommonDiseases,
                 Notes = request.Notes,
@@ -61,9 +61,9 @@ namespace CMMS.BLL.Services
 
             stage.StageName = request.StageName;
             stage.StageDescription = request.StageDescription;
-            stage.TemperatureMin = request.TemperatureMin;
-            stage.HumidityMin = request.HumidityMin;
-            stage.SoilMoistureMin = request.SoilMoistureMin;
+            stage.TemperatureMax = request.TemperatureMax;
+            stage.HumidityMax = request.HumidityMax;
+            stage.SoilMoistureMax = request.SoilMoistureMax;
             stage.GrowthIndicators = request.GrowthIndicators;
             stage.CommonDiseases = request.CommonDiseases;
             stage.Notes = request.Notes;

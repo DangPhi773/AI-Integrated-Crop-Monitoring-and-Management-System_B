@@ -138,7 +138,7 @@ namespace CMMS.BLL.Services
                     StartDate = request.StartDate,
                     EndDate = request.EndDate,
                     Notes = request.Notes,
-                    Status = request.Status ?? "Pending"
+                    Status = request.Status ?? (workerIds.Count > 0 ? "Assigned" : "Pending")
                 };
 
                 await _repo.AddAsync(entity);
@@ -192,6 +192,9 @@ namespace CMMS.BLL.Services
                 entity.Notes = request.Notes ?? entity.Notes;
                 entity.Status = request.Status ?? entity.Status;
 
+                if (entity.Status == "Pending" && (entity.AssignedToWorkerIds?.Count ?? 0) > 0)
+                    entity.Status = "Assigned";
+
                 _repo.Update(entity);
                 await _repo.SaveChangesAsync();
 
@@ -215,7 +218,7 @@ namespace CMMS.BLL.Services
         {
             try
             {
-                var validStatuses = new[] { "Pending", "InProgress", "Completed", "Cancelled" };
+                var validStatuses = new[] { "Pending", "Assigned", "InProgress", "Completed", "Failed", "Cancelled" };
                 if (!validStatuses.Contains(status))
                     return new ApiResponse<string> { Success = false, Message = $"Trạng thái không hợp lệ. Chỉ chấp nhận: {string.Join(", ", validStatuses)}" };
 

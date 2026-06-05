@@ -12,6 +12,7 @@ namespace CMMS.DAL.Interfaces
         Task<IEnumerable<CropGrowthStage>> GetAllAsync();
         Task<CropGrowthStage?> GetByIdAsync(Guid id);
         Task<IEnumerable<CropGrowthStage>> GetByCropIdAsync(Guid cropId);
+        Task<CropGrowthStage?> GetActiveStageByBedIdAsync(Guid bedId);
         System.Threading.Tasks.Task AddAsync(CropGrowthStage stage);
         void Update(CropGrowthStage stage);
         void Delete(CropGrowthStage stage);
