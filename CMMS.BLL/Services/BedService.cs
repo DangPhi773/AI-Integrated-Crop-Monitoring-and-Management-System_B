@@ -56,11 +56,17 @@ namespace CMMS.BLL.Services
         {
             try
             {
+                if (request.PlotId.HasValue && !string.IsNullOrWhiteSpace(request.BedName))
+                {
+                    if (await _bedRepo.ExistsNameInPlotAsync(request.PlotId.Value, request.BedName))
+                        return new ApiResponse<string> { Success = false, Message = $"Tên luống '{request.BedName.Trim()}' đã tồn tại trong khu vực này" };
+                }
+
                 var entity = new Bed
                 {
                     BedId = Guid.NewGuid(),
                     PlotId = request.PlotId,
-                    BedName = request.BedName,
+                    BedName = request.BedName?.Trim(),
                     BedArea = request.BedArea,
                     BedStatus = request.BedStatus ?? "Active",
                     CropQuantities = request.CropQuantities,
@@ -91,8 +97,17 @@ namespace CMMS.BLL.Services
                 var entity = await _bedRepo.GetByIdAsync(id);
                 if (entity == null) return new ApiResponse<string> { Success = false, Message = "Bed not found" };
 
-                entity.PlotId = request.PlotId ?? entity.PlotId;
-                entity.BedName = request.BedName ?? entity.BedName;
+                var effectivePlotId = request.PlotId ?? entity.PlotId;
+                var effectiveName = request.BedName ?? entity.BedName;
+
+                if (effectivePlotId.HasValue && !string.IsNullOrWhiteSpace(effectiveName))
+                {
+                    if (await _bedRepo.ExistsNameInPlotAsync(effectivePlotId.Value, effectiveName, id))
+                        return new ApiResponse<string> { Success = false, Message = $"Tên luống '{effectiveName.Trim()}' đã tồn tại trong khu vực này" };
+                }
+
+                entity.PlotId = effectivePlotId;
+                entity.BedName = effectiveName?.Trim();
                 entity.BedArea = request.BedArea ?? entity.BedArea;
                 entity.BedStatus = request.BedStatus ?? entity.BedStatus;
                 entity.CropQuantities = request.CropQuantities ?? entity.CropQuantities;
@@ -183,12 +198,21 @@ namespace CMMS.BLL.Services
                 if (request.Beds == null || request.Beds.Count == 0)
                     return new ApiResponse<string> { Success = false, Message = "Danh sách beds rỗng" };
 
+                var duplicates = request.Beds
+                    .Where(b => !string.IsNullOrWhiteSpace(b.BedName))
+                    .GroupBy(b => b.BedName.Trim().ToLower())
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.First().BedName.Trim())
+                    .ToList();
+                if (duplicates.Any())
+                    return new ApiResponse<string> { Success = false, Message = $"Tên luống bị trùng: {string.Join(", ", duplicates)}" };
+
                 var now = DateTimeHelper.VnNow();
                 var beds = request.Beds.Select(b => new Bed
                 {
                     BedId = Guid.NewGuid(),
                     PlotId = request.PlotId,
-                    BedName = b.BedName,
+                    BedName = b.BedName?.Trim(),
                     BedArea = (decimal)b.BedArea,
                     BedLength = b.BedLength,
                     BedWidth = b.BedWidth,
@@ -247,7 +271,7 @@ namespace CMMS.BLL.Services
             var prefix = string.IsNullOrWhiteSpace(request.BedNamePrefix) ? "Luống" : request.BedNamePrefix!.Trim();
             var beds = Enumerable.Range(1, bedCount).Select(i => new BedPreviewItem
             {
-                BedName = $"{prefix} {i}",
+                BedName = $"{prefix}{i}",
                 BedLength = Math.Round(bedLength, 2),
                 BedWidth = Math.Round(request.BedWidth, 2),
                 BedArea = Math.Round(bedArea, 2),
