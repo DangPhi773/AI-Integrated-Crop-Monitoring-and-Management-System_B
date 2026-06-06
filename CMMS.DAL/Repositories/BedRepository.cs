@@ -29,6 +29,16 @@ namespace CMMS.DAL.Repositories
 
         public Task<bool> AnyByPlotIdAsync(Guid plotId) => _context.Beds.AnyAsync(b => b.PlotId == plotId);
 
+        public Task<bool> ExistsNameInPlotAsync(Guid plotId, string bedName, Guid? excludeBedId = null)
+        {
+            var normalized = bedName.Trim().ToLower();
+            return _context.Beds.AnyAsync(b =>
+                b.PlotId == plotId
+                && b.BedName != null
+                && b.BedName.Trim().ToLower() == normalized
+                && (excludeBedId == null || b.BedId != excludeBedId));
+        }
+
         public void Update(Bed bed) => _context.Beds.Update(bed);
 
         public void Delete(Bed bed) => _context.Beds.Remove(bed);
